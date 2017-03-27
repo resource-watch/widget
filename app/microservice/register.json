@@ -1,0 +1,25 @@
+{
+    "name": "Widget adapter",
+    "tags": [
+        "gfw",
+        "rw"
+    ],
+    "endpoints": [
+        {
+            "path": "/v1/widget",
+            "method": "GET",
+            "redirect": {
+                "method": "GET",
+                "path": "/api/v1/widget/"
+            }
+        },
+	{
+            "path": "/v1/dataset/:dataset_id/widget",
+            "method": "GET",
+            "redirect": {
+                "method": "GET",
+                "path": "/api/v1/widget/hi"
+            }
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "logger": {
+        "name": "widget-DEV",
+        "level": "debug",
+        "toFile": false,
+        "dirLogFile": null
+    },
+    "service": {
+        "name": "Widget adapter",
+        "port": 3050
+    },
+    "mongodb": {
+	"database": "widget_db",
+        "host": "mymachine",
+        "port": 27017
+    }
+}

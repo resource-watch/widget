@@ -1,0 +1,11 @@
+test:
+  extends:
+    file: base.yml
+    service: base
+  ports:
+    - "3050"
+  container_name: widget-adapter-test
+  environment:
+    NODE_ENV: test
+    CT_URL: http://192.1688.99.100:9000
+  command: test

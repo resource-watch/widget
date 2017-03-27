@@ -1,0 +1,8 @@
+{
+    "logger": {
+        "name": "widget-adapter",
+        "level": "debug",
+        "toFile": false,
+        "dirLogFile": null
+    }
+}

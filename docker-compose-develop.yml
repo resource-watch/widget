@@ -1,0 +1,23 @@
+develop:
+  extends:
+    file: base.yml
+    service: base
+  ports:
+    - "35749:35729"
+  environment:
+    CT_URL: http://192.168.1.125:9000 
+    LOCAL_URL: http://192.168.1.125:3050
+    CT_TOKEN: null
+    API_VERSION: v1
+  command: develop
+  volumes:
+    - ./app:/opt/widget/app
+mongo:
+  image: mongo:3.4
+  container_name: widget-mongo-develop
+  command: --smallfiles
+  ports:
+    - "27017"
+  volumes:
+    - /opt/docker/data/widget:/data/db
+  restart: always
