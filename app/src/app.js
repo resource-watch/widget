@@ -37,7 +37,7 @@ const onDbReady = (err) => {
             try {
                 error = JSON.parse(inErr);
             } catch (e) {
-                logger.error('Error parse');
+                logger.error('Parsing error');
                 error = inErr;
             }
             ctx.status = error.status || ctx.status || 500;

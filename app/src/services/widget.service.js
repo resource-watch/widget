@@ -3,7 +3,7 @@ const logger = require('logger');
 const Widget = require('models/widget.model');
 
 class WidgetService {
-    static async create(dataset, user) {
+    static async create(widget) {
         logger.debug(`[WidgetService]: Getting widget with name:  ${widget.name}`);
         logger.info(`[DBACCES-FIND]: widget.name: ${widget.name}`);
         logger.info(`[DBACCESS-SAVE]: widget.name: ${widget.name}`);
@@ -13,3 +13,5 @@ class WidgetService {
         return newWidget;
     }
 }
+
+module.exports = WidgetService;
