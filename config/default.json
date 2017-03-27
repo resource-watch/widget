@@ -11,7 +11,7 @@
     },
     "mongodb": {
 	"database": "widget_db",
-        "host": "mymachine",
+        "host": "192.168.1.125",
         "port": 27017
     }
 }
