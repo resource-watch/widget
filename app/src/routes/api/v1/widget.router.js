@@ -4,7 +4,7 @@ const logger = require('logger');
 const router = new Router({
     prefix: '/widget',
 });
-o
+
 class WidgetRouter {
 
     static async getAll(ctx) {
