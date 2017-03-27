@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate');
 const uuidV4 = require('uuid/v4');
 const Schema = mongoose.Schema;
-const STATUS = require('app.constants').STATUS;
 
 const Widget = new Schema({
     _id:		 { type: String, default: uuidV4                                },

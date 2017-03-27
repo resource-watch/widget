@@ -1,12 +1,12 @@
 const Router = require('koa-router');
 const logger = require('logger');
+const WidgetService = require('services/widget.service');
 
 const router = new Router({
     prefix: '/widget',
 });
 
 class WidgetRouter {
-
     static async getAll(ctx) {
         ctx.body = {
             hi: 'ECM'
@@ -18,23 +18,12 @@ class WidgetRouter {
         try {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.create(ctx.request.body, user);
-            try {
-                WidgetRouter.notifyAdapter(ctx, widget);
-            } catch (error) {
-                // do nothing
-            }
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
-        } catch (err) {
-            if (err instanceof WidgetDuplicated) {
-                ctx.throw(400, err.message);
-                return;
-            }
+        } catch (err) {}
             throw err;
-        }
     }
-
-
+  
 }
 
 router.get('/', WidgetRouter.getAll);
