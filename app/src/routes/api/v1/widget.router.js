@@ -1,5 +1,6 @@
 const Router = require('koa-router');
 const logger = require('logger');
+const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
 const WidgetSerializer = require('serializers/widget.serializer');
 
@@ -12,7 +13,9 @@ class WidgetRouter {
     static async get(ctx) {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-	
+	let widget = await Widget.findById(id).exec();
+	logger.info(`widget is ${widget}`);
+	ctx.body = WidgetSerializer.serialize(widget)
     }
     
     static async create(ctx) {
@@ -22,10 +25,6 @@ class WidgetRouter {
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
-	    if (err instanceof WidgetNotFound) {
-		ctx.throw(404, err.message);
-		return;
-	    }
             throw err;
 	}
     }
@@ -33,6 +32,6 @@ class WidgetRouter {
 }
 
 router.post('/', WidgetRouter.create);
-router.get('/:id', WidgetRouter.create);
+router.get('/:widget', WidgetRouter.get);
 
 module.exports = router;
