@@ -13,9 +13,14 @@ class WidgetRouter {
     static async get(ctx) {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-	let widget = await Widget.findById(id).exec();
-	logger.info(`widget is ${widget}`);
-	ctx.body = WidgetSerializer.serialize(widget)
+	try {
+	    const widget = await WidgetService.get(id);
+	    logger.info(`widget is ${widget}`);
+	    ctx.set('cache-control', 'flush');
+	    ctx.body = WidgetSerializer.serialize(widget);
+	} catch (err) {
+	    throw err;
+	}
     }
     
     static async create(ctx) {
@@ -25,7 +30,18 @@ class WidgetRouter {
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
-            throw err;
+	    throw err;
+	}
+    }
+
+    static async delete(ctx) {
+	const id = ctx.params.widget;
+	try {
+	    const widget = await WidgetService.delete(id);
+	    ctx.set('cache-control', 'flush');
+            ctx.body = WidgetSerializer.serialize(widget);
+	} catch (err) {
+	    throw err;
 	}
     }
   
@@ -33,5 +49,6 @@ class WidgetRouter {
 
 router.post('/', WidgetRouter.create);
 router.get('/:widget', WidgetRouter.get);
+router.delete('/:widget', WidgetRouter.delete);
 
 module.exports = router;
