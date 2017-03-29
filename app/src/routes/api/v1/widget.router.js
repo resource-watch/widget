@@ -44,10 +44,19 @@ class WidgetRouter {
 	    throw err;
 	}
     }
+
+    static async getAll(ctx) {
+	const query = ctx.query;
+	logger.debug("query: %j", query)
+	delete query.loggedUser;
+	const widgets = await WidgetService.getAll(query);
+	ctx.body = WidgetSerializer.serialize(widgets);
+    }
   
 }
 
 router.post('/', WidgetRouter.create);
+router.get('/', WidgetRouter.getAll);
 router.get('/:widget', WidgetRouter.get);
 router.delete('/:widget', WidgetRouter.delete);
 
