@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 
 const Widget = new Schema({
     _id:		 { type: String, default: uuidV4                                },
+    dataset:             { type: String, required: true },
     name:		 { type: String, required: true, trim: true                     },
     createdAt:		 { type: Date,   default: Date.now                              },
     updatedAt:		 { type: Date,   default: Date.now                              }

@@ -4,7 +4,8 @@ class WidgetSerializer {
             id: el._id,
             type: 'widget',
             attributes: {
-                name: el.name
+                name: el.name,
+		dataset: el.dataset
             }
         };
     }
