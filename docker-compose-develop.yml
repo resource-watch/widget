@@ -21,5 +21,5 @@ services:
     ports:
       - "27017"
     volumes:
-      - /var/docker/data/widget/mongo:/data/db
+      - /tmp/docker/data/widget/mongo:/data/db
     restart: always

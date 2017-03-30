@@ -49,7 +49,9 @@ class WidgetRouter {
 	logger.debug("query: %j", query)
 	delete query.loggedUser;
 	const widgets = await WidgetService.getAll(query);
-	ctx.body = WidgetSerializer.serialize(widgets);
+	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+	const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}`;
+	ctx.body = WidgetSerializer.serialize(widgets, link);
     }
   
 }
