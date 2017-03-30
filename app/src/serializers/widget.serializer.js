@@ -5,8 +5,16 @@ class WidgetSerializer {
             type: 'widget',
             attributes: {
                 name: el.name,
-		dataset: el.dataset
-            }
+		dataset: el.dataset,
+		slug: el.slug,
+		description: el.description,
+		source: el.source,
+		sourceUrl: el.sourceUrl,
+		application: el.application,
+		verified: el.verified,
+		default: el.default,
+		published: el.published
+	    }
         };
     }
 
