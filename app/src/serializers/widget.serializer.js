@@ -4,16 +4,21 @@ class WidgetSerializer {
             id: el._id,
             type: 'widget',
             attributes: {
-                name: el.name,
-		dataset: el.dataset,
-		slug: el.slug,
-		description: el.description,
-		source: el.source,
-		sourceUrl: el.sourceUrl,
-		application: el.application,
-		verified: el.verified,
-		default: el.default,
-		published: el.published
+                name:		 el.name,
+		dataset:	 el.dataset,
+		layer:           el.layer,
+		slug:		 el.slug,
+		description:	 el.description,
+		source:		 el.source,
+		sourceUrl:	 el.sourceUrl,
+		authors:	 el.authors,
+		application:	 el.application,
+		verified:	 el.verified,
+		default:	 el.default,
+		published:       el.published,
+		queryUrl:        el.queryUrl,
+		widgetConfig:    el.widgetConfig,
+		template:        el.template
 	    }
         };
     }
@@ -37,7 +42,7 @@ class WidgetSerializer {
                 first: `${link}page[number]=1&page[size]=${data.limit}`,
                 last: `${link}page[number]=${data.pages}&page[size]=${data.limit}`,
                 prev: `${link}page[number]=${data.page - 1 > 0 ? data.page - 1 : data.page}&page[size]=${data.limit}`,
-                next: `${link}page[number]=${data.page + 1 < data.pages ? data.page + 1 : data.pages}&page[size]=${data.limit}`,
+                next: `${link}page[number]=${data.page + 1 < data.pages ? data.page + 1 : data.pages}&page[size]=${data.limit}`
             };
         }
         return result;

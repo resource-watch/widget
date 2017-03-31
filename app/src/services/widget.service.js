@@ -2,15 +2,44 @@ const URL = require('url').URL;
 const logger = require('logger');
 const Widget = require('models/widget.model');
 const WidgetNotFound = require('errors/widgetNotFound.error');
+const DuplicatedWidget = require('errors/duplicatedWidget.error');
+const slug = require('slug');
 
 class WidgetService {
+
+    static getSlug(name) {
+        return slug(name);
+    }
+
     static async create(widget, dataset) {
         logger.debug(`[WidgetService]: Creating widget with name:  ${widget.name}`);
         logger.info(`[DBACCES-FIND]: widget.name: ${widget.name}`);
         logger.info(`[DBACCESS-SAVE]: widget.name: ${widget.name}`);
-        let newWidget = await new Widget({
+	const tempSlug = WidgetService.getSlug(widget.name);
+        const currentWidget = await Widget.findOne({
+            slug: tempSlug
+        }).exec();
+	if (currentWidget) {
+	    logger.error(`[WidgetService]: Widget with name ${widget.name} generates an existing slug: ${tempSlug}`);
+	    throw new DuplicatedWidget(`Slug already existing: ${tempSlug}`);
+	}
+	
+        const newWidget = await new Widget({
             name: widget.name,
-	    dataset: dataset || widget.dataset
+	    dataset: dataset || widget.dataset,
+	    slug: tempSlug,
+	    description: widget.description,
+	    source: widget.source,
+	    sourceUrl: widget.sourceUrl,
+	    application: widget.application,
+	    verified: widget.verified,
+	    default: widget.default,
+	    published: widget.published,
+	    authors: widget.authors,
+	    queryUrl: widget.queryUrl,
+	    widgetConfig: widget.widgetConfig,
+	    template: widget.template,
+	    layer: widget.layer
         }).save();
         return newWidget;
     }

@@ -13,56 +13,57 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
 
 class WidgetRouter {
 
-  static async get(ctx) {
-    const id = ctx.params.widget;
-    logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-    try {
-      const widget = await WidgetService.get(id);
-      logger.info(`widget is ${widget}`);
-      ctx.set('cache-control', 'flush');
-      ctx.body = WidgetSerializer.serialize(widget);
-    } catch (err) {
-      throw err;
+    static async get(ctx) {
+	const id = ctx.params.widget;
+	logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
+	try {
+	    const widget = await WidgetService.get(id);
+	    logger.info(`widget is ${widget}`);
+	    ctx.set('cache-control', 'flush');
+	    ctx.body = WidgetSerializer.serialize(widget);
+	} catch (err) {
+	    throw err;
+	}
     }
-  }
-  
-  static async create(ctx) {
-    logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
-    try {
-      const dataset = ctx.params.dataset;
-      const widget = await WidgetService.create(ctx.request.body, dataset);
-      ctx.set('cache-control', 'flush');
-      ctx.body = WidgetSerializer.serialize(widget);
-    } catch (err) {
-      throw err;
+    
+    static async create(ctx) {
+	logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
+	try {
+	    const dataset = ctx.params.dataset;
+	    const widget = await WidgetService.create(ctx.request.body, dataset);
+	    ctx.set('cache-control', 'flush');
+	    ctx.body = WidgetSerializer.serialize(widget);
+	} catch (err) {
+	    throw err;
+	}
     }
-  }
-  
-  static async delete(ctx) {
-    const id = ctx.params.widget;
-    try {
-      const widget = await WidgetService.delete(id);
-      ctx.set('cache-control', 'flush');
-      ctx.body = WidgetSerializer.serialize(widget);
-    } catch (err) {
-      throw err;
+    
+    static async delete(ctx) {
+	const id = ctx.params.widget;
+	logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
+	try {
+	    const widget = await WidgetService.delete(id);
+	    ctx.set('cache-control', 'flush');
+	    ctx.body = WidgetSerializer.serialize(widget);
+	} catch (err) {
+	    throw err;
+	}
     }
-  }
-  
-  static async getAll(ctx) {
-    const query = ctx.query;
-    logger.debug("query: %j", query)
-    delete query.loggedUser;
-    const widgets = await WidgetService.getAll(query);
-    const clonedQuery = Object.assign({}, query);
-    delete clonedQuery['page[size]'];
-    delete clonedQuery['page[number]'];
-    delete clonedQuery.ids;
-    const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
-    const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-    const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
-    ctx.body = WidgetSerializer.serialize(widgets, link);
-  }
+    
+    static async getAll(ctx) {
+	const query = ctx.query;
+	logger.debug("query: %j", query);
+	delete query.loggedUser;
+	const widgets = await WidgetService.getAll(query);
+	const clonedQuery = Object.assign({}, query);
+	delete clonedQuery['page[size]'];
+	delete clonedQuery['page[number]'];
+	delete clonedQuery.ids;
+	const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
+	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+	const link = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}${ctx.request.path}${serializedQuery}`;
+	ctx.body = WidgetSerializer.serialize(widgets, link);
+    }
 }
 
 router.get('/widget', WidgetRouter.getAll);
