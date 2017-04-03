@@ -11,10 +11,32 @@ class WidgetService {
         return slug(name);
     }
 
-    static async create(widget, dataset) {
+    static async update(id, widget, user) {
+	logger.debug(`[WidgetService]: Updating widget with id:  ${id}`);
+        const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({ slug: id }).exec();
+	logger.debug(`[WidgetService]: Widget:  ${currentWidget}`);
+	if (!currentWidget) {
+            logger.error(`[WidgetService]: Widget with id ${id} doesn't exist`);
+            throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
+        }
+
+	currentWidget.name = widget.name || currentWidget.name;
+	currentWidget.description = widget.description || currentWidget.description;
+	currentWidget.userId = user.id || currentWidget.userId;
+	currentWidget.description = widget.description || currentWidget.description;
+	currentWidget.source = widget.source || currentWidget.source;
+	currentWidget.sourceUrl = widget.sourceUrl || currentWidget.sourceUrl;
+	currentWidget.application = widget.application || currentWidget.application;
+	currentWidget.verified = widget.verified || currentWidget.verified;
+	currentWidget.default = widget.default || currentWidget.default;
+	currentWidget.published = widget.published || currentWidget.published;
+	let newWidget = await currentWidget.save();
+	logger.debug(`[WidgetService]: Widget:  ${newWidget}`);	
+	return newWidget;
+    }
+
+    static async create(widget, dataset, user) {
         logger.debug(`[WidgetService]: Creating widget with name:  ${widget.name}`);
-        logger.info(`[DBACCES-FIND]: widget.name: ${widget.name}`);
-        logger.info(`[DBACCESS-SAVE]: widget.name: ${widget.name}`);
 	const tempSlug = WidgetService.getSlug(widget.name);
         const currentWidget = await Widget.findOne({
             slug: tempSlug
@@ -27,6 +49,7 @@ class WidgetService {
         const newWidget = await new Widget({
             name: widget.name,
 	    dataset: dataset || widget.dataset,
+	    userId: user.id,
 	    slug: tempSlug,
 	    description: widget.description,
 	    source: widget.source,

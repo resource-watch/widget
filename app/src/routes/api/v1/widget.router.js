@@ -13,6 +13,11 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
 
 class WidgetRouter {
 
+    static getUser(ctx) {
+        return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
+    }
+
+
     static async get(ctx) {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
@@ -30,7 +35,9 @@ class WidgetRouter {
 	logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
 	try {
 	    const dataset = ctx.params.dataset;
-	    const widget = await WidgetService.create(ctx.request.body, dataset);
+	    const user = WidgetRouter.getUser(ctx);
+	    logger.info(`[WidgetRouter] User: ${JSON.stringify(user)}`);
+	    const widget = await WidgetService.create(ctx.request.body, dataset, user);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
 	} catch (err) {
@@ -64,6 +71,38 @@ class WidgetRouter {
 	const link = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}${ctx.request.path}${serializedQuery}`;
 	ctx.body = WidgetSerializer.serialize(widgets, link);
     }
+
+    // static async update(ctx) {
+    //     const id = ctx.params.dataset;
+    //     logger.info(`[DatasetRouter] Updating dataset with id: ${id}`);
+    //     try {
+    //         const user = DatasetRouter.getUser(ctx);
+    //         const dataset = await DatasetService.update(id, ctx.request.body, user);
+    //         ctx.set('cache-control', 'flush');
+    //         ctx.body = DatasetSerializer.serialize(dataset);
+    //     } catch (err) {
+    //         if (err instanceof DatasetNotFound) {
+    //             ctx.throw(404, err.message);
+    //             return;
+    //         } else if (err instanceof DatasetDuplicated) {
+    //             ctx.throw(400, err.message);
+    //             return;
+    //         }
+    //         throw err;
+    //     }
+    // }
+
+    static async update(ctx) {
+	const id = ctx.params.widget;
+	logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
+	try {
+	    const user = WidgetRouter.getUser(ctx);
+	    logger.info(`[WidgetRouter] User: ${user}`);
+	    const widget = await WidgetService.update(id, ctx.request.body, user);
+	    logger.info(`[WidgetRouter] Widget: ${widget}`);	    
+	} catch (err) {};
+    }
+
 }
 
 router.get('/widget', WidgetRouter.getAll);
@@ -72,5 +111,5 @@ router.post('/dataset/:dataset/widget/', WidgetRouter.create);
 router.get('/widget/:widget', WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', WidgetRouter.get);
 router.delete('/widget/:widget', WidgetRouter.delete);
-
+router.patch('/widget/:widget', WidgetRouter.update);
 module.exports = router;
