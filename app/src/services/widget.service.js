@@ -36,7 +36,7 @@ class WidgetService {
     }
 
     static async create(widget, dataset, user) {
-        logger.debug(`[WidgetService]: Creating widget with name:  ${widget.name}`);
+        logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
 	const tempSlug = WidgetService.getSlug(widget.name);
         const currentWidget = await Widget.findOne({
             slug: tempSlug
@@ -90,8 +90,7 @@ class WidgetService {
 	return await widget.remove();
     }
 
-    static async getAll(query = {}) {
-	logger.debug(`[WidgetService]: Getting all widgets`);
+    static async getAll(query = {}, dataset = null) {
 	logger.info(`[DBACCES-FIND]: all widgets`);
 	const sort = query.sort || '';
 	const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
@@ -100,6 +99,11 @@ class WidgetService {
 	logger.debug(`pageSize param: ${limit}`);
 	const ids = query['ids'] ? query['ids'].split(',').map(el => el.trim()): [];
 	logger.debug(`ids param: ${ids}`);
+	if (dataset) {
+	    query.dataset = dataset;
+	    logger.debug(`[WidgetService] Dataset for filtering is ${dataset})`);
+	}
+	
 	const filteredQuery = WidgetService.getFilteredQuery(Object.assign({}, query), ids);
 	logger.debug(`filteredQuery: ${JSON.stringify(filteredQuery)}`);
 	const filteredSort = WidgetService.getFilteredSort(sort);
@@ -119,6 +123,7 @@ class WidgetService {
 	if (!query.application && query.app) {
             query.application = query.app;
         }
+	
         const widgetAttributes = Object.keys(Widget.schema.obj);
 	logger.debug(`[getFilteredQuery] widgetAttributes: ${widgetAttributes}`);
 	Object.keys(query).forEach((param) => {

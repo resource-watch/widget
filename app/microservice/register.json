@@ -5,21 +5,28 @@
         "rw"
     ],
     "endpoints": [
-        {
+	{
             "path": "/v1/widget",
             "method": "GET",
             "redirect": {
                 "method": "GET",
                 "path": "/api/v1/widget/"
             }
-        },
-	{
-            "path": "/v1/dataset/:dataset_id/widget",
+        },{
+            "path": "/v1/widget",
+            "method": "POST",
+            "redirect": {
+                "method": "POST",
+                "path": "/api/v1/widget/"
+            }
+	},{
+            "path": "/v1/dataset/:dataset/widget",
             "method": "GET",
             "redirect": {
                 "method": "GET",
-                "path": "/api/v1/widget/hi"
+                "path": "/api/v1/dataset/:dataset/widget"
             }
         }
+            
     ]
 }

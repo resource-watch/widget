@@ -59,13 +59,16 @@ class WidgetRouter {
     
     static async getAll(ctx) {
 	const query = ctx.query;
+	const dataset = ctx.params.dataset || null;
+	logger.debug("dataset: %j", dataset);
 	logger.debug("query: %j", query);
 	delete query.loggedUser;
-	const widgets = await WidgetService.getAll(query);
+	const widgets = await WidgetService.getAll(query, dataset);
 	const clonedQuery = Object.assign({}, query);
 	delete clonedQuery['page[size]'];
 	delete clonedQuery['page[number]'];
 	delete clonedQuery.ids;
+	delete clonedQuery.dataset;
 	const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
 	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
 	const link = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}${ctx.request.path}${serializedQuery}`;
@@ -105,11 +108,20 @@ class WidgetRouter {
 
 }
 
+
+// Declaring routes
+// Index
 router.get('/widget', WidgetRouter.getAll);
+router.get('/dataset/:dataset/widget', WidgetRouter.getAll);
+// Create
+// Read
+// Update
+// Delete
 router.post('/widget', WidgetRouter.create);
 router.post('/dataset/:dataset/widget/', WidgetRouter.create);
 router.get('/widget/:widget', WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', WidgetRouter.get);
 router.delete('/widget/:widget', WidgetRouter.delete);
 router.patch('/widget/:widget', WidgetRouter.update);
+
 module.exports = router;
