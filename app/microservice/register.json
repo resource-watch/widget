@@ -40,6 +40,13 @@
                 "method": "GET",
                 "path": "/api/v1/dataset/:dataset/widget/:widget"
 	    }
+	},{
+            "path": "/v1/widget/:widget",
+            "method": "GET",
+            "redirect": {
+                "method": "GET",
+                "path": "/api/v1/widget/:widget"
+	    }
 	}
     ]
 }

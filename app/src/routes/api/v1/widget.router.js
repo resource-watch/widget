@@ -76,26 +76,6 @@ class WidgetRouter {
 	ctx.body = WidgetSerializer.serialize(widgets, link);
     }
 
-    // static async update(ctx) {
-    //     const id = ctx.params.dataset;
-    //     logger.info(`[DatasetRouter] Updating dataset with id: ${id}`);
-    //     try {
-    //         const user = DatasetRouter.getUser(ctx);
-    //         const dataset = await DatasetService.update(id, ctx.request.body, user);
-    //         ctx.set('cache-control', 'flush');
-    //         ctx.body = DatasetSerializer.serialize(dataset);
-    //     } catch (err) {
-    //         if (err instanceof DatasetNotFound) {
-    //             ctx.throw(404, err.message);
-    //             return;
-    //         } else if (err instanceof DatasetDuplicated) {
-    //             ctx.throw(400, err.message);
-    //             return;
-    //         }
-    //         throw err;
-    //     }
-    // }
-
     static async update(ctx) {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
