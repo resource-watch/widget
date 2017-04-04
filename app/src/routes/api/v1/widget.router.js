@@ -14,7 +14,7 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
 class WidgetRouter {
 
     static getUser(ctx) {
-        return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
+	return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
     }
 
 
@@ -31,7 +31,7 @@ class WidgetRouter {
 	    throw err;
 	}
     }
-    
+
     static async create(ctx) {
 	logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
 	try {
@@ -45,7 +45,7 @@ class WidgetRouter {
 	    throw err;
 	}
     }
-    
+
     static async delete(ctx) {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
@@ -57,7 +57,7 @@ class WidgetRouter {
 	    throw err;
 	}
     }
-    
+
     static async getAll(ctx) {
 	const query = ctx.query;
 	const dataset = ctx.params.dataset || null;
@@ -83,9 +83,33 @@ class WidgetRouter {
 	    const user = WidgetRouter.getUser(ctx);
 	    logger.info(`[WidgetRouter] User: ${user}`);
 	    const widget = await WidgetService.update(id, ctx.request.body, user);
-	    logger.info(`[WidgetRouter] Widget: ${widget}`);	    
-	} catch (err) {};
+	    logger.info(`[WidgetRouter] Widget: ${widget}`);
+	    ctx.body = WidgetSerializer.serialize(widget);
+	} catch (err) {
+	    throw err;
+	}
     }
+    
+    // static async update(ctx) {
+    //     const id = ctx.params.dataset;
+    //     logger.info(`[DatasetRouter] Updating dataset with id: ${id}`);
+    //     try {
+    //         const user = DatasetRouter.getUser(ctx);
+    //         const dataset = await DatasetService.update(id, ctx.request.body, user);
+    //         ctx.set('cache-control', 'flush');
+    //         ctx.body = DatasetSerializer.serialize(dataset);
+    //     } catch (err) {
+    //         if (err instanceof DatasetNotFound) {
+    //             ctx.throw(404, err.message);
+    //             return;
+    //         } else if (err instanceof DatasetDuplicated) {
+    //             ctx.throw(400, err.message);
+    //             return;
+    //         }
+    //         throw err;
+    //	}
+    // }
+
 
 }
 
