@@ -67,15 +67,31 @@ class WidgetService {
         return newWidget;
     }
 
-    static async get(id) {
+    static async get(id, dataset = null) {
 	logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
 	logger.info(`[DBACCES-FIND]: ID: ${id}`);
 	const widget = await Widget.findById(id).exec();
-	if (!widget) {
+	logger.info(`[DBACCES-FIND]: ID: ${widget}`);
+	if (dataset !== widget.dataset) {
 	    logger.error(`[WidgetService]: Widget not found with the id ${id}`);
-	    throw new WidgetNotFound(`Widget not found with the id ${id}`);
+	    throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
+	} else {
+	    return widget;
 	}
-	return widget;
+	// if (!dataset) {
+	//     logger.debug(`No dataset provided. Finding by id.`);
+	//     const widget = await Widget.findById(id).exec();
+	//     logger.debug(`Widget is: ${widget}`);
+	// } else {
+	//     logger.debug(`Dataset is ${dataset}`);
+	//     const widget = await Widget.find({id: id, dataset: dataset}).exec();
+	// }
+	// if (typeof widget !== 'undefined') {
+	//     return widget;
+	// } else {
+	//     logger.error(`[WidgetService]: Widget not found with the id ${id}`);
+	//     throw new WidgetNotFound(`Widget not found with the id ${id}`);
+	// }
     }
 
     static async delete(id) {

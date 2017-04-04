@@ -20,9 +20,10 @@ class WidgetRouter {
 
     static async get(ctx) {
 	const id = ctx.params.widget;
+	const dataset = ctx.params.dataset;
 	logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
 	try {
-	    const widget = await WidgetService.get(id);
+	    const widget = await WidgetService.get(id, dataset);
 	    logger.info(`widget is ${widget}`);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
@@ -109,19 +110,20 @@ class WidgetRouter {
 }
 
 
-// Declaring routes
+// Declaring the routes
 // Index
 router.get('/widget', WidgetRouter.getAll);
 router.get('/dataset/:dataset/widget', WidgetRouter.getAll);
 // Create
-// Read
-// Update
-// Delete
 router.post('/widget', WidgetRouter.create);
 router.post('/dataset/:dataset/widget/', WidgetRouter.create);
+// Read
 router.get('/widget/:widget', WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', WidgetRouter.get);
+// Update
+// Delete
 router.delete('/widget/:widget', WidgetRouter.delete);
 router.patch('/widget/:widget', WidgetRouter.update);
+// Get by IDs
 
 module.exports = router;
