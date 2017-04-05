@@ -2,7 +2,9 @@ const Router = require('koa-router');
 const logger = require('logger');
 const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
+const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
+
 const router = new Router();
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
@@ -91,10 +93,25 @@ class WidgetRouter {
 }
 
 const widgetValidationMiddleware = async (ctx, next) => {
-    logger.info(`[DatasetRouter] Validating the widget`);
+    logger.info(`[WidgetRouter] Validating the widget`);
     if (ctx.request.body.widget) {
         ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
         delete ctx.request.body.dataset;
+    }
+    await next();
+};
+
+const datasetValidationMiddleware = async (ctx, next) => {
+    logger.info(`[WidgetRouter] Validating the dataset exists`);
+    if (ctx.params.dataset || ctx.request.body.dataset) {
+	const datasetId = ctx.params.dataset || ctx.request.body.dataset;
+	logger.info(`[WidgetRouter] Dataset ID: ${datasetId}`);
+	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+	const datasetUrl = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}/dataset/${datasetId}`;
+	const datasetExists = await DatasetService.checkDataset(datasetUrl);
+	if (!datasetExists) {throw new DatasetNotFound.error(`No dataset found with ID ${datasetId}`)}
+    } else {
+	logger.debug(`No dataset found`)
     }
     await next();
 };
@@ -103,19 +120,19 @@ const widgetValidationMiddleware = async (ctx, next) => {
 // Declaring the routes
 // Index
 router.get('/widget', WidgetRouter.getAll);
-router.get('/dataset/:dataset/widget', WidgetRouter.getAll);
+router.get('/dataset/:dataset/widget', datasetValidationMiddleware, WidgetRouter.getAll);
 // Create
 router.post('/widget', widgetValidationMiddleware, WidgetRouter.create);
-router.post('/dataset/:dataset/widget/', widgetValidationMiddleware, WidgetRouter.create);
+router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.create);
 // Read
 router.get('/widget/:widget', WidgetRouter.get);
-router.get('/dataset/:dataset/widget/:widget', WidgetRouter.get);
+router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 // Update
 router.patch('/widget/:widget', widgetValidationMiddleware, WidgetRouter.update);
-router.patch('/dataset/:dataset/widget/:widget', widgetValidationMiddleware, WidgetRouter.update);
+router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.update);
 // Delete
 router.delete('/widget/:widget', WidgetRouter.delete);
-router.delete('/dataset/:dataset/widget/:widget', WidgetRouter.delete);
+router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.delete);
 // Get by IDs
 
 module.exports = router;
