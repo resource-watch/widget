@@ -14,7 +14,7 @@ class WidgetRouter {
     static getUser(ctx) {
 	return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
     }
-
+        
     static async get(ctx) {
 	try {
 	    const id = ctx.params.widget;
@@ -77,10 +77,11 @@ class WidgetRouter {
     static async update(ctx) {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
+	const dataset = ctx.params.dataset || null;
 	try {
 	    const user = WidgetRouter.getUser(ctx);
 	    logger.info(`[WidgetRouter] User: ${user}`);
-	    const widget = await WidgetService.update(id, ctx.request.body, user);
+	    const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
 	    logger.info(`[WidgetRouter] Widget: ${widget}`);
 	    ctx.body = WidgetSerializer.serialize(widget);
 	} catch (err) {
@@ -89,20 +90,29 @@ class WidgetRouter {
     }
 }
 
+const widgetValidationMiddleware = async (ctx, next) => {
+    logger.info(`[DatasetRouter] Validating the widget`);
+    if (ctx.request.body.widget) {
+        ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
+        delete ctx.request.body.dataset;
+    }
+    await next();
+};
+
 
 // Declaring the routes
 // Index
 router.get('/widget', WidgetRouter.getAll);
 router.get('/dataset/:dataset/widget', WidgetRouter.getAll);
 // Create
-router.post('/widget', WidgetRouter.create);
-router.post('/dataset/:dataset/widget/', WidgetRouter.create);
+router.post('/widget', widgetValidationMiddleware, WidgetRouter.create);
+router.post('/dataset/:dataset/widget/', widgetValidationMiddleware, WidgetRouter.create);
 // Read
 router.get('/widget/:widget', WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', WidgetRouter.get);
 // Update
-router.patch('/widget/:widget', WidgetRouter.update);
-router.patch('/dataset/:dataset/widget/:widget', WidgetRouter.update);
+router.patch('/widget/:widget', widgetValidationMiddleware, WidgetRouter.update);
+router.patch('/dataset/:dataset/widget/:widget', widgetValidationMiddleware, WidgetRouter.update);
 // Delete
 router.delete('/widget/:widget', WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', WidgetRouter.delete);
