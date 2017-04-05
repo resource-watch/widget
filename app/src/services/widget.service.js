@@ -11,10 +11,32 @@ class WidgetService {
         return slug(name);
     }
 
-    static async create(widget, dataset) {
-        logger.debug(`[WidgetService]: Creating widget with name:  ${widget.name}`);
-        logger.info(`[DBACCES-FIND]: widget.name: ${widget.name}`);
-        logger.info(`[DBACCESS-SAVE]: widget.name: ${widget.name}`);
+    static async update(id, widget, user) {
+	logger.debug(`[WidgetService]: Updating widget with id:  ${id}`);
+        const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({ slug: id }).exec();
+	logger.debug(`[WidgetService]: Widget:  ${currentWidget}`);
+	if (!currentWidget) {
+            logger.error(`[WidgetService]: Widget with id ${id} doesn't exist`);
+            throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
+        }
+
+	currentWidget.name = widget.name || currentWidget.name;
+	currentWidget.description = widget.description || currentWidget.description;
+	currentWidget.userId = user.id || currentWidget.userId;
+	currentWidget.description = widget.description || currentWidget.description;
+	currentWidget.source = widget.source || currentWidget.source;
+	currentWidget.sourceUrl = widget.sourceUrl || currentWidget.sourceUrl;
+	currentWidget.application = widget.application || currentWidget.application;
+	currentWidget.verified = widget.verified || currentWidget.verified;
+	currentWidget.default = widget.default || currentWidget.default;
+	currentWidget.published = widget.published || currentWidget.published;
+	let newWidget = await currentWidget.save();
+	logger.debug(`[WidgetService]: Widget:  ${newWidget}`);	
+	return newWidget;
+    }
+
+    static async create(widget, dataset, user) {
+        logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
 	const tempSlug = WidgetService.getSlug(widget.name);
         const currentWidget = await Widget.findOne({
             slug: tempSlug
@@ -27,6 +49,7 @@ class WidgetService {
         const newWidget = await new Widget({
             name: widget.name,
 	    dataset: dataset || widget.dataset,
+	    userId: user.id,
 	    slug: tempSlug,
 	    description: widget.description,
 	    source: widget.source,
@@ -44,18 +67,23 @@ class WidgetService {
         return newWidget;
     }
 
-    static async get(id) {
+    static async get(id, dataset = null) {
 	logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
 	logger.info(`[DBACCES-FIND]: ID: ${id}`);
 	const widget = await Widget.findById(id).exec();
-	if (!widget) {
-	    logger.error(`[WidgetService]: Widget not found with the id ${id}`);
+	logger.info(`[DBACCES-FIND]: Widget: ${widget}`);
+	if (widget) {
+	    if (dataset && dataset !== widget.dataset) {
+		throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
+	    } else {
+		return widget;
+	    }
+	} else {
 	    throw new WidgetNotFound(`Widget not found with the id ${id}`);
 	}
-	return widget;
     }
 
-    static async delete(id) {
+    static async delete(id, dataset) {
 	logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
 	logger.info(`[DBACCES-FIND]: ID: ${id}`);
 	const widget = await Widget.findById(id).exec();
@@ -67,8 +95,7 @@ class WidgetService {
 	return await widget.remove();
     }
 
-    static async getAll(query = {}) {
-	logger.debug(`[WidgetService]: Getting all widgets`);
+    static async getAll(query = {}, dataset = null) {
 	logger.info(`[DBACCES-FIND]: all widgets`);
 	const sort = query.sort || '';
 	const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
@@ -77,6 +104,11 @@ class WidgetService {
 	logger.debug(`pageSize param: ${limit}`);
 	const ids = query['ids'] ? query['ids'].split(',').map(el => el.trim()): [];
 	logger.debug(`ids param: ${ids}`);
+	if (dataset) {
+	    query.dataset = dataset;
+	    logger.debug(`[WidgetService] Dataset for filtering is ${dataset})`);
+	}
+	
 	const filteredQuery = WidgetService.getFilteredQuery(Object.assign({}, query), ids);
 	logger.debug(`filteredQuery: ${JSON.stringify(filteredQuery)}`);
 	const filteredSort = WidgetService.getFilteredSort(sort);
@@ -96,6 +128,7 @@ class WidgetService {
 	if (!query.application && query.app) {
             query.application = query.app;
         }
+	
         const widgetAttributes = Object.keys(Widget.schema.obj);
 	logger.debug(`[getFilteredQuery] widgetAttributes: ${widgetAttributes}`);
 	Object.keys(query).forEach((param) => {
