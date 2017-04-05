@@ -83,7 +83,7 @@ class WidgetService {
 	}
     }
 
-    static async delete(id) {
+    static async delete(id, dataset) {
 	logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
 	logger.info(`[DBACCES-FIND]: ID: ${id}`);
 	const widget = await Widget.findById(id).exec();

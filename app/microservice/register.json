@@ -47,6 +47,20 @@
                 "method": "GET",
                 "path": "/api/v1/widget/:widget"
 	    }
+	},{
+            "path": "/v1/widget/:widget",
+            "method": "PATCH",
+            "redirect": {
+                "method": "PATCH",
+                "path": "/api/v1/widget/:widget"
+	    }
+	},{
+            "path": "/v1/dataset/:dataset/widget/:widget",
+            "method": "PATCH",
+            "redirect": {
+                "method": "PATCH",
+                "path": "/api/v1/dataset/:dataset/widget/:widget"
+	    }
 	}
     ]
 }

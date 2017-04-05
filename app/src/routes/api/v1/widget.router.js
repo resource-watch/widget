@@ -10,20 +10,17 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     return a;
 }, []).join('&');
 
-
 class WidgetRouter {
-
     static getUser(ctx) {
 	return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
     }
 
-
     static async get(ctx) {
-	const id = ctx.params.widget;
-	const dataset = ctx.params.dataset;
-	logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
 	try {
-	    const widget = await WidgetService.get(id, dataset);
+	    const id = ctx.params.widget;
+	    const dataset = ctx.params.dataset;
+	    logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
+ 	    const widget = await WidgetService.get(id, dataset);
 	    logger.info(`widget is ${widget}`);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
@@ -50,7 +47,8 @@ class WidgetRouter {
 	const id = ctx.params.widget;
 	logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
 	try {
-	    const widget = await WidgetService.delete(id);
+	    const dataset = ctx.params.dataset;
+	    const widget = await WidgetService.delete(id, dataset);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
 	} catch (err) {
@@ -89,28 +87,6 @@ class WidgetRouter {
 	    throw err;
 	}
     }
-    
-    // static async update(ctx) {
-    //     const id = ctx.params.dataset;
-    //     logger.info(`[DatasetRouter] Updating dataset with id: ${id}`);
-    //     try {
-    //         const user = DatasetRouter.getUser(ctx);
-    //         const dataset = await DatasetService.update(id, ctx.request.body, user);
-    //         ctx.set('cache-control', 'flush');
-    //         ctx.body = DatasetSerializer.serialize(dataset);
-    //     } catch (err) {
-    //         if (err instanceof DatasetNotFound) {
-    //             ctx.throw(404, err.message);
-    //             return;
-    //         } else if (err instanceof DatasetDuplicated) {
-    //             ctx.throw(400, err.message);
-    //             return;
-    //         }
-    //         throw err;
-    //	}
-    // }
-
-
 }
 
 
@@ -125,9 +101,11 @@ router.post('/dataset/:dataset/widget/', WidgetRouter.create);
 router.get('/widget/:widget', WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', WidgetRouter.get);
 // Update
+router.patch('/widget/:widget', WidgetRouter.update);
+router.patch('/dataset/:dataset/widget/:widget', WidgetRouter.update);
 // Delete
 router.delete('/widget/:widget', WidgetRouter.delete);
-router.patch('/widget/:widget', WidgetRouter.update);
+router.delete('/dataset/:dataset/widget/:widget', WidgetRouter.delete);
 // Get by IDs
 
 module.exports = router;
