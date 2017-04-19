@@ -13,10 +13,11 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
 }, []).join('&');
 
 class WidgetRouter {
+
     static getUser(ctx) {
 	return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
     }
-        
+    
     static async get(ctx) {
 	try {
 	    const id = ctx.params.widget;
@@ -90,7 +91,7 @@ class WidgetRouter {
 	    throw err;
 	}
     }
-}
+};
 
 const widgetValidationMiddleware = async (ctx, next) => {
     logger.info(`[WidgetRouter] Validating the widget`);

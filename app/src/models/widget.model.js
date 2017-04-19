@@ -13,6 +13,7 @@ const Widget = new Schema({
     source:          	{ type: String, required: false, trim: true },
     sourceUrl:   	{ type: String, required: false, trim: true },
     application:      [ { type: String, required: true,  trim: true } ],
+    layerId:            { type: String, required: false, trim: true },
     verified:		{ type: Boolean, default: false  },
     default:		{ type: Boolean, default: false  },
     published:          { type: Boolean, default: true   },
