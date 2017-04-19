@@ -4,7 +4,6 @@ const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
 const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
-
 const router = new Router();
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
@@ -17,13 +16,13 @@ class WidgetRouter {
     static getUser(ctx) {
 	return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
     }
-    
+
     static async get(ctx) {
 	try {
 	    const id = ctx.params.widget;
 	    const dataset = ctx.params.dataset;
 	    logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
- 	    const widget = await WidgetService.get(id, dataset);
+	    const widget = await WidgetService.get(id, dataset);
 	    logger.info(`widget is ${widget}`);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
@@ -96,8 +95,8 @@ class WidgetRouter {
 const widgetValidationMiddleware = async (ctx, next) => {
     logger.info(`[WidgetRouter] Validating the widget`);
     if (ctx.request.body.widget) {
-        ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
-        delete ctx.request.body.dataset;
+	ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
+	delete ctx.request.body.dataset;
     }
     await next();
 };
@@ -108,11 +107,19 @@ const datasetValidationMiddleware = async (ctx, next) => {
 	const datasetId = ctx.params.dataset || ctx.request.body.dataset;
 	logger.info(`[WidgetRouter] Dataset ID: ${datasetId}`);
 	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-	const datasetUrl = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}/dataset/${datasetId}`;
-	const datasetExists = await DatasetService.checkDataset(datasetUrl);
-	if (!datasetExists) {throw new DatasetNotFound.error(`No dataset found with ID ${datasetId}`)}
+	const datasetUrl = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}/dataset/${datasetId}`;
+	try {
+	    const datasetExists = await DatasetService.checkDataset(datasetUrl);
+	    logger.info(`[WidgetRouter] Dataset exists: ${datasetExists}`);
+	} catch (err) {
+	    if (err instanceof DatasetNotFound) {
+		ctx.throw(404, err.getMessages());
+		return;
+	    }
+	    throw err;
+	}
     } else {
-	logger.debug(`No dataset found`)
+	logger.debug(`No dataset found`);
     }
     await next();
 };
