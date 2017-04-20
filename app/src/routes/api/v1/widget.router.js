@@ -103,20 +103,12 @@ const widgetValidationMiddleware = async (ctx, next) => {
 };
 
 const datasetValidationMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Validating the dataset exists`);
-    if (ctx.params.dataset || ctx.request.body.dataset) {
-	const datasetId = ctx.params.dataset || ctx.request.body.dataset;
-	logger.info(`[WidgetRouter] Dataset ID: ${datasetId}`);
-	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-	const datasetUrl = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}/dataset/${datasetId}`;
-	try {
-	    const datasetExists = await DatasetService.checkDataset(datasetUrl);
-	    logger.info(`[WidgetRouter] Dataset exists: ${datasetExists}`);
-	} catch (err) {
-	    throw err;
-	}
-    } else {
-	logger.debug(`No dataset found`);
+    logger.info(`[WidgetRouter] Validating dataset presence`);
+    //
+    try {
+	await DatasetService.checkDataset(ctx);
+    } catch(err) {
+	logger.info(`ERROR: ${err}`);
     }
     await next();
 };
