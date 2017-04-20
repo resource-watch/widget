@@ -4,6 +4,7 @@ const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
 const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
+const DatasetNotFound = require('errors/datasetNotFound.error');
 const router = new Router();
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
@@ -112,10 +113,6 @@ const datasetValidationMiddleware = async (ctx, next) => {
 	    const datasetExists = await DatasetService.checkDataset(datasetUrl);
 	    logger.info(`[WidgetRouter] Dataset exists: ${datasetExists}`);
 	} catch (err) {
-	    if (err instanceof DatasetNotFound) {
-		ctx.throw(404, err.getMessages());
-		return;
-	    }
 	    throw err;
 	}
     } else {

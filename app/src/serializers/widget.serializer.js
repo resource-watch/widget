@@ -18,7 +18,8 @@ class WidgetSerializer {
 		published:       el.published,
 		queryUrl:        el.queryUrl,
 		widgetConfig:    el.widgetConfig,
-		template:        el.template
+		template:        el.template,
+                layerId:         el.layerId
 	    }
         };
     }

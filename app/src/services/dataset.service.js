@@ -22,6 +22,7 @@ class DatasetService {
 	    .catch(function (err) {
 		logger.debug(`Error!: ${err}`);
 		throw new DatasetNotFound(`Dataset not found`);
+                return false;
 	    });
     }
     
