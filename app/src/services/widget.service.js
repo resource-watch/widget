@@ -22,11 +22,18 @@ class WidgetService {
 
 	currentWidget.name		 = widget.name		|| currentWidget.name;
 	currentWidget.description	 = widget.description	|| currentWidget.description;
-	currentWidget.userId		 = user.id		|| currentWidget.userId;
-	currentWidget.description	 = widget.description	|| currentWidget.description;
+	//currentWidget.userId		 = user.id		|| currentWidget.userId;
+	currentWidget.usedId = currentWidget.userId;
+	// ^discuss
 	currentWidget.source		 = widget.source        || currentWidget.source;
 	currentWidget.sourceUrl		 = widget.sourceUrl	|| currentWidget.sourceUrl;
 	currentWidget.application	 = widget.application	|| currentWidget.application;
+	currentWidget.layerId     	 = widget.layerId	|| currentWidget.layerId;
+	currentWidget.authors     	 = widget.authors	|| currentWidget.authors;
+	currentWidget.queryUrl     	 = widget.queryUrl	|| currentWidget.queryUrl;
+	currentWidget.widgetConfig     	 = widget.widgetConfig	|| currentWidget.widgetConfig;
+	// Those == null wrapped in parens are totally on purpose: undefined is being coerced
+	if (!(widget.template  == null)) { currentWidget.template = widget.template; }
 	if (!(widget.verified  == null)) { currentWidget.verified = widget.verified; }
 	if (!(widget.default   == null)) { currentWidget.default = widget.default; }
 	if (!(widget.published == null)) { currentWidget.published = widget.published; }
@@ -63,7 +70,7 @@ class WidgetService {
 	    queryUrl: widget.queryUrl,
 	    widgetConfig: widget.widgetConfig,
 	    template: widget.template,
-	    layer: widget.layer
+	    layerId: widget.layerId
         }).save();
         return newWidget;
     }

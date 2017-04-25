@@ -6,8 +6,8 @@ class WidgetSerializer {
             attributes: {
                 name:		 el.name,
 		dataset:	 el.dataset,
-		layer:           el.layer,
 		slug:		 el.slug,
+		userId:          el.userId,
 		description:	 el.description,
 		source:		 el.source,
 		sourceUrl:	 el.sourceUrl,

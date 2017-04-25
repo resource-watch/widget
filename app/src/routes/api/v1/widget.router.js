@@ -120,13 +120,13 @@ const datasetValidationMiddleware = async (ctx, next) => {
 router.get('/widget', WidgetRouter.getAll);
 router.get('/dataset/:dataset/widget', datasetValidationMiddleware, WidgetRouter.getAll);
 // Create
-router.post('/widget', widgetValidationMiddleware, WidgetRouter.create);
+router.post('/widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.create);
 router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.create);
 // Read
-router.get('/widget/:widget', WidgetRouter.get);
+router.get('/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 // Update
-router.patch('/widget/:widget', widgetValidationMiddleware, WidgetRouter.update);
+router.patch('/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.update);
 router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.update);
 // Delete
 router.delete('/widget/:widget', WidgetRouter.delete);
