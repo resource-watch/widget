@@ -6,8 +6,8 @@ class WidgetSerializer {
             attributes: {
                 name:		 el.name,
 		dataset:	 el.dataset,
-		layer:           el.layer,
 		slug:		 el.slug,
+		userId:          el.userId,
 		description:	 el.description,
 		source:		 el.source,
 		sourceUrl:	 el.sourceUrl,
@@ -18,7 +18,8 @@ class WidgetSerializer {
 		published:       el.published,
 		queryUrl:        el.queryUrl,
 		widgetConfig:    el.widgetConfig,
-		template:        el.template
+		template:        el.template,
+                layerId:         el.layerId
 	    }
         };
     }
@@ -30,7 +31,8 @@ class WidgetSerializer {
                 result.data = data.docs.map(el => WidgetSerializer.serializeElement(el));
             } else {
                 if (Array.isArray(data)) {
-                    result.data = WidgetSerializer.serializeElement(data[0]);
+		    result.data = data.map(el => WidgetSerializer.serializeElement(el));
+                    // result.data = WidgetSerializer.serializeElement(data[0]);
                 } else {
                     result.data = WidgetSerializer.serializeElement(data);
                 }

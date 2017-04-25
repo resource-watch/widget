@@ -20,16 +20,24 @@ class WidgetService {
             throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
         }
 
-	currentWidget.name = widget.name || currentWidget.name;
-	currentWidget.description = widget.description || currentWidget.description;
-	currentWidget.userId = user.id || currentWidget.userId;
-	currentWidget.description = widget.description || currentWidget.description;
-	currentWidget.source = widget.source || currentWidget.source;
-	currentWidget.sourceUrl = widget.sourceUrl || currentWidget.sourceUrl;
-	currentWidget.application = widget.application || currentWidget.application;
-	currentWidget.verified = widget.verified || currentWidget.verified;
-	currentWidget.default = widget.default || currentWidget.default;
-	currentWidget.published = widget.published || currentWidget.published;
+	currentWidget.name		 = widget.name		|| currentWidget.name;
+	currentWidget.description	 = widget.description	|| currentWidget.description;
+	//currentWidget.userId		 = user.id		|| currentWidget.userId;
+	currentWidget.usedId = currentWidget.userId;
+	// ^discuss
+	currentWidget.source		 = widget.source        || currentWidget.source;
+	currentWidget.sourceUrl		 = widget.sourceUrl	|| currentWidget.sourceUrl;
+	currentWidget.application	 = widget.application	|| currentWidget.application;
+	currentWidget.layerId     	 = widget.layerId	|| currentWidget.layerId;
+	currentWidget.authors     	 = widget.authors	|| currentWidget.authors;
+	currentWidget.queryUrl     	 = widget.queryUrl	|| currentWidget.queryUrl;
+	currentWidget.widgetConfig     	 = widget.widgetConfig	|| currentWidget.widgetConfig;
+	// Those == null wrapped in parens are totally on purpose: undefined is being coerced
+	if (!(widget.template  == null)) { currentWidget.template = widget.template; }
+	if (!(widget.verified  == null)) { currentWidget.verified = widget.verified; }
+	if (!(widget.default   == null)) { currentWidget.default = widget.default; }
+	if (!(widget.published == null)) { currentWidget.published = widget.published; }
+
 	let newWidget = await currentWidget.save();
 	logger.debug(`[WidgetService]: Widget:  ${newWidget}`);	
 	return newWidget;
@@ -62,7 +70,7 @@ class WidgetService {
 	    queryUrl: widget.queryUrl,
 	    widgetConfig: widget.widgetConfig,
 	    template: widget.template,
-	    layer: widget.layer
+	    layerId: widget.layerId
         }).save();
         return newWidget;
     }
@@ -181,6 +189,37 @@ class WidgetService {
         return filteredSort;
     }
 
+    static getFilter(filter) {
+	const finalFilter = {};
+	if (filter && filter.application) {
+	    finalFilter.application = { $in: filter.application.split(',') };
+	}
+	return finalFilter;
+    }
+
+    static async getByIds(resource) {
+	logger.debug(`[WidgetService] Getting widget with ids ${resource.ids}`);
+	const query = {
+	    '_id': { $in: resource.ids }
+	};
+	logger.debug(`[WidgetService] IDs query: ${JSON.stringify(query)}`);
+	return await Widget.find(query).exec();
+    }
+
+    static async hasPermission(id, user) {
+        let permission = true;
+        const widget = await WidgetService.get(id);
+        const appPermission = widget.application.find(widgetApp =>
+            user.extraUserData.apps.find(app => app === widgetApp)
+        );
+        if (!appPermission) {
+            permission = false;
+        }
+        if ((user.role === 'MANAGER') && (!widget.userId || widget.userId !== user.id)) {
+            permission = false;
+        }
+        return permission;
+    }
 }
 
 module.exports = WidgetService;
