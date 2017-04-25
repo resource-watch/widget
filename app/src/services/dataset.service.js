@@ -14,26 +14,21 @@ class DatasetService {
 	    const options = {  
 		method: 'GET',
 		uri: datasetUrl,
-		json: true,
-		resolveWithFullResponse: true
+		json: true
 	    };
 	    try {
-		rp(options)
-		    .then(function(response) {
-			logger.info(`[DatasetService] Response status code: ${response.StatusCode}`);
-		    })
-		    .catch(function (err) {
-			logger.info(`[DatasetService] Error: ${err}`);
-			throw new DatasetNotFound(`Dataset with id ${datasetId} not found`);
-		    });
+		const apicall = rp(options).then(function (response) {
+		    logger.info(`[DatasetService] Dataset API call was succesful.`);
+		});
+
+		return apicall;
 	    } catch(err) {
-		if (err instanceof DatasetNotFound) {
-		    logger.info(`AHA`);
-		}
+		logger.info(`[DatasetService] There was an error obtaining the dataset: ${err}`);
+		throw err;
 	    }
 	} else {
 	    // If no datasets are present, it has to be catched by the validator
-	    logger.info(`[DatasetService] No dataset provided in the context`);
+	    logger.info(`[DatasetService] No dataset provided in this context.`);
 	}
     }
 }

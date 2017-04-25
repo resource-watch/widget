@@ -108,8 +108,9 @@ const datasetValidationMiddleware = async (ctx, next) => {
     try {
 	await DatasetService.checkDataset(ctx);
     } catch(err) {
-	logger.info(`ERROR: ${err}`);
-    }
+	logger.info(`[WidgetRouter] ERROR: ${err}`);
+	ctx.throw(err.statusCode, "Dataset not found");
+    };
     await next();
 };
 
