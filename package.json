@@ -51,6 +51,7 @@
 	"request": "^2.79.0",
 	"request-promise": "^4.1.1",
 	"mongoose": "^4.8.5",
+	"slug": "^0.9.1",
 	"mongoose-paginate": "^5.0.3"
     }
 }
