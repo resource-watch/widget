@@ -189,6 +189,37 @@ class WidgetService {
         return filteredSort;
     }
 
+    static getFilter(filter) {
+	const finalFilter = {};
+	if (filter && filter.application) {
+	    finalFilter.application = { $in: filter.application.split(',') };
+	}
+	return finalFilter;
+    }
+
+    static async getByIds(resource, filter) {
+	logger.debug(`Getting metadata with ids ${resource.ids}`);
+	const query = {
+	    'id': { $in: resource.ids }
+	};
+	const finalQuery = Object.assign(query, WidgetService.getFilter(filter));
+	return await Widget.find(finalQuery).exec();
+    }
+
+    static async hasPermission(id, user) {
+        let permission = true;
+        const widget = await WidgetService.get(id);
+        const appPermission = widget.application.find(widgetApp =>
+            user.extraUserData.apps.find(app => app === widgetApp)
+        );
+        if (!appPermission) {
+            permission = false;
+        }
+        if ((user.role === 'MANAGER') && (!widget.userId || widget.userId !== user.id)) {
+            permission = false;
+        }
+        return permission;
+    }
 }
 
 module.exports = WidgetService;

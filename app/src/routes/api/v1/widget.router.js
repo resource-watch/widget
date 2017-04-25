@@ -6,6 +6,7 @@ const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
 const DatasetNotFound = require('errors/datasetNotFound.error');
 const router = new Router();
+const USER_ROLES = require('app.constants').USER_ROLES;
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
@@ -91,6 +92,24 @@ class WidgetRouter {
 	    throw err;
 	}
     }
+
+    static async getByIds(ctx) {
+	if (!ctx.request.body.ids) {
+	    ctx.throw(400, 'Bad request');
+	    return;
+	}
+	logger.info(`Getting metadata by ids: ${ctx.request.body.ids}`);
+	const resource = {
+	    ids: ctx.request.body.ids
+	};
+	if (typeof resource.ids === 'string') {
+	    resource.ids = resource.ids.split(',').map((elem) => elem.trim());
+	}
+	var filter = {};
+	if (ctx.query.application) { filter.application = ctx.query.application; }
+	const result = await WidgetService.getByIds(resource, filter);
+	ctx.body = WidgetSerializer.serialize(result);
+    }
 };
 
 const widgetValidationMiddleware = async (ctx, next) => {
@@ -114,23 +133,66 @@ const datasetValidationMiddleware = async (ctx, next) => {
     await next();
 };
 
+const authorizationMiddleware = async (ctx, next) => {
+    logger.info(`[WidgetRouter] Checking authorization`);
+    // Get user from query (delete) or body (post-patch)
+    const user = WidgetRouter.getUser(ctx);
+    if (user.id === 'microservice') {
+        await next();
+        return;
+    }
+    if (!user || USER_ROLES.indexOf(user.role) === -1) {
+        ctx.throw(401, 'Unauthorized'); // if not logged or invalid ROLE -> out
+        return;
+    }
+    if (user.role === 'USER') {
+        ctx.throw(403, 'Forbidden'); // if user is USER -> out
+        return;
+    }
+    const application = ctx.request.query.application ? ctx.request.query.application : ctx.request.body.application;
+    if (application) {
+        const appPermission = application.find(app =>
+            user.extraUserData.apps.find(userApp => userApp === app)
+        );
+        if (!appPermission) {
+            ctx.throw(403, 'Forbidden'); // if manager or admin but no application -> out
+            return;
+        }
+    }
+    const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
+    if ((user.role === 'MANAGER' || user.role === 'ADMIN') && !newWidgetCreation) {
+        try {
+            const permission = await WidgetService.hasPermission(ctx.params.widget, user);
+            if (!permission) {
+                ctx.throw(403, 'Forbidden');
+                return;
+            }
+        } catch (err) {
+            throw err;
+        }
+    }
+    await next(); // SUPERADMIN is included here
+};
+
+
 
 // Declaring the routes
 // Index
 router.get('/widget', WidgetRouter.getAll);
 router.get('/dataset/:dataset/widget', datasetValidationMiddleware, WidgetRouter.getAll);
 // Create
-router.post('/widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.create);
-router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.create);
+router.post('/widget', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.create);
+router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.create);
 // Read
 router.get('/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 // Update
-router.patch('/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.update);
-router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, WidgetRouter.update);
+router.patch('/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.update);
+router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.update);
 // Delete
-router.delete('/widget/:widget', WidgetRouter.delete);
-router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.delete);
+router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
+router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
 // Get by IDs
+router.post('/widget/find-by-ids', WidgetRouter.getByIds);
 
 module.exports = router;
