@@ -20,16 +20,17 @@ class WidgetService {
             throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
         }
 
-	currentWidget.name = widget.name || currentWidget.name;
-	currentWidget.description = widget.description || currentWidget.description;
-	currentWidget.userId = user.id || currentWidget.userId;
-	currentWidget.description = widget.description || currentWidget.description;
-	currentWidget.source = widget.source || currentWidget.source;
-	currentWidget.sourceUrl = widget.sourceUrl || currentWidget.sourceUrl;
-	currentWidget.application = widget.application || currentWidget.application;
-	currentWidget.verified = widget.verified || currentWidget.verified;
-	currentWidget.default = widget.default || currentWidget.default;
-	currentWidget.published = widget.published || currentWidget.published;
+	currentWidget.name		 = widget.name		|| currentWidget.name;
+	currentWidget.description	 = widget.description	|| currentWidget.description;
+	currentWidget.userId		 = user.id		|| currentWidget.userId;
+	currentWidget.description	 = widget.description	|| currentWidget.description;
+	currentWidget.source		 = widget.source        || currentWidget.source;
+	currentWidget.sourceUrl		 = widget.sourceUrl	|| currentWidget.sourceUrl;
+	currentWidget.application	 = widget.application	|| currentWidget.application;
+	if (!(widget.verified  == null)) { currentWidget.verified = widget.verified; }
+	if (!(widget.default   == null)) { currentWidget.default = widget.default; }
+	if (!(widget.published == null)) { currentWidget.published = widget.published; }
+
 	let newWidget = await currentWidget.save();
 	logger.debug(`[WidgetService]: Widget:  ${newWidget}`);	
 	return newWidget;
