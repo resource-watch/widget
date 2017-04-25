@@ -75,6 +75,7 @@ class WidgetRouter {
 	const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
 	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
 	const link = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}${ctx.request.path}${serializedQuery}`;
+	logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
 	ctx.body = WidgetSerializer.serialize(widgets, link);
     }
 
@@ -98,16 +99,15 @@ class WidgetRouter {
 	    ctx.throw(400, 'Bad request');
 	    return;
 	}
-	logger.info(`Getting metadata by ids: ${ctx.request.body.ids}`);
+	logger.info(`Getting widgets with ids: ${ctx.request.body.ids}`);
 	const resource = {
 	    ids: ctx.request.body.ids
 	};
 	if (typeof resource.ids === 'string') {
 	    resource.ids = resource.ids.split(',').map((elem) => elem.trim());
 	}
-	var filter = {};
-	if (ctx.query.application) { filter.application = ctx.query.application; }
-	const result = await WidgetService.getByIds(resource, filter);
+	const result = await WidgetService.getByIds(resource);
+	logger.info(`[WidgetRouter] Result is: ${result}`);
 	ctx.body = WidgetSerializer.serialize(result);
     }
 };

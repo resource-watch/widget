@@ -31,7 +31,8 @@ class WidgetSerializer {
                 result.data = data.docs.map(el => WidgetSerializer.serializeElement(el));
             } else {
                 if (Array.isArray(data)) {
-                    result.data = WidgetSerializer.serializeElement(data[0]);
+		    result.data = data.map(el => WidgetSerializer.serializeElement(el));
+                    // result.data = WidgetSerializer.serializeElement(data[0]);
                 } else {
                     result.data = WidgetSerializer.serializeElement(data);
                 }

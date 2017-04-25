@@ -197,13 +197,13 @@ class WidgetService {
 	return finalFilter;
     }
 
-    static async getByIds(resource, filter) {
-	logger.debug(`Getting metadata with ids ${resource.ids}`);
+    static async getByIds(resource) {
+	logger.debug(`[WidgetService] Getting widget with ids ${resource.ids}`);
 	const query = {
-	    'id': { $in: resource.ids }
+	    '_id': { $in: resource.ids }
 	};
-	const finalQuery = Object.assign(query, WidgetService.getFilter(filter));
-	return await Widget.find(finalQuery).exec();
+	logger.debug(`[WidgetService] IDs query: ${JSON.stringify(query)}`);
+	return await Widget.find(query).exec();
     }
 
     static async hasPermission(id, user) {
