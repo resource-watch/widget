@@ -4,6 +4,8 @@ const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
 const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
+const WidgetValidator = require('validators/widget.validator');
+const WidgetNotValid = require('errors/widgetNotValid.error');
 const DatasetNotFound = require('errors/datasetNotFound.error');
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
@@ -112,12 +114,34 @@ class WidgetRouter {
     }
 };
 
-const widgetValidationMiddleware = async (ctx, next) => {
+const validationMiddleware = async (ctx, next) => {
     logger.info(`[WidgetRouter] Validating the widget`);
     if (ctx.request.body.widget) {
 	ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
-	delete ctx.request.body.dataset;
+	delete ctx.request.body.widget;
     }
+
+    if (ctx.params.dataset) {
+	ctx.request.body.dataset = ctx.params.dataset;
+    }
+
+    try {
+	
+	const newWidget = ctx.request.method === 'POST';
+	if (newWidget) {
+            await WidgetValidator.validateWidgetCreation(ctx);
+	} else {
+	    await WidgetValidator.validateWidgetUpdate(ctx);
+	}
+    } catch (err) {
+        if (err instanceof WidgetNotValid) {
+            ctx.throw(400, err.getMessages());
+            return;
+        }
+        throw err;
+    }
+
+    
     await next();
 };
 
@@ -181,14 +205,14 @@ const authorizationMiddleware = async (ctx, next) => {
 router.get('/widget', WidgetRouter.getAll);
 router.get('/dataset/:dataset/widget', datasetValidationMiddleware, WidgetRouter.getAll);
 // Create
-router.post('/widget', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.create);
-router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.create);
+router.post('/widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.create);
+router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.create);
 // Read
 router.get('/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 // Update
-router.patch('/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.update);
-router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, widgetValidationMiddleware, authorizationMiddleware, WidgetRouter.update);
+router.patch('/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
+router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
 // Delete
 router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
