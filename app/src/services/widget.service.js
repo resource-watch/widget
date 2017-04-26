@@ -8,7 +8,11 @@ const slug = require('slug');
 class WidgetService {
 
     static getSlug(name) {
-        return slug(name);
+	if (name) {
+            return slug(name);
+	} else {
+	    return "";  
+	};
     }
 
     static async update(id, widget, user) {
