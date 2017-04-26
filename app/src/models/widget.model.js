@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate');
 const uuidV4 = require('uuid/v4');
 const Schema = mongoose.Schema;
+const WidgetValidator = require('validators/widget.validator');
 
 const Widget = new Schema({
   _id:                { type: String, default: uuidV4 },

@@ -69,7 +69,7 @@ const onDbReady = (err) => {
             ctUrl: process.env.CT_URL,
             url: process.env.LOCAL_URL,
             token: process.env.CT_TOKEN,
-            active: true,
+            active: true
         }).then(() => {}, (error) => {
             logger.error(error);
             process.exit(1);
