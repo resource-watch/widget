@@ -1,5 +1,5 @@
 prod:
-  image: vizzuality/widget-adapter:1.0.0${STAGING}
+  image: vizzuality/widget:1.0.0${STAGING}
   ports:
     - "3050"
   env_file:
@@ -10,4 +10,4 @@ prod:
   log_driver: "syslog"
   log_opt:
       syslog-address: ${SYSLOG_ADDRESS}
-      tag: widget-adapter${STAGING}
+      tag: widget${STAGING}
