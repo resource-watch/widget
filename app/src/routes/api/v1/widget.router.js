@@ -76,7 +76,7 @@ class WidgetRouter {
 	delete clonedQuery.dataset;
 	const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
 	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-	const link = `${ctx.request.protocol}://${ctx.request.host}/api/${apiVersion}${ctx.request.path}${serializedQuery}`;
+	const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
 	logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
 	ctx.body = WidgetSerializer.serialize(widgets, link);
     }
