@@ -100,14 +100,14 @@ class WidgetRouter {
 	    ctx.throw(400, 'Bad request');
 	    return;
 	}
-	logger.info(`[WidgetRouter] Getting widgets with ids: ${ctx.request.body.ids}`);
+	logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
 	const resource = {
 	    ids: ctx.request.body.ids
 	};
 	if (typeof resource.ids === 'string') {
 	    resource.ids = resource.ids.split(',').map((elem) => elem.trim());
 	}
-	const result = await WidgetService.getByIds(resource);
+	const result = await WidgetService.getByDataset(resource);
 	ctx.body = WidgetSerializer.serialize(result);
     }
 };
