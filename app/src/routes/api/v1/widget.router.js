@@ -123,6 +123,14 @@ const validationMiddleware = async (ctx, next) => {
 	ctx.request.body.dataset = ctx.params.dataset;
     }
 
+    // Removing null values for proper validation
+    const widgetKeys = Object.keys(ctx.request.body);
+    widgetKeys.forEach((key) => {
+	logger.info("KEY: ", key);
+	if (ctx.request.body[key] == null ) {
+	    delete ctx.request.body[key];
+	}
+    });
 
     try {
 	
