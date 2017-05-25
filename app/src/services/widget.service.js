@@ -201,10 +201,10 @@ class WidgetService {
 	return finalFilter;
     }
 
-    static async getByIds(resource) {
-	logger.debug(`[WidgetService] Getting widget with ids ${resource.ids}`);
+    static async getByDataset(resource) {
+	logger.debug(`[WidgetService] Getting widgets for datasets with ids ${resource.ids}`);
 	const query = {
-	    '_id': { $in: resource.ids }
+	    'dataset': { $in: resource.ids }
 	};
 	logger.debug(`[WidgetService] IDs query: ${JSON.stringify(query)}`);
 	return await Widget.find(query).exec();
