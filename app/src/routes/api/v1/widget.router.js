@@ -27,7 +27,6 @@ class WidgetRouter {
 	    const dataset = ctx.params.dataset;
 	    logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
 	    const widget = await WidgetService.get(id, dataset);
-	    logger.info(`widget is ${widget}`);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
 	} catch (err) {
@@ -40,7 +39,6 @@ class WidgetRouter {
 	try {
 	    const dataset = ctx.params.dataset;
 	    const user = WidgetRouter.getUser(ctx);
-	    logger.info(`[WidgetRouter] User: ${JSON.stringify(user)}`);
 	    const widget = await WidgetService.create(ctx.request.body, dataset, user);
 	    ctx.set('cache-control', 'flush');
 	    ctx.body = WidgetSerializer.serialize(widget);
@@ -87,9 +85,7 @@ class WidgetRouter {
 	const dataset = ctx.params.dataset || null;
 	try {
 	    const user = WidgetRouter.getUser(ctx);
-	    logger.info(`[WidgetRouter] User: ${user}`);
 	    const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
-	    logger.info(`[WidgetRouter] Widget: ${widget}`);
 	    ctx.body = WidgetSerializer.serialize(widget);
 	} catch (err) {
 	    throw err;
@@ -97,19 +93,21 @@ class WidgetRouter {
     }
 
     static async getByIds(ctx) {
+	if (ctx.request.body.widget) {
+	    ctx.request.body.ids = ctx.request.body.widget.ids;
+	}
 	if (!ctx.request.body.ids) {
 	    ctx.throw(400, 'Bad request');
 	    return;
 	}
-	logger.info(`Getting widgets with ids: ${ctx.request.body.ids}`);
+	logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
 	const resource = {
 	    ids: ctx.request.body.ids
 	};
 	if (typeof resource.ids === 'string') {
 	    resource.ids = resource.ids.split(',').map((elem) => elem.trim());
 	}
-	const result = await WidgetService.getByIds(resource);
-	logger.info(`[WidgetRouter] Result is: ${result}`);
+	const result = await WidgetService.getByDataset(resource);
 	ctx.body = WidgetSerializer.serialize(result);
     }
 };
@@ -124,6 +122,15 @@ const validationMiddleware = async (ctx, next) => {
     if (ctx.params.dataset) {
 	ctx.request.body.dataset = ctx.params.dataset;
     }
+
+    // Removing null values for proper validation
+    const widgetKeys = Object.keys(ctx.request.body);
+    widgetKeys.forEach((key) => {
+	logger.info("KEY: ", key);
+	if (ctx.request.body[key] == null ) {
+	    delete ctx.request.body[key];
+	}
+    });
 
     try {
 	
@@ -151,7 +158,6 @@ const datasetValidationMiddleware = async (ctx, next) => {
     try {
 	await DatasetService.checkDataset(ctx);
     } catch(err) {
-	logger.info(`[WidgetRouter] ERROR: ${err}`);
 	ctx.throw(err.statusCode, "Dataset not found");
     };
     await next();

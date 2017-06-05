@@ -7,8 +7,8 @@ services:
     ports:
       - "35749:35749"
     environment:
-      CT_URL: http://192.168.99.100:9000 
-      LOCAL_URL: http://192.168.99.100:3050
+      CT_URL: http://mymachine:9000 
+      LOCAL_URL: http://mymachine:3050
       CT_TOKEN: null
       API_VERSION: v1
     command: develop
