@@ -1,8 +1,8 @@
 FROM mhart/alpine-node:7.7
 MAINTAINER enrique@cornejo.me
 
-ENV NAME widget-adapter
-ENV USER widget-adapter
+ENV NAME widget
+ENV USER widget
 
 RUN apk update && apk upgrade && \
     apk add --no-cache --update bash git openssh python alpine-sdk
