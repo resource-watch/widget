@@ -36,7 +36,7 @@ spec:
             valueFrom:
                 secretKeyRef:
                   name: dbsecrets
-                  key: GEOSTORE_MONGO_URI
+                  key: WIGET_MONGO_URI
           - name: CT_URL
             valueFrom:
                 secretKeyRef:
