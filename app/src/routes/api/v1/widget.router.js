@@ -1,12 +1,11 @@
 const Router = require('koa-router');
 const logger = require('logger');
-const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
 const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
 const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
-const DatasetNotFound = require('errors/datasetNotFound.error');
+
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
 
@@ -18,127 +17,127 @@ const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
 class WidgetRouter {
 
     static getUser(ctx) {
-	   return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
+        return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
     }
 
     static async get(ctx) {
-    	try {
-    	    const id = ctx.params.widget;
-    	    const dataset = ctx.params.dataset;
-    	    logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-    	    const widget = await WidgetService.get(id, dataset);
-    	    ctx.set('cache-control', 'flush');
-    	    ctx.body = WidgetSerializer.serialize(widget);
-    	} catch (err) {
-    	    throw err;
-    	}
+        try {
+            const id = ctx.params.widget;
+            const dataset = ctx.params.dataset;
+            logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
+            const widget = await WidgetService.get(id, dataset);
+            ctx.set('cache-control', 'flush');
+            ctx.body = WidgetSerializer.serialize(widget);
+        } catch (err) {
+            throw err;
+        }
     }
 
     static async create(ctx) {
-    	logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
-    	try {
-    	    const dataset = ctx.params.dataset;
-    	    const user = WidgetRouter.getUser(ctx);
-    	    const widget = await WidgetService.create(ctx.request.body, dataset, user);
-    	    ctx.set('cache-control', 'flush');
-    	    ctx.body = WidgetSerializer.serialize(widget);
-    	} catch (err) {
-    	    throw err;
-    	}
+        logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
+        try {
+            const dataset = ctx.params.dataset;
+            const user = WidgetRouter.getUser(ctx);
+            const widget = await WidgetService.create(ctx.request.body, dataset, user);
+            ctx.set('cache-control', 'flush');
+            ctx.body = WidgetSerializer.serialize(widget);
+        } catch (err) {
+            throw err;
+        }
     }
 
     static async delete(ctx) {
-    	const id = ctx.params.widget;
-    	logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
-    	try {
-    	    const dataset = ctx.params.dataset;
-    	    const widget = await WidgetService.delete(id, dataset);
-    	    ctx.set('cache-control', 'flush');
-    	    ctx.body = WidgetSerializer.serialize(widget);
-    	} catch (err) {
-    	    throw err;
-    	}
+        const id = ctx.params.widget;
+        logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
+        try {
+            const dataset = ctx.params.dataset;
+            const widget = await WidgetService.delete(id, dataset);
+            ctx.set('cache-control', 'flush');
+            ctx.body = WidgetSerializer.serialize(widget);
+        } catch (err) {
+            throw err;
+        }
     }
 
     static async getAll(ctx) {
-    	const query = ctx.query;
-    	const dataset = ctx.params.dataset || null;
-    	logger.debug("dataset: %j", dataset);
-    	logger.debug("query: %j", query);
-    	delete query.loggedUser;
-    	const widgets = await WidgetService.getAll(query, dataset);
-    	const clonedQuery = Object.assign({}, query);
-    	delete clonedQuery['page[size]'];
-    	delete clonedQuery['page[number]'];
-    	delete clonedQuery.ids;
-    	delete clonedQuery.dataset;
-    	const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
-    	const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
-    	const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
-    	logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
-    	ctx.body = WidgetSerializer.serialize(widgets, link);
+        const query = ctx.query;
+        const dataset = ctx.params.dataset || null;
+        logger.debug("dataset: %j", dataset);
+        logger.debug("query: %j", query);
+        delete query.loggedUser;
+        const widgets = await WidgetService.getAll(query, dataset);
+        const clonedQuery = Object.assign({}, query);
+        delete clonedQuery['page[size]'];
+        delete clonedQuery['page[number]'];
+        delete clonedQuery.ids;
+        delete clonedQuery.dataset;
+        const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
+        const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
+        const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
+        logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
+        ctx.body = WidgetSerializer.serialize(widgets, link);
     }
 
     static async update(ctx) {
-    	const id = ctx.params.widget;
-    	logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
-    	const dataset = ctx.params.dataset || null;
-    	try {
-    	    const user = WidgetRouter.getUser(ctx);
-    	    const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
-    	    ctx.body = WidgetSerializer.serialize(widget);
-    	} catch (err) {
-    	    throw err;
-    	}
+        const id = ctx.params.widget;
+        logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
+        const dataset = ctx.params.dataset || null;
+        try {
+            const user = WidgetRouter.getUser(ctx);
+            const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
+            ctx.body = WidgetSerializer.serialize(widget);
+        } catch (err) {
+            throw err;
+        }
     }
 
     static async getByIds(ctx) {
-    	if (ctx.request.body.widget) {
-    	    ctx.request.body.ids = ctx.request.body.widget.ids;
-    	}
-    	if (!ctx.request.body.ids) {
-    	    ctx.throw(400, 'Bad request');
-    	    return;
-    	}
-    	logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
-    	const resource = {
-    	    ids: ctx.request.body.ids
-    	};
-    	if (typeof resource.ids === 'string') {
-    	    resource.ids = resource.ids.split(',').map((elem) => elem.trim());
-    	}
-    	const result = await WidgetService.getByDataset(resource);
-    	ctx.body = WidgetSerializer.serialize(result);
+        if (ctx.request.body.widget) {
+            ctx.request.body.ids = ctx.request.body.widget.ids;
+        }
+        if (!ctx.request.body.ids) {
+            ctx.throw(400, 'Bad request');
+            return;
+        }
+        logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
+        const resource = {
+            ids: ctx.request.body.ids
+        };
+        if (typeof resource.ids === 'string') {
+            resource.ids = resource.ids.split(',').map((elem) => elem.trim());
+        }
+        const result = await WidgetService.getByDataset(resource);
+        ctx.body = WidgetSerializer.serialize(result);
     }
 };
 
-const validationMiddleware = async (ctx, next) => {
+const validationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Validating the widget`);
     if (ctx.request.body.widget) {
-	ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
-	delete ctx.request.body.widget;
+        ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
+        delete ctx.request.body.widget;
     }
 
     if (ctx.params.dataset) {
-	ctx.request.body.dataset = ctx.params.dataset;
+        ctx.request.body.dataset = ctx.params.dataset;
     }
 
     // Removing null values for proper validation
     const widgetKeys = Object.keys(ctx.request.body);
     widgetKeys.forEach((key) => {
-    	if (ctx.request.body[key] == null ) {
-    	    delete ctx.request.body[key];
-    	}
+        if (ctx.request.body[key] == null) {
+            delete ctx.request.body[key];
+        }
     });
 
     try {
 
-	const newWidget = ctx.request.method === 'POST';
-	if (newWidget) {
+        const newWidget = ctx.request.method === 'POST';
+        if (newWidget) {
             await WidgetValidator.validateWidgetCreation(ctx);
-	} else {
-	    await WidgetValidator.validateWidgetUpdate(ctx);
-	}
+        } else {
+            await WidgetValidator.validateWidgetUpdate(ctx);
+        }
     } catch (err) {
         if (err instanceof WidgetNotValid) {
             ctx.throw(400, err.getMessages());
@@ -151,18 +150,18 @@ const validationMiddleware = async (ctx, next) => {
     await next();
 };
 
-const datasetValidationMiddleware = async (ctx, next) => {
+const datasetValidationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Validating dataset presence`);
     //
     try {
-	await DatasetService.checkDataset(ctx);
-    } catch(err) {
-	ctx.throw(err.statusCode, "Dataset not found");
+        await DatasetService.checkDataset(ctx);
+    } catch (err) {
+        ctx.throw(err.statusCode, "Dataset not found");
     };
     await next();
 };
 
-const authorizationMiddleware = async (ctx, next) => {
+const authorizationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Checking authorization`);
     // Get user from query (delete) or body (post-patch)
     const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
