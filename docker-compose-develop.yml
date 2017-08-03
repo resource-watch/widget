@@ -11,6 +11,7 @@ services:
       LOCAL_URL: http://mymachine:3050
       CT_TOKEN: null
       API_VERSION: v1
+      CT_REGISTER_MODE: auto
     command: develop
     volumes:
       - ./app:/opt/widget/app
