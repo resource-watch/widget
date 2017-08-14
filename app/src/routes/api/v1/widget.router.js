@@ -26,7 +26,7 @@ class WidgetRouter {
     	    const id = ctx.params.widget;
     	    const dataset = ctx.params.dataset;
     	    logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-    	    const widget = await WidgetService.get(id, dataset);
+    	    const widget = await WidgetService.get(id, dataset, ctx.query.includes);
     	    ctx.set('cache-control', 'flush');
     	    ctx.body = WidgetSerializer.serialize(widget);
     	} catch (err) {

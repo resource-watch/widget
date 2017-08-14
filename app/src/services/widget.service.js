@@ -90,15 +90,19 @@ class WidgetService {
         return newWidget;
     }
 
-    static async get(id, dataset = null) {
+    static async get(id, dataset = null, includes) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.info(`[DBACCES-FIND]: ID: ${id}`);
-        const widget = await Widget.findById(id).exec();
+        let widget = await Widget.findById(id).exec();
         logger.info(`[DBACCES-FIND]: Widget: ${widget}`);
         if (widget) {
             if (dataset && dataset !== widget.dataset) {
                 throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
             } else {
+                if (includes && includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
+                    logger.debug('Finding vocabularies');
+                    widget = await RelationshipsService.getRelationships([widget])[0];
+                }
                 return widget;
             }
         } else {
