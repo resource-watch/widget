@@ -90,7 +90,7 @@ class WidgetService {
         return newWidget;
     }
 
-    static async get(id, dataset = null, includes) {
+    static async get(id, dataset, includes) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.info(`[DBACCES-FIND]: ID: ${id}`);
         let widget = await Widget.findById(id).exec();
@@ -101,7 +101,8 @@ class WidgetService {
             } else {
                 if (includes && includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
                     logger.debug('Finding vocabularies');
-                    widget = await RelationshipsService.getRelationships([widget])[0];
+                    let widgets = await RelationshipsService.getRelationships([widget]);
+                    return widgets[0];
                 }
                 return widget;
             }
