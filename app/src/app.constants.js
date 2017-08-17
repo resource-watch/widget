@@ -1,4 +1,4 @@
-const USER_ROLES = ['USER', 'MANGAER', 'ADMIN', 'SUPERADMIN'];
+const USER_ROLES = ['USER', 'MANAGER', 'ADMIN', 'SUPERADMIN'];
 
 module.exports = {
     USER_ROLES

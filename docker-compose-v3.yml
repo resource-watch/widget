@@ -1,0 +1,14 @@
+version: '3'
+services:
+  prod:
+    image: vizzuality/widget:1.0.0${STAGING}-sdg
+    ports:
+      - "3050"
+    env_file:
+      - prod.env
+    command: start
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: ${SYSLOG_ADDRESS}
+        tag: widget${STAGING}

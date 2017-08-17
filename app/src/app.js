@@ -26,7 +26,7 @@ const onDbReady = (err) => {
     }
 
     const app = new Koa();
-
+    
     app.use(koaBody);
 
     app.use(async (ctx, next) => {
@@ -61,7 +61,7 @@ const onDbReady = (err) => {
         ctRegisterMicroservice.register({
             info: require('../microservice/register.json'),
             swagger: require('../microservice/public-swagger.json'),
-            mode: process.env.NODE_ENV === 'dev' ? ctRegisterMicroservice.MODE_AUTOREGISTER : ctRegisterMicroservice.MODE_NORMAL,
+            mode: (process.env.CT_REGISTER_MODE && process.env.CT_REGISTER_MODE === 'auto') ? ctRegisterMicroservice.MODE_AUTOREGISTER : ctRegisterMicroservice.MODE_NORMAL,
             framework: ctRegisterMicroservice.KOA2,
             app,
             logger,
