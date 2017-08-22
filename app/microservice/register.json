@@ -82,6 +82,12 @@
                 "method": "POST",
                 "path": "/api/v1/widget/find-by-ids"
             }
+    }, {
+        "path": "/v1/widget/change-environment/:dataset/:env",
+        "method": "PATCH",
+        "redirect": {
+            "method": "PATCH",
+            "path": "/api/v1/widget/change-environment/:dataset/:env"
         }
-    ]
+    }]
 }

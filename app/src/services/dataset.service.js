@@ -2,6 +2,21 @@ const URL = require('url').URL;
 const logger = require('logger');
 const DatasetNotFound = require('errors/datasetNotFound.error');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
+const JSONAPIDeserializer = require('jsonapi-serializer').Deserializer;
+
+
+const deserializer = obj => new Promise((resolve, reject) => {
+    new JSONAPIDeserializer({
+        keyForAttribute: 'camelCase'
+    }).deserialize(obj, (err, data) => {
+        if (err) {
+            reject(err);
+            return;
+        }
+        resolve(data);
+    });
+});
+
 
 class DatasetService {
     static async checkDataset(ctx) {
@@ -15,8 +30,7 @@ class DatasetService {
                     method: 'GET',
                     json: true
                 });
-
-                return dataset;
+                return await deserializer(dataset);
             } catch (err) {
                 logger.info(`[DatasetService] There was an error obtaining the dataset: ${err}`);
                 throw err;
@@ -24,9 +38,10 @@ class DatasetService {
         } else {
             // If no datasets are present, it has to be catched by the validator
             logger.info(`[DatasetService] No dataset provided in this context.`);
+            return null;
         }
     }
-    
+
 }
 
 
