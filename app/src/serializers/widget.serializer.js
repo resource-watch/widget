@@ -16,6 +16,7 @@ class WidgetSerializer {
                 verified: el.verified,
                 default: el.default,
                 published: el.published,
+                env: el.env,
                 queryUrl: el.queryUrl,
                 widgetConfig: el.widgetConfig,
                 template: el.template,

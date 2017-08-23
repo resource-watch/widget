@@ -15,6 +15,7 @@ const Widget = new Schema({
   sourceUrl:          { type: String, required: false, trim: true },
   authors:            { type: String, required: false, trim: true },
   queryUrl:           { type: String, required: false, trim: true },
+  env: { type: String, required: true, default: 'production', trim: true },  
   widgetConfig:       Schema.Types.Mixed,
   application:      [ { type: String, required: true,  trim: true } ],
   layerId:            { type: String, required: false, trim: true },
