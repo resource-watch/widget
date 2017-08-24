@@ -4,6 +4,7 @@ const Widget = require('models/widget.model');
 const DatasetService = require('services/dataset.service');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const DuplicatedWidget = require('errors/duplicatedWidget.error');
+const GraphService = require('services/graph.service');
 const RelationshipsService = require('services/relationships.service');
 const slug = require('slug');
 
@@ -42,7 +43,7 @@ class WidgetService {
         currentWidget.authors = widget.authors || currentWidget.authors;
         currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
-        
+
         // Those == null wrapped in parens are totally on purpose: undefined is being coerced
         if (!(widget.template == null)) {
             currentWidget.template = widget.template;
@@ -92,8 +93,18 @@ class WidgetService {
             template: widget.template,
             layerId: widget.layerId
         }).save();
+
+        logger.debug('[WidgetService]: Creating in graph');
+        try {
+            await GraphService.createWidget(dataset || widget.dataset, newWidget._id);
+        } catch (err) {
+            logger.error('Error creating widget in graph. Removing widget');
+            await newWidget.remove();
+            throw new Error(err);
+        }
         return newWidget;
     }
+
 
     static async updateEnvironment(dataset, env) {
         logger.debug('Updating widgets with dataset', dataset);
@@ -129,6 +140,12 @@ class WidgetService {
             logger.error(`[WidgetService]: Widget not found with the id ${id}`);
             throw new WidgetNotFound(`Widget not found with the id ${id}`);
         }
+        logger.debug('[WidgetService]: Deleting in graph');
+        try {
+            await GraphService.deleteWidget(id);
+        } catch (err) {
+            logger.error('Error removing dataset of the graph', err);
+        }
         logger.info(`[DBACCES-DELETE]: ID: ${id}`);
         return await widget.remove();
     }
@@ -160,6 +177,7 @@ class WidgetService {
         logger.info(`[DBACCESS-FIND]: widget`);
         let pages = await Widget.paginate(filteredQuery, options);
         pages = Object.assign({}, pages);
+
         if (includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
             logger.debug('Finding vocabularies');
             pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, Object.assign({}, query));
@@ -171,7 +189,6 @@ class WidgetService {
         if (!query.application && query.app) {
             query.application = query.app;
         }
-
         if (!query.env) {
             query.env = 'production';
         }

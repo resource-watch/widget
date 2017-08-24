@@ -1,5 +1,7 @@
 const URL = require('url').URL;
 const logger = require('logger');
+const http = require('http');
+const rp = require('request-promise');
 const DatasetNotFound = require('errors/datasetNotFound.error');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const JSONAPIDeserializer = require('jsonapi-serializer').Deserializer;
@@ -19,6 +21,7 @@ const deserializer = obj => new Promise((resolve, reject) => {
 
 
 class DatasetService {
+
     static async checkDataset(ctx) {
         if (ctx.params.dataset || ctx.request.body.dataset) {
             const datasetId = ctx.params.dataset || ctx.request.body.dataset;
