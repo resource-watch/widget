@@ -1,12 +1,11 @@
 const Router = require('koa-router');
 const logger = require('logger');
-const Widget = require('models/widget.model');
 const WidgetService = require('services/widget.service');
 const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
 const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
-const DatasetNotFound = require('errors/datasetNotFound.error');
+
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
 
@@ -157,7 +156,7 @@ const validationMiddleware = async(ctx, next) => {
     await next();
 };
 
-const datasetValidationMiddleware = async (ctx, next) => {
+const datasetValidationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Validating dataset presence`);
     //
     try {
@@ -168,7 +167,7 @@ const datasetValidationMiddleware = async (ctx, next) => {
     await next();
 };
 
-const authorizationMiddleware = async (ctx, next) => {
+const authorizationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Checking authorization`);
     // Get user from query (delete) or body (post-patch)
     const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
