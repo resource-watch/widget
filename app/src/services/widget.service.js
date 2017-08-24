@@ -1,9 +1,11 @@
 const URL = require('url').URL;
 const logger = require('logger');
 const Widget = require('models/widget.model');
+const DatasetService = require('services/dataset.service');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const DuplicatedWidget = require('errors/duplicatedWidget.error');
 const GraphService = require('services/graph.service');
+const RelationshipsService = require('services/relationships.service');
 const slug = require('slug');
 
 class WidgetService {
@@ -11,7 +13,7 @@ class WidgetService {
     static getSlug(name) {
         if (name) {
             return slug(name);
-        } 
+        }
         return '';
     }
 
@@ -20,6 +22,9 @@ class WidgetService {
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
             slug: id
         }).exec();
+        logger.debug('Obtaining dataset');
+        const dataset = await DatasetService.checkDataset({ params: { dataset: currentWidget.dataset } });
+
         logger.debug(`[WidgetService]: Widget:  ${currentWidget}`);
         if (!currentWidget) {
             logger.error(`[WidgetService]: Widget with id ${id} doesn't exist`);
@@ -38,6 +43,7 @@ class WidgetService {
         currentWidget.authors = widget.authors || currentWidget.authors;
         currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
+
         // Those == null wrapped in parens are totally on purpose: undefined is being coerced
         if (!(widget.template == null)) {
             currentWidget.template = widget.template;
@@ -57,7 +63,7 @@ class WidgetService {
         return newWidget;
     }
 
-    static async create(widget, dataset, user) {
+    static async create(widget, datasetId, dataset, user) {
         logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
         const tempSlug = WidgetService.getSlug(widget.name);
         const currentWidget = await Widget.findOne({
@@ -70,7 +76,7 @@ class WidgetService {
 
         const newWidget = await new Widget({
             name: widget.name,
-            dataset: dataset || widget.dataset,
+            dataset: datasetId || widget.dataset,
             userId: user.id,
             slug: tempSlug,
             description: widget.description,
@@ -82,6 +88,7 @@ class WidgetService {
             published: widget.published,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
+            env: dataset.env,
             widgetConfig: widget.widgetConfig,
             template: widget.template,
             layerId: widget.layerId
@@ -98,15 +105,26 @@ class WidgetService {
         return newWidget;
     }
 
-    static async get(id, dataset = null) {
+
+    static async updateEnvironment(dataset, env) {
+        logger.debug('Updating widgets with dataset', dataset);
+        await Widget.update({ dataset }, { $set: { env } }, { multi: true });
+    }
+
+    static async get(id, dataset, includes) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.info(`[DBACCES-FIND]: ID: ${id}`);
-        const widget = await Widget.findById(id).exec();
+        let widget = await Widget.findById(id).exec();
         logger.info(`[DBACCES-FIND]: Widget: ${widget}`);
         if (widget) {
             if (dataset && dataset !== widget.dataset) {
                 throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
             } else {
+                if (includes && includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
+                    logger.debug('Finding vocabularies');
+                    let widgets = await RelationshipsService.getRelationships([widget]);
+                    return widgets[0];
+                }
                 return widget;
             }
         } else {
@@ -140,6 +158,7 @@ class WidgetService {
         const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 10;
         logger.debug(`pageSize param: ${limit}`);
         const ids = query['ids'] ? query['ids'].split(',').map(el => el.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
         logger.debug(`ids param: ${ids}`);
         if (dataset) {
             query.dataset = dataset;
@@ -158,6 +177,11 @@ class WidgetService {
         logger.info(`[DBACCESS-FIND]: widget`);
         let pages = await Widget.paginate(filteredQuery, options);
         pages = Object.assign({}, pages);
+
+        if (includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
+            logger.debug('Finding vocabularies');
+            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, Object.assign({}, query));
+        }
         return pages;
     }
 
@@ -165,13 +189,16 @@ class WidgetService {
         if (!query.application && query.app) {
             query.application = query.app;
         }
+        if (!query.env) {
+            query.env = 'production';
+        }
 
         const widgetAttributes = Object.keys(Widget.schema.obj);
         logger.debug(`[getFilteredQuery] widgetAttributes: ${widgetAttributes}`);
         Object.keys(query).forEach((param) => {
             if (widgetAttributes.indexOf(param) < 0) {
                 delete query[param];
-            } else {
+            } else if (param !== 'env'){
                 switch (Widget.schema.paths[param].instance) {
                     case 'String':
                         query[param] = {

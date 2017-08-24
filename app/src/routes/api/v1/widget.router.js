@@ -25,7 +25,7 @@ class WidgetRouter {
             const id = ctx.params.widget;
             const dataset = ctx.params.dataset;
             logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-            const widget = await WidgetService.get(id, dataset);
+            const widget = await WidgetService.get(id, dataset, ctx.query.includes);
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
@@ -38,7 +38,7 @@ class WidgetRouter {
         try {
             const dataset = ctx.params.dataset;
             const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.create(ctx.request.body, dataset, user);
+            const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
@@ -109,6 +109,12 @@ class WidgetRouter {
         const result = await WidgetService.getByDataset(resource);
         ctx.body = WidgetSerializer.serialize(result);
     }
+
+    static async updateEnvironment(ctx) {
+        logger.info('Updating enviroment of all widgets with dataset ', ctx.params.dataset, ' to environment', ctx.params.env);
+        await WidgetService.updateEnvironment(ctx.params.dataset, ctx.params.env);
+        ctx.body = '';
+    }
 };
 
 const validationMiddleware = async(ctx, next) => {
@@ -154,10 +160,10 @@ const datasetValidationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Validating dataset presence`);
     //
     try {
-        await DatasetService.checkDataset(ctx);
+        ctx.state.dataset = await DatasetService.checkDataset(ctx);
     } catch (err) {
-        ctx.throw(err.statusCode, "Dataset not found");
-    };
+        ctx.throw(err.statusCode, 'Dataset not found');
+    }
     await next();
 };
 
@@ -206,6 +212,14 @@ const authorizationMiddleware = async(ctx, next) => {
 };
 
 
+const isMicroservice = async function (ctx, next) {
+    logger.debug('Checking if the call is from a microservice');
+    if (ctx.request.body && ctx.request.body.loggedUser && ctx.request.body.loggedUser.id === 'microservice') {
+        await next();
+    } else {
+        ctx.throw(403, 'Not authorized');
+    }
+};
 
 // Declaring the routes
 // Index
@@ -225,5 +239,7 @@ router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
 // Get by IDs
 router.post('/widget/find-by-ids', WidgetRouter.getByIds);
+router.patch('/widget/change-environment/:dataset/:env', isMicroservice, WidgetRouter.updateEnvironment);
+
 
 module.exports = router;

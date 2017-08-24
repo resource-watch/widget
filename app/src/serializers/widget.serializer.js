@@ -4,25 +4,27 @@ class WidgetSerializer {
             id: el._id,
             type: 'widget',
             attributes: {
-                name:		 el.name,
-		dataset:	 el.dataset,
-		slug:		 el.slug,
-		userId:          el.userId,
-		description:	 el.description,
-		source:		 el.source,
-		sourceUrl:	 el.sourceUrl,
-		authors:	 el.authors,
-		application:	 el.application,
-		verified:	 el.verified,
-		default:	 el.default,
-		published:       el.published,
-		queryUrl:        el.queryUrl,
-		widgetConfig:    el.widgetConfig,
-		template:        el.template,
-                layerId:         el.layerId,
-		createdAt:       el.createdAt,
-		updatedAt:       el.updatedAt
-	    }
+                name: el.name,
+                dataset: el.dataset,
+                slug: el.slug,
+                userId: el.userId,
+                description: el.description,
+                source: el.source,
+                sourceUrl: el.sourceUrl,
+                authors: el.authors,
+                application: el.application,
+                verified: el.verified,
+                default: el.default,
+                published: el.published,
+                env: el.env,
+                queryUrl: el.queryUrl,
+                widgetConfig: el.widgetConfig,
+                template: el.template,
+                layerId: el.layerId,
+                createdAt: el.createdAt,
+                updatedAt: el.updatedAt,
+                vocabulary: el.vocabulary
+            }
         };
     }
 
@@ -33,7 +35,7 @@ class WidgetSerializer {
                 result.data = data.docs.map(el => WidgetSerializer.serializeElement(el));
             } else {
                 if (Array.isArray(data)) {
-		    result.data = data.map(el => WidgetSerializer.serializeElement(el));
+                    result.data = data.map(el => WidgetSerializer.serializeElement(el));
                     // result.data = WidgetSerializer.serializeElement(data[0]);
                 } else {
                     result.data = WidgetSerializer.serializeElement(data);
