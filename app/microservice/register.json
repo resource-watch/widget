@@ -76,13 +76,10 @@
         }
     }, {
         "path": "/v1/widget/find-by-ids",
-        "method": "POST",
+        "method": "POST",        
         "redirect": {
             "method": "POST",
-            "redirect": {
-                "method": "POST",
-                "path": "/api/v1/widget/find-by-ids"
-            }
+            "path": "/api/v1/widget/find-by-ids"
         }
     }, {
         "path": "/v1/widget/change-environment/:dataset/:env",
