@@ -198,7 +198,7 @@ class WidgetService {
         Object.keys(query).forEach((param) => {
             if (widgetAttributes.indexOf(param) < 0) {
                 delete query[param];
-            } else if (param !== 'env'){
+            } else if (param !== 'env') {
                 switch (Widget.schema.paths[param].instance) {
                     case 'String':
                         query[param] = {
@@ -226,7 +226,12 @@ class WidgetService {
                     default:
                         query[param] = query[param];
                 }
+            } else if (param === 'env') {
+                query.env = {
+                    $in: query[param].split(',')
+                };
             }
+              
             if (ids.length > 0) {
                 query._id = {
                     $in: ids
