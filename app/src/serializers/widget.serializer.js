@@ -15,6 +15,7 @@ class WidgetSerializer {
                 application: el.application,
                 verified: el.verified,
                 default: el.default,
+                defaultEditableWidget: el.defaultEditableWidget,
                 published: el.published,
                 env: el.env,
                 queryUrl: el.queryUrl,

@@ -54,6 +54,9 @@ class WidgetService {
         if (!(widget.default == null)) {
             currentWidget.default = widget.default;
         }
+        if (!(widget.defaultEditableWidget == null)) {
+            currentWidget.defaultEditableWidget = widget.defaultEditableWidget;
+        }
         if (!(widget.published == null)) {
             currentWidget.published = widget.published;
         }
@@ -85,6 +88,7 @@ class WidgetService {
             application: widget.application,
             verified: widget.verified,
             default: widget.default,
+            defaultEditableWidget: widget.defaultEditableWidget,
             published: widget.published,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
@@ -231,7 +235,7 @@ class WidgetService {
                     $in: query[param].split(',')
                 };
             }
-              
+
             if (ids.length > 0) {
                 query._id = {
                     $in: ids
