@@ -48,6 +48,9 @@ class WidgetValidator {
         koaObj.checkBody('default')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
+        koaObj.checkBody('defaultEditableWidget')
+            .optional()
+            .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
         koaObj.checkBody('published')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
@@ -97,6 +100,9 @@ class WidgetValidator {
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
         koaObj.checkBody('default')
+            .optional()
+            .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
+        koaObj.checkBody('defaultEditableWidget')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
         koaObj.checkBody('published')
