@@ -6,6 +6,7 @@ const WidgetNotFound = require('errors/widgetNotFound.error');
 const DuplicatedWidget = require('errors/duplicatedWidget.error');
 const GraphService = require('services/graph.service');
 const RelationshipsService = require('services/relationships.service');
+const ctRegisterMicroservice = require('ct-register-microservice-node');
 const slug = require('slug');
 
 class WidgetService {
@@ -151,7 +152,45 @@ class WidgetService {
             logger.error('Error removing dataset of the graph', err);
         }
         logger.info(`[DBACCES-DELETE]: ID: ${id}`);
-        return await widget.remove();
+        try {
+            await WidgetService.deleteMedadata(id, widget._id);
+        } catch (err) {
+            logger.error('Error removing metadata of the widget', err);
+        }
+        return widget.remove();
+    }
+
+    static async deleteByDataset(id) {
+        logger.debug(`[WidgetService]: Deleting widgets of dataset with id: ${id}`);
+        logger.info(`[DBACCES-FIND]: ID: ${id}`);
+        const widgets = await Widget.find({
+            dataset: id
+        }).exec();
+        for (let i = 0, length = widgets.length; i < length; i++) {
+            const widget = widgets[i];
+            logger.debug('[WidgetService]: Deleting in graph');
+            try {
+                await GraphService.deleteWidget(id);
+            } catch (err) {
+                logger.error('Error removing dataset of the graph', err);
+            }
+            logger.info(`[DBACCES-DELETE]: ID: ${id}`);
+            await widget.remove();
+            try {
+                await WidgetService.deleteMedadata(id, widget._id);
+            } catch (err) {
+                logger.error('Error removing metadata of the widget', err);
+            }
+
+        }
+    }
+
+    static async deleteMedadata(datasetId, widgetId) {
+        logger.debug('Removing metadata of the layer');
+        await ctRegisterMicroservice.requestToMicroservice({
+            uri: `/dataset/${datasetId}/widget/${widgetId}/metadata`,
+            method: 'DELETE'
+        });
     }
 
     static async getAll(query = {}, dataset = null) {

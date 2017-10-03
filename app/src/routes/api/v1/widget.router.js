@@ -59,6 +59,18 @@ class WidgetRouter {
         }
     }
 
+    static async deleteByDataset(ctx) {
+        const id = ctx.params.dataset;
+        logger.info(`[WidgetRouter] Deleting widgets of dataset with id: ${id}`);
+        try {
+            const widget = await WidgetService.deleteByDataset(id);
+            ctx.set('cache-control', 'flush');
+            ctx.body = WidgetSerializer.serialize(widget);
+        } catch (err) {
+            throw err;
+        }
+    }
+
     static async getAll(ctx) {
         const query = ctx.query;
         const dataset = ctx.params.dataset || null;
@@ -168,6 +180,16 @@ const datasetValidationMiddleware = async(ctx, next) => {
     await next();
 };
 
+const isMicroserviceMiddleware = async(ctx, next) => {
+    logger.debug('Checking if is a microservice');
+    const user = WidgetRouter.getUser(ctx);
+    if (!user || user.id !== 'microservice') {
+        ctx.throw(401, 'Not authorized');
+        return;
+    }
+    await next();
+};
+
 const authorizationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Checking authorization`);
     // Get user from query (delete) or body (post-patch)
@@ -238,6 +260,7 @@ router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, va
 // Delete
 router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
+router.delete('/dataset/:dataset/widget', isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
 // Get by IDs
 router.post('/widget/find-by-ids', WidgetRouter.getByIds);
 router.patch('/widget/change-environment/:dataset/:env', isMicroservice, WidgetRouter.updateEnvironment);
