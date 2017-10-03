@@ -101,7 +101,8 @@ class WidgetRouter {
         }
         logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
         const resource = {
-            ids: ctx.request.body.ids
+            ids: ctx.request.body.ids,
+            app: ctx.request.body.app
         };
         if (typeof resource.ids === 'string') {
             resource.ids = resource.ids.split(',').map((elem) => elem.trim());
