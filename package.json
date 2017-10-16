@@ -5,7 +5,7 @@
 			"main": "index.js",
 			"scripts": {
 						"dev": "NODE_PATH=app/src node ./node_modules/.bin/grunt --gruntfile app/Gruntfile.js",
-						"start": "NODE_PATH=app/src node app/index"
+						"start": "NODE_PATH=app/src node app/index.js"
 			},
 			"keywords": [],
 			"author": "",
