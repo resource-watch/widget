@@ -29,11 +29,6 @@ const onDbReady = (err) => {
     
     app.use(koaBody);
 
-    app.use(require('microservice-cache-middleware')({
-        prefix: 'widget',
-        redisUrl: process.env.REDIS_URL
-    }));
-
     app.use(async (ctx, next) => {
         try {
             await next();
