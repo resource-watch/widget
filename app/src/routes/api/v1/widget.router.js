@@ -36,6 +36,13 @@ class WidgetRouter {
             if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
                 if (queryParams.indexOf('queryUrl') >= 0) {
                     widget.queryUrl = ctx.query.queryUrl;
+                    if (widget.widgetConfig && widget.widgetConfig.data) {
+                        if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                            widget.widgetConfig.data[0].url = ctx.query.queryUrl;
+                        } else if (widget.widgetConfig.data.url) {
+                            widget.widgetConfig.data.url = ctx.query.queryUrl;
+                        }
+                    }
                     if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
                         widget.widgetConfig.data[0].url = ctx.query.queryUrl;
                     }
@@ -57,11 +64,19 @@ class WidgetRouter {
                     widget.queryUrl += `?${params}`;
                 }
                 
-                if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
-                    if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
-                        widget.widgetConfig.data[0].url += `&${params}`;
-                    } else {
-                        widget.widgetConfig.data[0].url += `?${params}`;
+                if (widget.widgetConfig && widget.widgetConfig.data) {
+                    if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                        if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
+                            widget.widgetConfig.data[0].url += `&${params}`;
+                        } else {
+                            widget.widgetConfig.data[0].url += `?${params}`;
+                        }
+                    } else if (widget.widgetConfig.data.url) {
+                        if (widget.widgetConfig.data.url.indexOf('?') >= 0) {
+                            widget.widgetConfig.data.url += `&${params}`;
+                        } else {
+                            widget.widgetConfig.data.url += `?${params}`;
+                        }
                     }
                 }
             }
