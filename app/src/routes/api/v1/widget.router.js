@@ -26,6 +26,45 @@ class WidgetRouter {
             const dataset = ctx.params.dataset;
             logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
             const widget = await WidgetService.get(id, dataset, ctx.query.includes);
+            const queryParams = Object.keys(ctx.query);
+            if (queryParams.indexOf('loggedUser') !== -1) {
+                queryParams.splice(queryParams.indexOf('loggedUser'), 1);
+            }
+            if (queryParams.indexOf('includes') !== -1) {
+                queryParams.splice(queryParams.indexOf('includes'), 1);
+            }
+            if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
+                if (queryParams.indexOf('queryUrl') >= 0) {
+                    widget.queryUrl = ctx.query.queryUrl;
+                    if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                        widget.widgetConfig.data[0].url = ctx.query.queryUrl;
+                    }
+                    queryParams.splice(queryParams.indexOf('queryUrl'), 1);
+                }
+            }
+            if (queryParams.length > 0) {
+                logger.debug(queryParams);
+                let params = '';
+                for (let i = 0; i < queryParams.length; i++) {
+                    if (params !== '') {
+                        params += '&';
+                    }
+                    params += `${queryParams[i]}=${ctx.query[queryParams[i]]}`;
+                }
+                if (widget.queryUrl.indexOf('?') >= 0) {
+                    widget.queryUrl += `&${params}`;
+                } else {
+                    widget.queryUrl += `?${params}`;
+                }
+                
+                if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                    if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
+                        widget.widgetConfig.data[0].url += `&${params}`;
+                    } else {
+                        widget.widgetConfig.data[0].url += `?${params}`;
+                    }
+                }
+            }
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
