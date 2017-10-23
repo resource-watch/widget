@@ -33,6 +33,9 @@ class WidgetRouter {
             if (queryParams.indexOf('includes') !== -1) {
                 queryParams.splice(queryParams.indexOf('includes'), 1);
             }
+            if (queryParams.indexOf('page') !== -1) {
+                queryParams.splice(queryParams.indexOf('page'), 1);
+            }
             if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
                 if (queryParams.indexOf('queryUrl') >= 0) {
                     widget.queryUrl = ctx.query.queryUrl;
@@ -58,7 +61,7 @@ class WidgetRouter {
                     }
                     params += `${queryParams[i]}=${ctx.query[queryParams[i]]}`;
                 }
-                if (widget.queryUrl.indexOf('?') >= 0) {
+                if (widget.queryUrl && widget.queryUrl.indexOf('?') >= 0) {
                     widget.queryUrl += `&${params}`;
                 } else {
                     widget.queryUrl += `?${params}`;
