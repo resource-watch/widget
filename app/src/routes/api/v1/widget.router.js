@@ -61,10 +61,12 @@ class WidgetRouter {
                     }
                     params += `${queryParams[i]}=${ctx.query[queryParams[i]]}`;
                 }
-                if (widget.queryUrl && widget.queryUrl.indexOf('?') >= 0) {
-                    widget.queryUrl += `&${params}`;
-                } else {
-                    widget.queryUrl += `?${params}`;
+                if (widget.queryUrl) {
+                    if (widget.queryUrl.indexOf('?') >= 0) {
+                        widget.queryUrl += `&${params}`;
+                    } else {
+                        widget.queryUrl += `?${params}`;
+                    }
                 }
                 
                 if (widget.widgetConfig && widget.widgetConfig.data) {
