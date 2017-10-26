@@ -25,7 +25,7 @@ class WidgetRouter {
             const id = ctx.params.widget;
             const dataset = ctx.params.dataset;
             logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-            const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
+            const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
             const widget = await WidgetService.get(id, dataset, includes);
             const queryParams = Object.keys(ctx.query);
             if (queryParams.indexOf('loggedUser') !== -1) {
