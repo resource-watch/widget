@@ -338,7 +338,7 @@ class WidgetService {
 
     static async hasPermission(id, user) {
         let permission = true;
-        const widget = await WidgetService.get(id);
+        const widget = await WidgetService.get(id, null, []);
         const appPermission = widget.application.find(widgetApp =>
             user.extraUserData.apps.find(app => app === widgetApp)
         );
