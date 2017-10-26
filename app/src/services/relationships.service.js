@@ -30,6 +30,7 @@ class RelationshipsService {
                         name: user.data[widgets[i].userId].name,
                         email: user.data[widgets[i].userId].email
                     };
+                    logger.info('Widgets', widgets);
                 }
             } catch (err) {
                 logger.err(err);
