@@ -116,7 +116,7 @@ class WidgetService {
         await Widget.update({ dataset }, { $set: { env } }, { multi: true });
     }
 
-    static async get(id, dataset, includes) {
+    static async get(id, dataset, includes = []) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.info(`[DBACCES-FIND]: ID: ${id}`);
         let widget = await Widget.findById(id).exec();
@@ -125,7 +125,7 @@ class WidgetService {
             if (dataset && dataset !== widget.dataset) {
                 throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
             } else {
-                if (includes.length > 0) {
+                if (includes && includes.length > 0) {
                     logger.debug('Finding relationships');
                     let widgets = await RelationshipsService.getRelationships([widget], includes);
                     return widgets[0];
