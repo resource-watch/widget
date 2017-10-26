@@ -8,7 +8,7 @@ class RelationshipsService {
         logger.info(`Getting relationships of widgets: ${widgets}`);
         for (let i = 0; i < widgets.length; i++) {
             try {
-                if (includes.indexOf('vocabulary')) {
+                if (includes.indexOf('vocabulary') > -1) {
                     const vocabularies = await ctRegisterMicroservice.requestToMicroservice({
                         uri: `/dataset/${widgets[i].dataset}/widget/${widgets[i]._id}/vocabulary`,
                         method: 'GET',
@@ -16,7 +16,7 @@ class RelationshipsService {
                     });
                     widgets[i].vocabulary = vocabularies.data;
                 }
-                if (includes.indexOf('user')) {
+                if (includes.indexOf('user') > -1) {
                     const user = await ctRegisterMicroservice.requestToMicroservice({
                         uri: `/auth/user/find-by-ids`,
                         method: 'POST',
@@ -33,7 +33,7 @@ class RelationshipsService {
                     logger.info('Widgets', widgets);
                 }
             } catch (err) {
-                logger.err(err);
+                logger.error(err);
             }
         }
         return widgets;
