@@ -13,7 +13,6 @@ services:
       API_VERSION: v1
       CT_REGISTER_MODE: auto
       REDIS_URL: redis://redis:6379
-      CACHE: "true"
     command: develop
     depends_on:
       - mongo

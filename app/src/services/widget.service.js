@@ -125,9 +125,9 @@ class WidgetService {
             if (dataset && dataset !== widget.dataset) {
                 throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
             } else {
-                if (includes && includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
-                    logger.debug('Finding vocabularies');
-                    let widgets = await RelationshipsService.getRelationships([widget]);
+                if (includes.length > 0) {
+                    logger.debug('Finding relationships');
+                    let widgets = await RelationshipsService.getRelationships([widget], includes);
                     return widgets[0];
                 }
                 return widget;
@@ -220,10 +220,9 @@ class WidgetService {
         logger.info(`[DBACCESS-FIND]: widget`);
         let pages = await Widget.paginate(filteredQuery, options);
         pages = Object.assign({}, pages);
-
-        if (includes.length > 0 && includes.indexOf('vocabulary') >= 0) {
-            logger.debug('Finding vocabularies');
-            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, Object.assign({}, query));
+        if (includes.length > 0) {
+            logger.debug('Finding relationships');
+            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes);
         }
         return pages;
     }

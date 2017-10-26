@@ -25,7 +25,8 @@ class WidgetRouter {
             const id = ctx.params.widget;
             const dataset = ctx.params.dataset;
             logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-            const widget = await WidgetService.get(id, dataset, ctx.query.includes);
+            const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
+            const widget = await WidgetService.get(id, dataset, includes);
             const queryParams = Object.keys(ctx.query);
             if (queryParams.indexOf('loggedUser') !== -1) {
                 queryParams.splice(queryParams.indexOf('loggedUser'), 1);
@@ -33,7 +34,7 @@ class WidgetRouter {
             if (queryParams.indexOf('includes') !== -1) {
                 queryParams.splice(queryParams.indexOf('includes'), 1);
             }
-            if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {                
+            if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
                 widget.queryUrl = ctx.query.queryUrl;
                 if (widget.widgetConfig && widget.widgetConfig.data) {
                     if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
@@ -46,7 +47,7 @@ class WidgetRouter {
                     widget.widgetConfig.data[0].url = ctx.query.queryUrl;
                 }
                 queryParams.splice(queryParams.indexOf('queryUrl'), 1);
-                
+
             }
             if (queryParams.length > 0) {
                 logger.debug(queryParams);
@@ -64,7 +65,7 @@ class WidgetRouter {
                         widget.queryUrl += `?${params}`;
                     }
                 }
-                
+
                 if (widget.widgetConfig && widget.widgetConfig.data) {
                     if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
                         if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
