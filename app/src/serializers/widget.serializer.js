@@ -24,7 +24,8 @@ class WidgetSerializer {
                 layerId: el.layerId,
                 createdAt: el.createdAt,
                 updatedAt: el.updatedAt,
-                vocabulary: el.vocabulary
+                vocabulary: el.vocabulary,
+                user: el.user
             }
         };
     }
