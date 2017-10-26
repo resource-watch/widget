@@ -27,8 +27,8 @@ class RelationshipsService {
                         version: false
                     });
                     widgets[i].user = {
-                        name: user.data.name,
-                        email: user.data.email
+                        name: user.data[widgets[i].userId].name,
+                        email: user.data[widgets[i].userId].email
                     };
                 }
             } catch (err) {
