@@ -5,6 +5,8 @@ const DatasetService = require('services/dataset.service');
 const WidgetSerializer = require('serializers/widget.serializer');
 const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
+const WidgetNotFound = require('errors/widgetNotFound.error');
+const WidgetProtected = require('errors/widgetProtected.error');
 
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
@@ -111,6 +113,14 @@ class WidgetRouter {
             ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
+            if (err instanceof WidgetProtected) {
+                ctx.throw(400, err.message);
+                return;
+            }
+            if (err instanceof WidgetNotFound) {
+                ctx.throw(404, err.message);
+                return;
+            }
             throw err;
         }
     }

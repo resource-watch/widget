@@ -21,6 +21,7 @@ const Widget = new Schema({
   layerId:            { type: String, required: false, trim: true },
   verified:	      { type: Boolean, default: false  },
   default:	      { type: Boolean, default: false  },
+  protected:	      { type: Boolean, default: false  },
   defaultEditableWidget: { type: Boolean, default: false },
   template:	      { type: Boolean, default: false  },
   published:          { type: Boolean, default: true   },

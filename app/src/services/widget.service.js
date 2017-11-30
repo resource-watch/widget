@@ -4,6 +4,7 @@ const Widget = require('models/widget.model');
 const DatasetService = require('services/dataset.service');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const DuplicatedWidget = require('errors/duplicatedWidget.error');
+const WidgetProtected = require('errors/widgetProtected.error');
 const GraphService = require('services/graph.service');
 const RelationshipsService = require('services/relationships.service');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
@@ -44,7 +45,9 @@ class WidgetService {
         currentWidget.authors = widget.authors || currentWidget.authors;
         currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
-
+        if (widget.protected === false || widget.protected === true) {
+            currentWidget.protected = widget.protected;
+        }
         // Those == null wrapped in parens are totally on purpose: undefined is being coerced
         if (!(widget.template == null)) {
             currentWidget.template = widget.template;
@@ -91,6 +94,7 @@ class WidgetService {
             default: widget.default,
             defaultEditableWidget: widget.defaultEditableWidget,
             published: widget.published,
+            protected: widget.protected,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
             env: dataset.env,
@@ -101,7 +105,7 @@ class WidgetService {
 
         logger.debug('[WidgetService]: Creating in graph');
         try {
-            // await GraphService.createWidget(datasetId || widget.dataset, newWidget._id);
+            await GraphService.createWidget(datasetId || widget.dataset, newWidget._id);
         } catch (err) {
             logger.error('Error creating widget in graph. Removing widget');
             await newWidget.remove();
@@ -144,6 +148,10 @@ class WidgetService {
         if (!widget) {
             logger.error(`[WidgetService]: Widget not found with the id ${id}`);
             throw new WidgetNotFound(`Widget not found with the id ${id}`);
+        }
+        if (widget.protected) {
+            logger.error(`[WidgetService]: Widget with id ${id} is protected`);
+            throw new WidgetProtected(`Widget is protected`);
         }
         logger.debug('[WidgetService]: Deleting in graph');
         try {
