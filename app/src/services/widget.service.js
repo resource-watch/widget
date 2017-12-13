@@ -12,11 +12,23 @@ const slug = require('slug');
 
 class WidgetService {
 
-    static getSlug(name) {
-        if (name) {
-            return slug(name);
+    static async getSlug(name) {
+        let valid = false;
+        let slugTemp = null;
+        let i = 0;
+        while (!valid) {
+            slugTemp = slug(name);
+            if (i > 0) {
+                slugTemp += `_${i}`;
+            }
+            const currentDataset = await Widget.findOne({
+                slug: slugTemp
+            }).exec();
+            if (!currentDataset) {
+                return slugTemp;
+            }
+            i++;
         }
-        return '';
     }
 
     static async update(id, widget, user) {
@@ -72,14 +84,8 @@ class WidgetService {
 
     static async create(widget, datasetId, dataset, user) {
         logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
-        const tempSlug = WidgetService.getSlug(widget.name);
-        const currentWidget = await Widget.findOne({
-            slug: tempSlug
-        }).exec();
-        if (currentWidget) {
-            logger.error(`[WidgetService]: Widget with name ${widget.name} generates an existing slug: ${tempSlug}`);
-            throw new DuplicatedWidget(`Slug already existing: ${tempSlug}`);
-        }
+        const tempSlug = await WidgetService.getSlug(widget.name);
+        
 
         const newWidget = await new Widget({
             name: widget.name,
