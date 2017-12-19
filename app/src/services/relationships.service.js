@@ -39,8 +39,7 @@ class RelationshipsService {
                         json: true,
                         body: {
                             ids: [widgets[i].id]
-                        },
-                        version: false
+                        }
                     });
                     widgets[i].metadata = metadata;
                 }
