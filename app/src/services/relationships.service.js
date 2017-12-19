@@ -41,7 +41,7 @@ class RelationshipsService {
                             ids: [widgets[i].id]
                         }
                     });
-                    widgets[i].metadata = metadata;
+                    widgets[i].metadata = metadata.data;
                 }
             } catch (err) {
                 logger.error(err);
