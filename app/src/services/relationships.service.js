@@ -34,7 +34,7 @@ class RelationshipsService {
                 }
                 if (includes.indexOf('metadata') > -1) {
                     const metadata = await ctRegisterMicroservice.requestToMicroservice({
-                        uri: `/dataset/${widgets[i].dataset}/widget/metadata/get-by-ids`,
+                        uri: `/dataset/${widgets[i].dataset}/widget/metadata/find-by-ids`,
                         method: 'POST',
                         json: true,
                         body: {
