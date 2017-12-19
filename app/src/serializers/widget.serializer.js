@@ -26,7 +26,8 @@ class WidgetSerializer {
                 createdAt: el.createdAt,
                 updatedAt: el.updatedAt,
                 vocabulary: el.vocabulary,
-                user: el.user
+                user: el.user,
+                metadata: el.metadata
             }
         };
     }
