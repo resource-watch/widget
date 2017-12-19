@@ -32,6 +32,18 @@ class RelationshipsService {
                     };
                     logger.info('Widgets', widgets);
                 }
+                if (includes.indexOf('metadata') > -1) {
+                    const metadata = await ctRegisterMicroservice.requestToMicroservice({
+                        uri: `/dataset/${widgets[i].dataset}/widget/metadata/get-by-ids`,
+                        method: 'POST',
+                        json: true,
+                        body: {
+                            ids: [widgets[i].id]
+                        },
+                        version: false
+                    });
+                    widgets[i].metadata = metadata;
+                }
             } catch (err) {
                 logger.error(err);
             }
