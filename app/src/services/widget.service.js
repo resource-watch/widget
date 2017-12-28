@@ -76,6 +76,9 @@ class WidgetService {
         if (!(widget.published == null)) {
             currentWidget.published = widget.published;
         }
+        if (!(widget.freeze == null)) {
+            currentWidget.freeze = widget.freeze;
+        }
 
         let newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
@@ -100,6 +103,7 @@ class WidgetService {
             default: widget.default,
             defaultEditableWidget: widget.defaultEditableWidget,
             published: widget.published,
+            freeze: widget.freeze,
             protected: widget.protected,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
