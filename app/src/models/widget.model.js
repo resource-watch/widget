@@ -25,6 +25,7 @@ const Widget = new Schema({
   defaultEditableWidget: { type: Boolean, default: false },
   template:	      { type: Boolean, default: false  },
   published:          { type: Boolean, default: true   },
+  freeze:          { type: Boolean, default: false   },
   createdAt:	      { type: Date,   default: Date.now},
   updatedAt:	      { type: Date,   default: Date.now}
 });

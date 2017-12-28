@@ -18,6 +18,7 @@ class WidgetSerializer {
                 protected: el.protected,
                 defaultEditableWidget: el.defaultEditableWidget,
                 published: el.published,
+                freeze: el.freeze,
                 env: el.env,
                 queryUrl: el.queryUrl,
                 widgetConfig: el.widgetConfig,
