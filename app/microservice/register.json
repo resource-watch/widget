@@ -4,6 +4,8 @@
         "gfw",
         "rw"
     ],
+    "cache": ["widget"],
+	"uncache": ["widget", "dataset"],
     "endpoints": [{
         "path": "/v1/widget",
         "method": "GET",
@@ -83,7 +85,7 @@
         }
     }, {
         "path": "/v1/widget/find-by-ids",
-        "method": "POST",        
+        "method": "POST",
         "redirect": {
             "method": "POST",
             "path": "/api/v1/widget/find-by-ids"
