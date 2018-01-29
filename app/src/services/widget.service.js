@@ -115,7 +115,7 @@ class WidgetService {
 
         logger.debug('[WidgetService]: Creating in graph');
         try {
-            //await GraphService.createWidget(datasetId || widget.dataset, newWidget._id);
+            await GraphService.createWidget(datasetId || widget.dataset, newWidget._id);
         } catch (err) {
             logger.error('Error creating widget in graph. Removing widget');
             await newWidget.remove();
