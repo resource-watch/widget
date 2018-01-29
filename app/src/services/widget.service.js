@@ -88,7 +88,7 @@ class WidgetService {
     static async create(widget, datasetId, dataset, user) {
         logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
         const tempSlug = await WidgetService.getSlug(widget.name);
-        
+
 
         const newWidget = await new Widget({
             name: widget.name,
@@ -115,7 +115,7 @@ class WidgetService {
 
         logger.debug('[WidgetService]: Creating in graph');
         try {
-            await GraphService.createWidget(datasetId || widget.dataset, newWidget._id);
+            //await GraphService.createWidget(datasetId || widget.dataset, newWidget._id);
         } catch (err) {
             logger.error('Error creating widget in graph. Removing widget');
             await newWidget.remove();
