@@ -246,6 +246,7 @@ class WidgetService {
     }
 
     static getFilteredQuery(query, ids = []) {
+        const collection = query.collection;
         if (!query.application && query.app) {
             query.application = query.app;
         }
@@ -291,13 +292,12 @@ class WidgetService {
                     $in: query[param].split(',')
                 };
             }
-
-            if (ids.length > 0) {
-                query._id = {
-                    $in: ids
-                };
-            }
         });
+        if (ids.length > 0 || collection) {
+            query._id = {
+                $in: ids
+            };
+        }
         return query;
     }
 
