@@ -149,12 +149,8 @@ class WidgetRouter {
                 return;
             }
             logger.debug('Obtaining collections', userId);
-            if (userId) {
-                ctx.query.ids = await RelationshipsService.getCollections(ctx.query.collection, userId);
-                ctx.query.ids = ctx.query.ids.join(',');
-            } else {
-                ctx.query.ids = '';
-            }
+            ctx.query.ids = await RelationshipsService.getCollections(ctx.query.collection, userId);
+            ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
             logger.debug('Ids from collections', ctx.query.ids);
         }
         const widgets = await WidgetService.getAll(query, dataset);
