@@ -247,8 +247,12 @@ class WidgetService {
 
     static getFilteredQuery(query, ids = []) {
         const collection = query.collection;
+        const favorite = query.favorite;
         if (!query.application && query.app) {
             query.application = query.app;
+            if (favorite) {
+                delete query.application;
+            }
         }
         if (!query.env) {
             query.env = 'production';
@@ -293,7 +297,7 @@ class WidgetService {
                 };
             }
         });
-        if (ids.length > 0 || collection) {
+        if (ids.length > 0 || collection || favorite) {
             query._id = {
                 $in: ids
             };
