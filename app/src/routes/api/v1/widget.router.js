@@ -153,6 +153,15 @@ class WidgetRouter {
             ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
             logger.debug('Ids from collections', ctx.query.ids);
         }
+        if (Object.keys(query).find(el => el.indexOf('collection') >= 0)) {
+            if (!userId) {
+                ctx.throw(403, 'Collection filter not authorized');
+                return;
+            }
+            ctx.query.ids = await RelationshipsService.getCollections(ctx.query.collection, userId);
+            ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
+            logger.debug('Ids from collections', ctx.query.ids);
+        }
         const widgets = await WidgetService.getAll(query, dataset);
         const clonedQuery = Object.assign({}, query);
         delete clonedQuery['page[size]'];
