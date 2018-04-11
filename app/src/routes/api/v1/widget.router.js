@@ -280,6 +280,7 @@ const authorizationMiddleware = async(ctx, next) => {
     logger.info(`[WidgetRouter] Checking authorization`);
     // Get user from query (delete) or body (post-patch)
     const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
+    const newWidgetUpdate = ctx.request.path.includes('widget') && ctx.request.method === 'PATCH';
     const user = WidgetRouter.getUser(ctx);
     if (user.id === 'microservice') {
         await next();
@@ -290,9 +291,20 @@ const authorizationMiddleware = async(ctx, next) => {
         return;
     }
     if (user.role === 'USER') {
-        if (!newWidgetCreation) {
+        if (!newWidgetCreation && !newWidgetUpdate) {
             ctx.throw(403, 'Forbidden'); // if user is USER -> out
             return;
+        }
+        if (newWidgetUpdate) {
+            try {
+                const permission = await WidgetService.hasPermission(ctx.params.widget, user);
+                if (!permission) {
+                    ctx.throw(403, 'Forbidden');
+                    return;
+                }
+            } catch (err) {
+                throw err;
+            }
         }
     }
     const application = ctx.request.query.application ? ctx.request.query.application : ctx.request.body.application;

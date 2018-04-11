@@ -367,7 +367,7 @@ class WidgetService {
         if (!appPermission) {
             permission = false;
         }
-        if ((user.role === 'MANAGER') && (!widget.userId || widget.userId !== user.id)) {
+        if ((user.role === 'MANAGER' || user.role === 'USER') && (!widget.userId || widget.userId !== user.id)) {
             permission = false;
         }
         return permission;
