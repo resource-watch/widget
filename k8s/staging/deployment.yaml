@@ -62,16 +62,7 @@ spec:
                 secretKeyRef:
                   name: mssecrets
                   key: CARTODB_USER
-          - name: FASTLY_APIKEY
-            valueFrom:
-                secretKeyRef:
-                  name: ctsecrets
-                  key: FASTLY_APIKEY
-          - name: FASTLY_SERVICEID
-            valueFrom:
-                secretKeyRef:
-                  name: ctsecrets
-                  key: FASTLY_SERVICEID
+
         ports:
           - containerPort: 3050
 
