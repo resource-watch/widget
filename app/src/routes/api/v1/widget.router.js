@@ -8,6 +8,7 @@ const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
+const FastlyPurge = require('fastly-purge');
 
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
@@ -86,6 +87,7 @@ class WidgetRouter {
                 }
             }
             ctx.set('cache-control', 'flush');
+            ctx.set('Surrogate-Key', `widget-${id}`);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -183,6 +185,17 @@ class WidgetRouter {
         try {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
+            const fastlyPurge = new FastlyPurge(process.env.FASTLY_APIKEY);
+            const SERVICE_ID = process.env.FASTLY_SERVICEID;
+            await new Promise((resolve, reject) => {
+                fastlyPurge.key(SERVICE_ID, `widget-${id}`, (err) => {
+                    if (err) {
+                        logger.error('Error purging', err);
+                        reject();
+                    }
+                    resolve();
+                });
+            });
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
