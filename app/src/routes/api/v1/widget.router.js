@@ -185,17 +185,21 @@ class WidgetRouter {
         try {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
-            const fastlyPurge = new FastlyPurge(process.env.FASTLY_APIKEY);
-            const SERVICE_ID = process.env.FASTLY_SERVICEID;
-            await new Promise((resolve, reject) => {
-                fastlyPurge.key(SERVICE_ID, `widget-${id}`, (err) => {
-                    if (err) {
-                        logger.error('Error purging', err);
-                        reject();
-                    }
-                    resolve();
+            try {
+                const fastlyPurge = new FastlyPurge(process.env.FASTLY_APIKEY);
+                const SERVICE_ID = process.env.FASTLY_SERVICEID;
+                await new Promise((resolve, reject) => {
+                    fastlyPurge.key(SERVICE_ID, `widget-${id}`, (err) => {
+                        if (err) {
+                            logger.error('Error purging', err);
+                            reject();
+                        }
+                        resolve();
+                    });
                 });
-            });
+            } catch (e) {
+                logger.error(e);
+            }
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
