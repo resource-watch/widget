@@ -57,6 +57,7 @@ class WidgetService {
         currentWidget.authors = widget.authors || currentWidget.authors;
         currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
+        currentWidget.env = widget.env || currentWidget.env;
         if (widget.protected === false || widget.protected === true) {
             currentWidget.protected = widget.protected;
         }
@@ -107,7 +108,7 @@ class WidgetService {
             protected: widget.protected,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
-            env: dataset.env,
+            env: widget.env,
             widgetConfig: widget.widgetConfig,
             template: widget.template,
             layerId: widget.layerId
@@ -254,8 +255,11 @@ class WidgetService {
                 delete query.application;
             }
         }
-        if (!query.env) {
+        if (!query.env) { // default value
             query.env = 'production';
+        }
+        if (!query.published) { // default value
+            query.published = true;
         }
 
         const widgetAttributes = Object.keys(Widget.schema.obj);
