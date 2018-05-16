@@ -40,11 +40,22 @@ class DatasetService {
             }
         } else {
             // If no datasets are present, it has to be catched by the validator
-            logger.info(`[DatasetService] No dataset provided in this context.`);
+	    // Not anymore - need to add it for proper cache tagging
+            logger.info(`[DatasetService] No dataset provided in this context. Adding.`);
+	    try {
+		const widgetId = await ctRegisterMicroservice.requestToMicroservice({
+		    uri: `/widget/${ctx.request.body.id}`,
+		    method: 'GET',
+		    json: true
+		});
+	    } catch (err) {
+		logger.info(`[DatasetService] There was an error obtaining the dataset: ${err}`);
+                throw err;
+	    }
+	    logger.debug(deserializer(widgetId));
             return null;
         }
     }
-
 }
 
 

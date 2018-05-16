@@ -9,7 +9,7 @@ const WidgetNotValid = require('errors/widgetNotValid.error');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
 const FastlyPurge = require('fastly-purge');
-
+const validator = require('validator');
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
 
@@ -361,6 +361,46 @@ const isMicroservice = async function (ctx, next) {
     }
 };
 
+const cacheMiddleware = async function (ctx, next) {
+    logger.info('[WidgetRouter] Uncaching endpoints');
+    logger.debug('Analysing route');
+    logger.debug(JSON.stringify(ctx.request));
+    logger.debug(JSON.stringify(ctx.state));
+
+    const method = ctx.request.method;
+
+    // logger.debug(url);
+    // logger.debug(params);
+    // logger.debug(method);
+
+    // const uuids = url.filter(elem => validator.isUUID(elem));
+    // logger.debug(uuids);
+    
+    // logger.debug(validator.isUUID("test"));
+    // False
+    // logger.debug(validator.isUUID("122c2d69-2692-4624-9b25-3486ba03ca51"));
+    // True
+
+    switch(method) {
+    case 'GET':
+	logger.debug('A GET was found');
+	// Here we'll set up the caching
+	logger.debug(`Dataset id is: ${ctx.state.dataset.id}`);
+	break;
+    case 'POST':
+	logger.debug('A POST was found');
+	break;
+    case 'PATCH':
+	logger.debug('A PATCH was found');
+	break;
+    case 'DELETE':
+	logger.debug('A DELETE was found');
+	break;
+    }    
+    
+    await next();
+};
+
 // Declaring the routes
 // Index
 router.get('/widget', WidgetRouter.getAll);
@@ -369,8 +409,8 @@ router.get('/dataset/:dataset/widget', datasetValidationMiddleware, WidgetRouter
 router.post('/widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.create);
 router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.create);
 // Read
-router.get('/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
-router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
+router.get('/widget/:widget', datasetValidationMiddleware, cacheMiddleware, WidgetRouter.get);
+router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, cacheMiddleware, WidgetRouter.get);
 // Update
 router.patch('/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
 router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
