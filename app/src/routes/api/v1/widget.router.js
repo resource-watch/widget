@@ -12,6 +12,7 @@ const FastlyPurge = require('fastly-purge');
 const validator = require('validator');
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
+const ctRegisterMicroservice = require('ct-register-microservice-node');
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
@@ -87,7 +88,7 @@ class WidgetRouter {
                 }
             }
             ctx.set('cache-control', 'flush');
-            ctx.set('Surrogate-Key', `widget-${id}`);
+            //octx.set('Surrogate-Key', `widget-${id}`);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -101,6 +102,7 @@ class WidgetRouter {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
             ctx.set('cache-control', 'flush');
+	    ctx.set('uncache', `widget dataset-widget`);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -176,6 +178,7 @@ class WidgetRouter {
         const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
+	ctx.set('cache', 'widget');
     }
 
     static async update(ctx) {
@@ -363,40 +366,37 @@ const isMicroservice = async function (ctx, next) {
 
 const cacheMiddleware = async function (ctx, next) {
     logger.info('[WidgetRouter] Uncaching endpoints');
-    logger.debug('Analysing route');
-    logger.debug(JSON.stringify(ctx.request));
-    logger.debug(JSON.stringify(ctx.state));
+    const widgetId = ctx.params.widget;
+    const widget = await WidgetService.get(widgetId);
+    const widgetSlug = widget.slug;
+    const datasetId = widget.dataset;
+    const dataset = await ctRegisterMicroservice.requestToMicroservice({
+        uri: `/dataset/${datasetId}`,
+        method: 'GET',
+        json: true
+    });
+
+    const datasetSlug = dataset.data.attributes.slug;
+    const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
+    const includesFragment = includes.length > 0 ? 
+	  includes.map(include => `${widgetId}-${include}-all`).join(" ")
+	  : "";
 
     const method = ctx.request.method;
-
-    // logger.debug(url);
-    // logger.debug(params);
-    // logger.debug(method);
-
-    // const uuids = url.filter(elem => validator.isUUID(elem));
-    // logger.debug(uuids);
-    
-    // logger.debug(validator.isUUID("test"));
-    // False
-    // logger.debug(validator.isUUID("122c2d69-2692-4624-9b25-3486ba03ca51"));
-    // True
-
     switch(method) {
     case 'GET':
-	logger.debug('A GET was found');
-	// Here we'll set up the caching
-	logger.debug(`Dataset id is: ${ctx.state.dataset.id}`);
+	ctx.set('cache', [widgetId, widgetSlug, includesFragment].join(" "));
 	break;
-    case 'POST':
-	logger.debug('A POST was found');
-	break;
+    // case 'POST':
+    // 	ctx.set('uncache', `widget dataset-widget`);
+    // 	break;
     case 'PATCH':
-	logger.debug('A PATCH was found');
+ 	ctx.set('uncache', ['widget', widgetId, widgetSlug, 'dataset-widget', `${datasetId}-widget-all`, `${datasetSlug}-widget-all`].join(" "));
 	break;
     case 'DELETE':
-	logger.debug('A DELETE was found');
+	ctx.set('uncache', ['widget', widgetId, widgetSlug, 'dataset-widget', `${datasetId}-widget-all`, `${datasetSlug}-widget-all`].join(" "));
 	break;
-    }    
+    }
     
     await next();
 };
@@ -407,16 +407,16 @@ router.get('/widget', WidgetRouter.getAll);
 router.get('/dataset/:dataset/widget', datasetValidationMiddleware, WidgetRouter.getAll);
 // Create
 router.post('/widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.create);
-router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.create);
+router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware,  WidgetRouter.create);
 // Read
 router.get('/widget/:widget', datasetValidationMiddleware, cacheMiddleware, WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, cacheMiddleware, WidgetRouter.get);
 // Update
-router.patch('/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
-router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
+router.patch('/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, cacheMiddleware, WidgetRouter.update);
+router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, cacheMiddleware, WidgetRouter.update);
 // Delete
-router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
-router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
+router.delete('/widget/:widget', authorizationMiddleware, cacheMiddleware, WidgetRouter.delete);
+router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, cacheMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget', isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
 // Get by IDs
 router.post('/widget/find-by-ids', WidgetRouter.getByIds);
