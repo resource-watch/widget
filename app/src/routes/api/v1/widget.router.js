@@ -87,8 +87,6 @@ class WidgetRouter {
                     }
                 }
             }
-            ctx.set('cache-control', 'flush');
-            //octx.set('Surrogate-Key', `widget-${id}`);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -101,8 +99,12 @@ class WidgetRouter {
             const dataset = ctx.params.dataset;
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
-            ctx.set('cache-control', 'flush');
-	    ctx.set('uncache', `widget dataset-widget`);
+	    const widgetId = widget.dataset;
+	    var uncache = ['widget', 'dataset-widget'];
+	    if (widget.dataset) {
+		uncache.push(`${widget.dataset}-widget-all`);
+	    }
+	    ctx.set('uncache', uncache.join(" "));
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -115,7 +117,6 @@ class WidgetRouter {
         try {
             const dataset = ctx.params.dataset;
             const widget = await WidgetService.delete(id, dataset);
-            ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             if (err instanceof WidgetProtected) {
@@ -135,7 +136,6 @@ class WidgetRouter {
         logger.info(`[WidgetRouter] Deleting widgets of dataset with id: ${id}`);
         try {
             const widget = await WidgetService.deleteByDataset(id);
-            ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -178,7 +178,13 @@ class WidgetRouter {
         const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
-	ctx.set('cache', 'widget');
+
+	var caches = ['widget'];
+	if (dataset) {
+	    caches.push(`${dataset}-widget-all`);
+	}
+	
+	ctx.set('cache', caches.join(" "));
     }
 
     static async update(ctx) {
@@ -421,6 +427,4 @@ router.delete('/dataset/:dataset/widget', isMicroserviceMiddleware, WidgetRouter
 // Get by IDs
 router.post('/widget/find-by-ids', WidgetRouter.getByIds);
 router.patch('/widget/change-environment/:dataset/:env', isMicroservice, WidgetRouter.updateEnvironment);
-
-
 module.exports = router;
