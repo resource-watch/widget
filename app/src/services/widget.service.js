@@ -128,7 +128,11 @@ class WidgetService {
 
     static async updateEnvironment(dataset, env) {
         logger.debug('Updating widgets with dataset', dataset);
+        const widgets = await Widget.find({
+            dataset
+        }).exec();
         await Widget.update({ dataset }, { $set: { env } }, { multi: true });
+        return widgets;
     }
 
     static async get(id, dataset, includes = []) {
@@ -152,7 +156,7 @@ class WidgetService {
         }
     }
 
-    static async delete(id, dataset) {
+    static async delete(id) {
         logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
         logger.info(`[DBACCES-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
@@ -176,7 +180,8 @@ class WidgetService {
         } catch (err) {
             logger.error('Error removing metadata of the widget', err);
         }
-        return widget.remove();
+        await widget.remove();
+        return widget;
     }
 
     static async deleteByDataset(id) {
@@ -202,6 +207,7 @@ class WidgetService {
             }
 
         }
+        return widgets;
     }
 
     static async deleteMedadata(datasetId, widgetId) {

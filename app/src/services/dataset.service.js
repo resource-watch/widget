@@ -40,11 +40,11 @@ class DatasetService {
             }
         } else {
             // If no datasets are present, it has to be catched by the validator
+	    // Not anymore - need to add it for proper cache tagging
             logger.info(`[DatasetService] No dataset provided in this context.`);
             return null;
         }
     }
-
 }
 
 

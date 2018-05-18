@@ -8,10 +8,10 @@ const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
-const FastlyPurge = require('fastly-purge');
-
+const validator = require('validator');
 const router = new Router();
 const USER_ROLES = require('app.constants').USER_ROLES;
+const ctRegisterMicroservice = require('ct-register-microservice-node');
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
@@ -41,7 +41,7 @@ class WidgetRouter {
             if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
                 widget.queryUrl = ctx.query.queryUrl;
                 if (widget.widgetConfig && widget.widgetConfig.data) {
-                    if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                    if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url)  {
                         widget.widgetConfig.data[0].url = ctx.query.queryUrl;
                     } else if (widget.widgetConfig.data.url) {
                         widget.widgetConfig.data.url = ctx.query.queryUrl;
@@ -71,7 +71,7 @@ class WidgetRouter {
                 }
 
                 if (widget.widgetConfig && widget.widgetConfig.data) {
-                    if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                    if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url)  {
                         if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
                             widget.widgetConfig.data[0].url += `&${params}`;
                         } else {
@@ -86,9 +86,15 @@ class WidgetRouter {
                     }
                 }
             }
-            ctx.set('cache-control', 'flush');
-            ctx.set('Surrogate-Key', `widget-${id}`);
             ctx.body = WidgetSerializer.serialize(widget);
+            const cache = [id, widget.slug];
+            if (includes) {
+                includes.forEach(inc => {
+                    cache.push(`${id}-${inc}`);
+                    cache.push(`${widget.slug}-${inc}`);
+                });
+            }
+            ctx.set('cache', cache.join(' '));
         } catch (err) {
             throw err;
         }
@@ -100,7 +106,8 @@ class WidgetRouter {
             const dataset = ctx.params.dataset;
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
-            ctx.set('cache-control', 'flush');
+            const widgetId = widget.dataset;
+            ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -113,8 +120,8 @@ class WidgetRouter {
         try {
             const dataset = ctx.params.dataset;
             const widget = await WidgetService.delete(id, dataset);
-            ctx.set('cache-control', 'flush');
             ctx.body = WidgetSerializer.serialize(widget);
+            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         } catch (err) {
             if (err instanceof WidgetProtected) {
                 ctx.throw(400, err.message);
@@ -132,9 +139,16 @@ class WidgetRouter {
         const id = ctx.params.dataset;
         logger.info(`[WidgetRouter] Deleting widgets of dataset with id: ${id}`);
         try {
-            const widget = await WidgetService.deleteByDataset(id);
-            ctx.set('cache-control', 'flush');
-            ctx.body = WidgetSerializer.serialize(widget);
+            const widgets = await WidgetService.deleteByDataset(id);
+            ctx.body = WidgetSerializer.serialize(widgets);
+            const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
+            if (widgets) {
+                widgets.forEach(widget => {
+                    uncache.push(widget._id);
+                    uncache.push(widget.slug);
+                });
+            }
+            ctx.set('uncache', uncache.join(' '));
         } catch (err) {
             throw err;
         }
@@ -176,6 +190,21 @@ class WidgetRouter {
         const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
+
+        const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
+        const cache = ['widget'];
+        if (ctx.params.dataset) {
+            cache.push(`${ctx.params.dataset}-widget-all`);
+        }
+        if (includes) {
+            includes.forEach(inc => {
+                cache.push(`widget-${inc}`);
+                if (ctx.params.dataset) {
+                    cache.push(`${ctx.params.dataset}-widget-all-${inc}`);
+                }
+            });
+        }
+        ctx.set('cache', cache.join(' '));
     }
 
     static async update(ctx) {
@@ -185,24 +214,8 @@ class WidgetRouter {
         try {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
-            try {
-                if (process.env.FASTLY_APIKEY) {
-                    const fastlyPurge = new FastlyPurge(process.env.FASTLY_APIKEY);
-                    const SERVICE_ID = process.env.FASTLY_SERVICEID;
-                    await new Promise((resolve, reject) => {
-                        fastlyPurge.key(SERVICE_ID, `widget-${id}`, (err) => {
-                            if (err) {
-                                logger.error('Error purging', err);
-                                reject();
-                            }
-                            resolve();
-                        });
-                    });
-                }
-            } catch (e) {
-                logger.error(e);
-            }
             ctx.body = WidgetSerializer.serialize(widget);
+            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         } catch (err) {
             throw err;
         }
@@ -230,12 +243,21 @@ class WidgetRouter {
 
     static async updateEnvironment(ctx) {
         logger.info('Updating enviroment of all widgets with dataset ', ctx.params.dataset, ' to environment', ctx.params.env);
-        await WidgetService.updateEnvironment(ctx.params.dataset, ctx.params.env);
+        const widgets = await WidgetService.updateEnvironment(ctx.params.dataset, ctx.params.env);
+        const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, 'dataset-widget'];
+        if (widgets) {
+            widgets.forEach(widget => {
+                uncache.push(widget._id);
+                uncache.push(widget.slug);
+            });
+        }
+        ctx.set('uncache', uncache.join(' '))
         ctx.body = '';
     }
-};
 
-const validationMiddleware = async(ctx, next) => {
+}
+
+const validationMiddleware = async (ctx, next) => {
     logger.info(`[WidgetRouter] Validating the widget`);
     if (ctx.request.body.widget) {
         ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
@@ -274,7 +296,7 @@ const validationMiddleware = async(ctx, next) => {
     await next();
 };
 
-const datasetValidationMiddleware = async(ctx, next) => {
+const datasetValidationMiddleware = async (ctx, next) => {
     logger.info(`[WidgetRouter] Validating dataset presence`);
     //
     try {
@@ -285,7 +307,7 @@ const datasetValidationMiddleware = async(ctx, next) => {
     await next();
 };
 
-const isMicroserviceMiddleware = async(ctx, next) => {
+const isMicroserviceMiddleware = async (ctx, next) => {
     logger.debug('Checking if is a microservice');
     const user = WidgetRouter.getUser(ctx);
     if (!user || user.id !== 'microservice') {
@@ -295,7 +317,7 @@ const isMicroserviceMiddleware = async(ctx, next) => {
     await next();
 };
 
-const authorizationMiddleware = async(ctx, next) => {
+const authorizationMiddleware = async (ctx, next) => {
     logger.info(`[WidgetRouter] Checking authorization`);
     // Get user from query (delete) or body (post-patch)
     const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
@@ -361,6 +383,7 @@ const isMicroservice = async function (ctx, next) {
     }
 };
 
+
 // Declaring the routes
 // Index
 router.get('/widget', WidgetRouter.getAll);
@@ -377,10 +400,8 @@ router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, va
 // Delete
 router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
-router.delete('/dataset/:dataset/widget', isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
+router.delete('/dataset/:dataset/widget', datasetValidationMiddleware, isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
 // Get by IDs
 router.post('/widget/find-by-ids', WidgetRouter.getByIds);
-router.patch('/widget/change-environment/:dataset/:env', isMicroservice, WidgetRouter.updateEnvironment);
-
-
+router.patch('/widget/change-environment/:dataset/:env', datasetValidationMiddleware, isMicroservice, WidgetRouter.updateEnvironment);
 module.exports = router;
