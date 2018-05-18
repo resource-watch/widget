@@ -107,7 +107,7 @@ class WidgetRouter {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
             const widgetId = widget.dataset;
-            ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.attributes.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
+            ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -121,7 +121,7 @@ class WidgetRouter {
             const dataset = ctx.params.dataset;
             const widget = await WidgetService.delete(id, dataset);
             ctx.body = WidgetSerializer.serialize(widget);
-            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.attributes.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
+            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         } catch (err) {
             if (err instanceof WidgetProtected) {
                 ctx.throw(400, err.message);
@@ -141,7 +141,7 @@ class WidgetRouter {
         try {
             const widgets = await WidgetService.deleteByDataset(id);
             ctx.body = WidgetSerializer.serialize(widgets);
-            const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.attributes.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
+            const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
             if (widgets) {
                 widgets.forEach(widget => {
                     uncache.push(widget._id);
@@ -215,7 +215,7 @@ class WidgetRouter {
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
             ctx.body = WidgetSerializer.serialize(widget);
-            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.attributes.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
+            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         } catch (err) {
             throw err;
         }
@@ -244,7 +244,7 @@ class WidgetRouter {
     static async updateEnvironment(ctx) {
         logger.info('Updating enviroment of all widgets with dataset ', ctx.params.dataset, ' to environment', ctx.params.env);
         const widgets = await WidgetService.updateEnvironment(ctx.params.dataset, ctx.params.env);
-        const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.attributes.slug}-widget`, 'dataset-widget'];
+        const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, 'dataset-widget'];
         if (widgets) {
             widgets.forEach(widget => {
                 uncache.push(widget._id);
