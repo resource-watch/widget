@@ -54,6 +54,9 @@ class WidgetValidator {
         koaObj.checkBody('published')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
+        koaObj.checkBody('env')
+            .optional()
+            .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('queryUrl')
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
@@ -95,7 +98,7 @@ class WidgetValidator {
         koaObj.checkBody('application')
             .optional()
             .check(v => WidgetValidator.isArray(v), 'must be an array')
-            .check(v => v.length != 0, `can't be an empty array`);
+            .check(v => v.length !== 0, `can't be an empty array`);
         koaObj.checkBody('verified')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
@@ -108,6 +111,9 @@ class WidgetValidator {
         koaObj.checkBody('published')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
+        koaObj.checkBody('env')
+            .optional()
+            .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('queryUrl')
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
