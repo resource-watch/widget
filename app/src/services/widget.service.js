@@ -264,9 +264,9 @@ class WidgetService {
         if (!query.env) { // default value
             query.env = 'production';
         }
-        if (!query.published) { // default value
-            query.published = true;
-        }
+        // if (!query.published) { // default value
+        //     query.published = true;
+        // }
 
         const widgetAttributes = Object.keys(Widget.schema.obj);
         logger.debug(`[getFilteredQuery] widgetAttributes: ${widgetAttributes}`);
