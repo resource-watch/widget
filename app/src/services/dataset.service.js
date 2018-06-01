@@ -45,6 +45,20 @@ class DatasetService {
             return null;
         }
     }
+
+    static async getDataset(datasetId) {       
+        try {
+            const dataset = await ctRegisterMicroservice.requestToMicroservice({
+                uri: `/dataset/${datasetId}`,
+                method: 'GET',
+                json: true
+            });
+            return await deserializer(dataset);
+        } catch (err) {
+            logger.info(`[DatasetService] There was an error obtaining the dataset: ${err}`);
+            throw err;
+        }        
+    }
 }
 
 
