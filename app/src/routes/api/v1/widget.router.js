@@ -118,8 +118,12 @@ class WidgetRouter {
         const id = ctx.params.widget;
         logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
         try {
-            const dataset = ctx.params.dataset;
+            let dataset = ctx.params.dataset;
             const widget = await WidgetService.delete(id, dataset);
+            if (!ctx.state.dataset) {
+                dataset = await DatasetService.getDataset(widget.dataset);
+                ctx.state.dataset = dataset;
+            }
             ctx.body = WidgetSerializer.serialize(widget);
             ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         } catch (err) {
