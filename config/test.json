@@ -1,0 +1,13 @@
+{
+  "logger": {
+    "name": "widget",
+    "level": "debug",
+    "toFile": false,
+    "dirLogFile": null
+  },
+  "mongodb": {
+    "database": "widget_db_test",
+    "host": "mongo",
+    "port": 27017
+  }
+}

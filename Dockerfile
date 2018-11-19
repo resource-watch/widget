@@ -1,15 +1,15 @@
-FROM mhart/alpine-node:7.7
+FROM mhart/alpine-node:10.13
 MAINTAINER enrique@cornejo.me
 
 ENV NAME widget
-ENV USER widget
+ENV USER microservice
 
 RUN apk update && apk upgrade && \
     apk add --no-cache --update bash git openssh python alpine-sdk
 
 RUN addgroup $USER && adduser -s /bin/bash -D -G $USER $USER
 
-RUN npm install -g grunt-cli bunyan pm2
+RUN npm install -g grunt-cli bunyan
 
 RUN mkdir -p /opt/$NAME
 COPY package.json /opt/$NAME/package.json
