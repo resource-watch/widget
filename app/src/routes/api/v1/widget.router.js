@@ -8,10 +8,9 @@ const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
-const validator = require('validator');
+const { USER_ROLES } = require('app.constants');
+
 const router = new Router();
-const USER_ROLES = require('app.constants').USER_ROLES;
-const ctRegisterMicroservice = require('ct-register-microservice-node');
 
 const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
@@ -41,7 +40,7 @@ class WidgetRouter {
             if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
                 widget.queryUrl = ctx.query.queryUrl;
                 if (widget.widgetConfig && widget.widgetConfig.data) {
-                    if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url)  {
+                    if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
                         widget.widgetConfig.data[0].url = ctx.query.queryUrl;
                     } else if (widget.widgetConfig.data.url) {
                         widget.widgetConfig.data.url = ctx.query.queryUrl;
@@ -71,7 +70,7 @@ class WidgetRouter {
                 }
 
                 if (widget.widgetConfig && widget.widgetConfig.data) {
-                    if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url)  {
+                    if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
                         if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
                             widget.widgetConfig.data[0].url += `&${params}`;
                         } else {
@@ -376,7 +375,6 @@ const authorizationMiddleware = async (ctx, next) => {
     }
     await next(); // SUPERADMIN is included here
 };
-
 
 const isMicroservice = async function (ctx, next) {
     logger.debug('Checking if the call is from a microservice');
