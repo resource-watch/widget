@@ -111,6 +111,35 @@ describe('Clone widgets tests', () => {
         response.body.errors[0].should.have.property('detail').and.equal('Forbidden');
     });
 
+    it('Clone a widget as an ADMIN overwriting data should be successful', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`)
+            .send({
+                name: 'new name',
+                description: 'new description',
+                loggedUser: ROLES.USER
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const createdWidget = response.body.data;
+
+        createdWidget.id.should.not.equal(widgetOne.id);
+
+        createdWidget.attributes.name.should.equal('new name');
+        createdWidget.attributes.description.should.equal('new description');
+
+        createdWidget.attributes.slug.should.not.equal(widgetOne.slug);
+
+        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+        createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+    });
+
     afterEach(() => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);

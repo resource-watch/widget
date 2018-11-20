@@ -133,10 +133,10 @@ class WidgetService {
             throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
         }
         const newWidget = {};
-        newWidget.name = `${currentWidget.name} - ${new Date().getTime()}`;
+        newWidget.name = widget.name || `${currentWidget.name} - ${new Date().getTime()}`;
+        newWidget.description = widget.description || currentWidget.description;
         newWidget.dataset = currentWidget.dataset;
         newWidget.userId = user.id;
-        newWidget.description = currentWidget.description;
         newWidget.source = currentWidget.source;
         newWidget.sourceUrl = currentWidget.sourceUrl;
         newWidget.application = currentWidget.application;
