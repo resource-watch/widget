@@ -102,11 +102,22 @@ class WidgetRouter {
     static async create(ctx) {
         logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
         try {
-            const dataset = ctx.params.dataset;
+            const { dataset } = ctx.params;
             const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
-            const widgetId = widget.dataset;
             ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
+            ctx.body = WidgetSerializer.serialize(widget);
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    static async clone(ctx) {
+        logger.info(`[WidgetRouter] Cloning widget with id: ${ctx.request.body.name}`);
+        try {
+            const id = ctx.params.widget;
+            const user = WidgetRouter.getUser(ctx);
+            const widget = await WidgetService.clone(id, ctx.request.body, user);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -117,7 +128,7 @@ class WidgetRouter {
         const id = ctx.params.widget;
         logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
         try {
-            let dataset = ctx.params.dataset;
+            let { dataset } = ctx.params;
             const widget = await WidgetService.delete(id, dataset);
             if (!ctx.state.dataset) {
                 dataset = await DatasetService.getDataset(widget.dataset);
@@ -216,7 +227,7 @@ class WidgetRouter {
         const dataset = ctx.params.dataset || null;
         try {
             const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.update(id, ctx.request.body, user, dataset);
+            const widget = await WidgetService.update(id, ctx.request.body);
             ctx.body = WidgetSerializer.serialize(widget);
             ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         } catch (err) {
@@ -325,6 +336,7 @@ const authorizationMiddleware = async (ctx, next) => {
     // Get user from query (delete) or body (post-patch)
     const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
     const newWidgetUpdate = ctx.request.path.includes('widget') && ctx.request.method === 'PATCH';
+    const newWidgetClone = ctx.request.path.match(/clone$/) && ctx.request.method === 'POST';
     const user = WidgetRouter.getUser(ctx);
     if (user.id === 'microservice') {
         await next();
@@ -339,7 +351,7 @@ const authorizationMiddleware = async (ctx, next) => {
             ctx.throw(403, 'Forbidden'); // if user is USER -> out
             return;
         }
-        if (newWidgetUpdate) {
+        if (newWidgetUpdate || newWidgetClone) {
             try {
                 const permission = await WidgetService.hasPermission(ctx.params.widget, user);
                 if (!permission) {
@@ -353,9 +365,7 @@ const authorizationMiddleware = async (ctx, next) => {
     }
     const application = ctx.request.query.application ? ctx.request.query.application : ctx.request.body.application;
     if (application) {
-        const appPermission = application.find(app =>
-            user.extraUserData.apps.find(userApp => userApp === app)
-        );
+        const appPermission = application.find(app => user.extraUserData.apps.find(userApp => userApp === app));
         if (!appPermission) {
             ctx.throw(403, 'Forbidden'); // if manager or admin but no application -> out
             return;
@@ -406,4 +416,7 @@ router.delete('/dataset/:dataset/widget', datasetValidationMiddleware, isMicrose
 // Get by IDs
 router.post('/widget/find-by-ids', WidgetRouter.getByIds);
 router.patch('/widget/change-environment/:dataset/:env', datasetValidationMiddleware, isMicroservice, WidgetRouter.updateEnvironment);
+// Clone
+router.post('/widget/:widget/clone', authorizationMiddleware, WidgetRouter.clone);
+
 module.exports = router;
