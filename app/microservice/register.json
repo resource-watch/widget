@@ -98,11 +98,18 @@
             "path": "/api/v1/widget/change-environment/:dataset/:env"
         }
     }, {
+        "path": "/v1/widget/:widget/clone",
+        "method": "POST",
+        "redirect": {
+            "method": "POST",
+            "path": "/api/v1/widget/:widget/clone"
+        }
+    }, {
         "path": "/v1/dataset/:dataset/widget/:widget/clone",
         "method": "POST",
         "redirect": {
             "method": "POST",
-            "path": "/api/v1/dataset/:dataset/widget/:widget/clone"
+            "path": "/api/v1/widget/:widget/clone"
         }
     }]
 }
