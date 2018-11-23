@@ -96,7 +96,7 @@
         "redirect": {
             "method": "PATCH",
             "path": "/api/v1/widget/change-environment/:dataset/:env"
-        },
+        }
     }, {
         "path": "/v1/dataset/:dataset/widget/:widget/clone",
         "method": "POST",
