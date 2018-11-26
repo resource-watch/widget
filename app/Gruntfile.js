@@ -6,6 +6,17 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
 
+        express: {
+            dev: {
+                options: {
+                    script: 'app/index.js',
+                    opts: ['--harmony'],
+                    node_env: 'dev',
+                    port: process.env.PORT,
+                    output: 'started'
+                }
+            }
+        },
         mochaTest: {
             e2e: {
                 options: {
@@ -29,12 +40,28 @@ module.exports = function (grunt) {
                 cmd: false,
                 args: ['grunt', '--gruntfile', 'app/Gruntfile.js', 'mochaTest:e2e']
             }
+        },
+        watch: {
+            options: {
+                livereload: 35730
+            },
+            jssrc: {
+                files: [
+                    'app/src/**/*.js',
+                ],
+                tasks: ['express:dev'],
+                options: {
+                    spawn: false
+                }
+            }
         }
     });
 
     grunt.registerTask('e2eTest', ['mochaTest:e2e']);
 
     grunt.registerTask('test', ['unitTest']);
+
+    grunt.registerTask('serve', ['express:dev', 'watch']);
 
     grunt.registerTask('default', 'serve');
 };

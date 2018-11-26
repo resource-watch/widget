@@ -54,6 +54,7 @@ class WidgetService {
         currentWidget.layerId = widget.layerId || currentWidget.layerId;
         currentWidget.authors = widget.authors || currentWidget.authors;
         currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
+        currentWidget.thumbnailUrl = widget.thumbnailUrl || currentWidget.thumbnailUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
         currentWidget.env = widget.env || currentWidget.env;
         if (widget.protected === false || widget.protected === true) {
@@ -105,6 +106,7 @@ class WidgetService {
             protected: widget.protected,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
+            thumbnailUrl: widget.thumbnailUrl,
             env: widget.env,
             widgetConfig: widget.widgetConfig,
             template: widget.template,
