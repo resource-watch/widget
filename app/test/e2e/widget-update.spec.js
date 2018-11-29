@@ -11,6 +11,9 @@ const should = chai.should();
 
 let requester;
 
+nock.disableNetConnect();
+nock.enableNetConnect(process.env.HOST_IP);
+
 describe('Update widgets tests', () => {
 
     before(async () => {
@@ -105,7 +108,7 @@ describe('Update widgets tests', () => {
             status: 1,
             default: true,
             published: true,
-            widgetConfig: Object.assign({}, widgetConfig, {someNewProp: 'someNewValue'})
+            widgetConfig: Object.assign({}, widgetConfig, { someNewProp: 'someNewValue' })
         };
 
         let databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -115,6 +118,13 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.not.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.not.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.not.deep.equal(widget.widgetConfig);
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
+            );
 
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
@@ -134,6 +144,7 @@ describe('Update widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
 
         databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -142,6 +153,7 @@ describe('Update widgets tests', () => {
         databaseWidget.description.should.equal(widget.description);
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
+        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
 
     });
@@ -210,7 +222,7 @@ describe('Update widgets tests', () => {
             status: 1,
             default: true,
             published: true,
-            widgetConfig: Object.assign({}, widgetConfig, {someNewProp: 'someNewValue'})
+            widgetConfig: Object.assign({}, widgetConfig, { someNewProp: 'someNewValue' })
         };
 
         let databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -220,6 +232,13 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.not.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.not.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.not.deep.equal(widget.widgetConfig);
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
+            );
 
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
@@ -239,6 +258,7 @@ describe('Update widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
 
         databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -247,6 +267,7 @@ describe('Update widgets tests', () => {
         databaseWidget.description.should.equal(widget.description);
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
+        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
 
     });
@@ -314,7 +335,7 @@ describe('Update widgets tests', () => {
             status: 1,
             default: true,
             published: true,
-            widgetConfig: Object.assign({}, widgetConfig, {someNewProp: 'someNewValue'})
+            widgetConfig: Object.assign({}, widgetConfig, { someNewProp: 'someNewValue' })
         };
 
         let databaseWidget = await Widget.findById(widgetOne.id).exec();

@@ -11,6 +11,9 @@ const should = chai.should();
 
 let requester;
 
+nock.disableNetConnect();
+nock.enableNetConnect(process.env.HOST_IP);
+
 describe('Create widgets tests', () => {
 
     before(async () => {
@@ -159,6 +162,14 @@ describe('Create widgets tests', () => {
             published: true,
             widgetConfig
         };
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
+            );
+
         const response = await requester
             .post(`/api/v1/widget`)
             .send({
@@ -177,7 +188,17 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.dataset.should.equal('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+
+        const databaseWidget = await Widget.findById(createdWidget.id).exec();
+
+        databaseWidget.name.should.equal(widget.name);
+        databaseWidget.description.should.equal(widget.description);
+        databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
+        databaseWidget.queryUrl.should.equal(widget.queryUrl);
+        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
+        databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
     });
 
     it('Create a widget as an USER with a matching app should be successful', async () => {
@@ -243,6 +264,14 @@ describe('Create widgets tests', () => {
             published: true,
             widgetConfig
         };
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
+            );
+
         const response = await requester
             .post(`/api/v1/widget`)
             .send({
@@ -261,7 +290,17 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.dataset.should.equal('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+
+        const databaseWidget = await Widget.findById(createdWidget.id).exec();
+
+        databaseWidget.name.should.equal(widget.name);
+        databaseWidget.description.should.equal(widget.description);
+        databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
+        databaseWidget.queryUrl.should.equal(widget.queryUrl);
+        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
+        databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
     });
 
     it('Create a widget as an USER without a matching app should fail with HTTP 403', async () => {
