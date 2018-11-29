@@ -4,7 +4,7 @@ const chai = require('chai');
 const Widget = require('models/widget.model');
 const { ROLES } = require('./test.constants');
 
-const { getTestServer, widgetConfig } = require('./test-server');
+const { getTestServer } = require('./test-server');
 const { getUUID, createWidget } = require('./utils');
 
 const should = chai.should();

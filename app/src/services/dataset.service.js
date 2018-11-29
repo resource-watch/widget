@@ -40,13 +40,13 @@ class DatasetService {
             }
         } else {
             // If no datasets are present, it has to be catched by the validator
-	    // Not anymore - need to add it for proper cache tagging
+            // Not anymore - need to add it for proper cache tagging
             logger.info(`[DatasetService] No dataset provided in this context.`);
             return null;
         }
     }
 
-    static async getDataset(datasetId) {       
+    static async getDataset(datasetId) {
         try {
             const dataset = await ctRegisterMicroservice.requestToMicroservice({
                 uri: `/dataset/${datasetId}`,
@@ -57,7 +57,7 @@ class DatasetService {
         } catch (err) {
             logger.info(`[DatasetService] There was an error obtaining the dataset: ${err}`);
             throw err;
-        }        
+        }
     }
 }
 
