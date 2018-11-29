@@ -1,7 +1,9 @@
 # Widget Microservice
 
+This repository contains the widget microservice for WRI API
 
-This repository is the node skeleton microservice to create node microservice for WRI API
+[![Build Status](https://travis-ci.org/resource-watch/widget.svg?branch=master)](https://travis-ci.org/resource-watch/widget)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/a5b0be0d7e79db309b30/test_coverage)](https://codeclimate.com/github/resource-watch/widget/test_coverage)
 
 ## Dependencies
 
