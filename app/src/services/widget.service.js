@@ -4,6 +4,7 @@ const DatasetService = require('services/dataset.service');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
 const GraphService = require('services/graph.service');
+const ScreenshotService = require('services/screenshot.service');
 const RelationshipsService = require('services/relationships.service');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const slug = require('slug');
@@ -82,6 +83,17 @@ class WidgetService {
 
         const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
+
+        logger.debug('[WidgetService]: Creating thumbnail');
+        try {
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(newWidget._id);
+            newWidget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
+            newWidget.save();
+        } catch (err) {
+            logger.error('Error generating widget thumbnail.');
+            throw new Error(err);
+        }
+
         return newWidget;
     }
 
@@ -119,6 +131,16 @@ class WidgetService {
         } catch (err) {
             logger.error('Error creating widget in graph. Removing widget');
             await newWidget.remove();
+            throw new Error(err);
+        }
+
+        logger.debug('[WidgetService]: Creating thumbnail');
+        try {
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(newWidget._id);
+            newWidget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
+            newWidget.save();
+        } catch (err) {
+            logger.error('Error generating widget thumbnail.');
             throw new Error(err);
         }
         return newWidget;

@@ -10,6 +10,9 @@ const should = chai.should();
 
 let requester;
 
+nock.disableNetConnect();
+nock.enableNetConnect(process.env.HOST_IP);
+
 describe('Get widgets tests', () => {
 
     before(async () => {

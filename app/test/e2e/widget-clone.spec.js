@@ -11,6 +11,9 @@ const should = chai.should();
 
 let requester;
 
+nock.disableNetConnect();
+nock.enableNetConnect(process.env.HOST_IP);
+
 describe('Clone widgets tests', () => {
 
     before(async () => {
@@ -48,6 +51,13 @@ describe('Clone widgets tests', () => {
     it('Clone a widget as an ADMIN should be successful', async () => {
         const widgetOne = await new Widget(createWidget()).save();
 
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
+
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .send({
@@ -67,11 +77,19 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
     });
 
     it('Clone a widget as an USER with a matching app should be successful', async () => {
         const widgetOne = await new Widget(createWidget()).save();
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
 
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
@@ -92,7 +110,18 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+
+        const databaseWidget = await Widget.findById(createdWidget.id).exec();
+
+        databaseWidget.name.should.equal(createdWidget.attributes.name);
+        databaseWidget.description.should.equal(createdWidget.attributes.description);
+        databaseWidget.sourceUrl.should.equal(createdWidget.attributes.sourceUrl);
+        databaseWidget.queryUrl.should.equal(createdWidget.attributes.queryUrl);
+        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
+        databaseWidget.widgetConfig.should.deep.equal(createdWidget.attributes.widgetConfig);
+
     });
 
     it('Clone a widget as an USER without a matching app should fail with HTTP 403', async () => {
@@ -113,6 +142,13 @@ describe('Clone widgets tests', () => {
 
     it('Clone a widget as an ADMIN overwriting data should be successful', async () => {
         const widgetOne = await new Widget(createWidget()).save();
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
 
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
@@ -137,7 +173,17 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+
+        const databaseWidget = await Widget.findById(createdWidget.id).exec();
+
+        databaseWidget.name.should.equal(createdWidget.attributes.name);
+        databaseWidget.description.should.equal(createdWidget.attributes.description);
+        databaseWidget.sourceUrl.should.equal(createdWidget.attributes.sourceUrl);
+        databaseWidget.queryUrl.should.equal(createdWidget.attributes.queryUrl);
+        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
+        databaseWidget.widgetConfig.should.deep.equal(createdWidget.attributes.widgetConfig);
     });
 
     afterEach(() => {

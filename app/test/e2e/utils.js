@@ -347,6 +347,7 @@ const createWidget = (apps = ['rw']) => {
         published: true,
         template: false,
         defaultEditableWidget: false,
+        thumbnailUrl: 'http://the-default-thumbnail.com/image.png',
         protected: false,
         default: true,
         verified: false,
