@@ -327,7 +327,7 @@ const widgetConfig = {
     ]
 };
 
-const createWidget = () => {
+const createWidget = (apps = ['rw']) => {
     const uuid = getUUID();
     const datasetUuid = getUUID();
 
@@ -350,9 +350,7 @@ const createWidget = () => {
         protected: false,
         default: true,
         verified: false,
-        application: [
-            'rw'
-        ],
+        application: apps,
         env: 'production'
     };
 };
