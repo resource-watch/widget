@@ -141,7 +141,7 @@ class WidgetService {
             newWidget.save();
         } catch (err) {
             logger.error('Error generating widget thumbnail.');
-            throw new Error(err);
+            throw new Error(`Error generating widget thumbnail: ${err.message}`);
         }
         return newWidget;
     }

@@ -12,9 +12,11 @@ class ScreenshotService {
                 json: true
             });
         } catch (e) {
+            logger.error(`[ScreenshotService]: Error taking screenshot: ${e}`);
             throw new Error(e);
         }
     }
+
 }
 
 module.exports = ScreenshotService;
