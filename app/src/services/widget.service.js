@@ -1,11 +1,10 @@
-const URL = require('url').URL;
 const logger = require('logger');
 const Widget = require('models/widget.model');
 const DatasetService = require('services/dataset.service');
 const WidgetNotFound = require('errors/widgetNotFound.error');
-const DuplicatedWidget = require('errors/duplicatedWidget.error');
 const WidgetProtected = require('errors/widgetProtected.error');
 const GraphService = require('services/graph.service');
+const ScreenshotService = require('services/screenshot.service');
 const RelationshipsService = require('services/relationships.service');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const slug = require('slug');
@@ -13,7 +12,7 @@ const slug = require('slug');
 class WidgetService {
 
     static async getSlug(name) {
-        let valid = false;
+        const valid = false;
         let slugTemp = null;
         let i = 0;
         while (!valid) {
@@ -31,13 +30,13 @@ class WidgetService {
         }
     }
 
-    static async update(id, widget, user) {
+    static async update(id, widget) {
         logger.debug(`[WidgetService]: Updating widget with id:  ${id}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
             slug: id
         }).exec();
         logger.debug('Obtaining dataset');
-        const dataset = await DatasetService.checkDataset({ params: { dataset: currentWidget.dataset } });
+        await DatasetService.checkDataset({ params: { dataset: currentWidget.dataset } });
 
         logger.debug(`[WidgetService]: Widget:  ${currentWidget}`);
         if (!currentWidget) {
@@ -47,7 +46,7 @@ class WidgetService {
 
         currentWidget.name = widget.name || currentWidget.name;
         currentWidget.description = widget.description || currentWidget.description;
-        //currentWidget.userId		 = user.id		|| currentWidget.userId;
+        // currentWidget.userId = user.id || currentWidget.userId;
         currentWidget.usedId = currentWidget.userId;
         // ^discuss
         currentWidget.source = widget.source || currentWidget.source;
@@ -56,6 +55,7 @@ class WidgetService {
         currentWidget.layerId = widget.layerId || currentWidget.layerId;
         currentWidget.authors = widget.authors || currentWidget.authors;
         currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
+        currentWidget.thumbnailUrl = widget.thumbnailUrl || currentWidget.thumbnailUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
         currentWidget.env = widget.env || currentWidget.env;
         if (widget.protected === false || widget.protected === true) {
@@ -81,15 +81,25 @@ class WidgetService {
             currentWidget.freeze = widget.freeze;
         }
 
-        let newWidget = await currentWidget.save();
+        const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
+
+        logger.debug('[WidgetService]: Creating thumbnail');
+        try {
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(newWidget._id);
+            newWidget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
+            newWidget.save();
+        } catch (err) {
+            logger.error('Error generating widget thumbnail.');
+            throw new Error(err);
+        }
+
         return newWidget;
     }
 
     static async create(widget, datasetId, dataset, user) {
         logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
         const tempSlug = await WidgetService.getSlug(widget.name);
-
 
         const newWidget = await new Widget({
             name: widget.name,
@@ -108,6 +118,7 @@ class WidgetService {
             protected: widget.protected,
             authors: widget.authors,
             queryUrl: widget.queryUrl,
+            thumbnailUrl: widget.thumbnailUrl,
             env: widget.env,
             widgetConfig: widget.widgetConfig,
             template: widget.template,
@@ -122,7 +133,60 @@ class WidgetService {
             await newWidget.remove();
             throw new Error(err);
         }
+
+        logger.debug('[WidgetService]: Creating thumbnail');
+        try {
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(newWidget._id);
+            newWidget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
+            newWidget.save();
+        } catch (err) {
+            logger.error('Error generating widget thumbnail.');
+            throw new Error(`Error generating widget thumbnail: ${err.message}`);
+        }
         return newWidget;
+    }
+
+    static async clone(id, widget, user) {
+        logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
+        logger.info(`[DBACCESS-FIND]: widget.id: ${id}`);
+        const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
+            slug: id
+        }).exec();
+        if (!currentWidget) {
+            logger.error(`[WidgetService]: Widget with id ${id} doesn't exist`);
+            throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
+        }
+        const newWidget = {};
+        newWidget.name = widget.name || `${currentWidget.name} - ${new Date().getTime()}`;
+        newWidget.description = widget.description || currentWidget.description;
+        newWidget.dataset = currentWidget.dataset;
+        newWidget.userId = user.id;
+        newWidget.source = currentWidget.source;
+        newWidget.sourceUrl = currentWidget.sourceUrl;
+        newWidget.application = currentWidget.application;
+        newWidget.verified = currentWidget.verified;
+        newWidget.default = currentWidget.default;
+        newWidget.defaultEditableWidget = currentWidget.defaultEditableWidget;
+        newWidget.published = currentWidget.published;
+        newWidget.freeze = currentWidget.freeze;
+        newWidget.protected = currentWidget.protected;
+        newWidget.authors = currentWidget.authors;
+        newWidget.queryUrl = currentWidget.queryUrl;
+        newWidget.env = currentWidget.env;
+        newWidget.widgetConfig = currentWidget.widgetConfig;
+        newWidget.template = currentWidget.template;
+        newWidget.layerId = currentWidget.layerId;
+
+        const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, user);
+        logger.debug('[WidgetService]: Creating in graph');
+        try {
+            await GraphService.createWidget(newWidget._id);
+        } catch (err) {
+            logger.error('Error creating widget in graph. Removing widget');
+            await createdWidget.remove();
+            throw new Error(err);
+        }
+        return createdWidget;
     }
 
 
@@ -137,16 +201,16 @@ class WidgetService {
 
     static async get(id, dataset, includes = []) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
-        logger.info(`[DBACCES-FIND]: ID: ${id}`);
-        let widget = await Widget.findById(id).exec();
-        logger.info(`[DBACCES-FIND]: Widget: ${widget}`);
+        logger.info(`[DBACCESS-FIND]: ID: ${id}`);
+        const widget = await Widget.findById(id).exec();
+        logger.info(`[DBACCESS-FIND]: Widget: ${widget}`);
         if (widget) {
             if (dataset && dataset !== widget.dataset) {
                 throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
             } else {
                 if (includes && includes.length > 0) {
                     logger.debug('Finding relationships');
-                    let widgets = await RelationshipsService.getRelationships([widget], includes);
+                    const widgets = await RelationshipsService.getRelationships([widget], includes);
                     return widgets[0];
                 }
                 return widget;
@@ -158,7 +222,7 @@ class WidgetService {
 
     static async delete(id) {
         logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
-        logger.info(`[DBACCES-FIND]: ID: ${id}`);
+        logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
         if (!widget) {
             logger.error(`[WidgetService]: Widget not found with the id ${id}`);
@@ -174,9 +238,9 @@ class WidgetService {
         } catch (err) {
             logger.error('Error removing dataset of the graph', err);
         }
-        logger.info(`[DBACCES-DELETE]: ID: ${id}`);
+        logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
         try {
-            await WidgetService.deleteMedadata(id, widget._id);
+            await WidgetService.deleteMetadata(id, widget._id);
         } catch (err) {
             logger.error('Error removing metadata of the widget', err);
         }
@@ -186,11 +250,11 @@ class WidgetService {
 
     static async deleteByDataset(id) {
         logger.debug(`[WidgetService]: Deleting widgets of dataset with id: ${id}`);
-        logger.info(`[DBACCES-FIND]: ID: ${id}`);
+        logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widgets = await Widget.find({
             dataset: id
         }).exec();
-        for (let i = 0, length = widgets.length; i < length; i++) {
+        for (let i = 0, { length } = widgets; i < length; i++) {
             const widget = widgets[i];
             logger.debug('[WidgetService]: Deleting in graph');
             try {
@@ -198,10 +262,10 @@ class WidgetService {
             } catch (err) {
                 logger.error('Error removing dataset of the graph', err);
             }
-            logger.info(`[DBACCES-DELETE]: ID: ${id}`);
+            logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
             await widget.remove();
             try {
-                await WidgetService.deleteMedadata(id, widget._id);
+                await WidgetService.deleteMetadata(id, widget._id);
             } catch (err) {
                 logger.error('Error removing metadata of the widget', err);
             }
@@ -210,7 +274,7 @@ class WidgetService {
         return widgets;
     }
 
-    static async deleteMedadata(datasetId, widgetId) {
+    static async deleteMetadata(datasetId, widgetId) {
         logger.debug('Removing metadata of the layer');
         await ctRegisterMicroservice.requestToMicroservice({
             uri: `/dataset/${datasetId}/widget/${widgetId}/metadata`,
@@ -219,13 +283,13 @@ class WidgetService {
     }
 
     static async getAll(query = {}, dataset = null) {
-        logger.info(`[DBACCES-FIND]: all widgets`);
+        logger.info(`[DBACCESS-FIND]: all widgets`);
         const sort = query.sort || '';
         const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
         logger.debug(`pageNumber param: ${page}`);
         const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 10;
         logger.debug(`pageSize param: ${limit}`);
-        const ids = query['ids'] ? query['ids'].split(',').map(el => el.trim()) : [];
+        const ids = query.ids ? query.ids.split(',').map(el => el.trim()) : [];
         const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
         logger.debug(`ids param: ${ids}`);
         if (dataset) {
@@ -253,8 +317,7 @@ class WidgetService {
     }
 
     static getFilteredQuery(query, ids = []) {
-        const collection = query.collection;
-        const favourite = query.favourite;
+        const { collection, favourite } = query;
         if (!query.application && query.app) {
             query.application = query.app;
             if (favourite) {
@@ -275,6 +338,7 @@ class WidgetService {
                 delete query[param];
             } else if (param !== 'env') {
                 switch (Widget.schema.paths[param].instance) {
+
                     case 'String':
                         query[param] = {
                             $regex: query[param],
@@ -300,6 +364,7 @@ class WidgetService {
                         break;
                     default:
                         query[param] = query[param];
+
                 }
             } else if (param === 'env') {
                 query.env = {
@@ -333,16 +398,6 @@ class WidgetService {
         return filteredSort;
     }
 
-    static getFilter(filter) {
-        const finalFilter = {};
-        if (filter && filter.application) {
-            finalFilter.application = {
-                $in: filter.application.split(',')
-            };
-        }
-        return finalFilter;
-    }
-
     static async getByDataset(resource) {
         logger.debug(`[WidgetService] Getting widgets for datasets with ids ${resource.ids}`);
         if (resource.app) {
@@ -371,9 +426,7 @@ class WidgetService {
     static async hasPermission(id, user) {
         let permission = true;
         const widget = await WidgetService.get(id, null, []);
-        const appPermission = widget.application.find(widgetApp =>
-            user.extraUserData.apps.find(app => app === widgetApp)
-        );
+        const appPermission = widget.application.find(widgetApp => user.extraUserData.apps.find(app => app === widgetApp));
         if (!appPermission) {
             permission = false;
         }
@@ -382,6 +435,7 @@ class WidgetService {
         }
         return permission;
     }
+
 }
 
 module.exports = WidgetService;

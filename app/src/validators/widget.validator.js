@@ -60,6 +60,9 @@ class WidgetValidator {
         koaObj.checkBody('queryUrl')
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
+        koaObj.checkBody('thumbnailUrl')
+            .optional()
+            .check(v => WidgetValidator.isString(v), 'must be a string');    
         koaObj.checkBody('widgetConfig');
         koaObj.checkBody('template')
             .optional()
@@ -117,6 +120,9 @@ class WidgetValidator {
         koaObj.checkBody('queryUrl')
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
+        koaObj.checkBody('thumbnailUrl')
+            .optional()
+            .check(v => WidgetValidator.isString(v), 'must be a string');    
         koaObj.checkBody('widgetConfig');
         koaObj.checkBody('template')
             .optional()
