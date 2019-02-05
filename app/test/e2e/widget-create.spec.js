@@ -188,7 +188,6 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.dataset.should.equal('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
 
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
@@ -197,7 +196,6 @@ describe('Create widgets tests', () => {
         databaseWidget.description.should.equal(widget.description);
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
-        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
     });
 
@@ -290,7 +288,6 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.dataset.should.equal('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
 
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
@@ -299,7 +296,6 @@ describe('Create widgets tests', () => {
         databaseWidget.description.should.equal(widget.description);
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
-        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
     });
 

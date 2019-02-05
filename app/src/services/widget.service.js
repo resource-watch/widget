@@ -84,15 +84,7 @@ class WidgetService {
         const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
 
-        logger.debug('[WidgetService]: Creating thumbnail');
-        try {
-            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(newWidget._id);
-            newWidget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
-            newWidget.save();
-        } catch (err) {
-            logger.error('Error generating widget thumbnail.');
-            throw new Error(err);
-        }
+        WidgetService.generateThumbnail(newWidget);
 
         return newWidget;
     }
@@ -134,15 +126,8 @@ class WidgetService {
             throw new Error(err);
         }
 
-        logger.debug('[WidgetService]: Creating thumbnail');
-        try {
-            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(newWidget._id);
-            newWidget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
-            newWidget.save();
-        } catch (err) {
-            logger.error('Error generating widget thumbnail.');
-            throw new Error(`Error generating widget thumbnail: ${err.message}`);
-        }
+        WidgetService.generateThumbnail(newWidget);
+
         return newWidget;
     }
 
@@ -178,15 +163,22 @@ class WidgetService {
         newWidget.layerId = currentWidget.layerId;
 
         const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, user);
-        logger.debug('[WidgetService]: Creating in graph');
-        try {
-            await GraphService.createWidget(newWidget._id);
-        } catch (err) {
-            logger.error('Error creating widget in graph. Removing widget');
-            await createdWidget.remove();
-            throw new Error(err);
-        }
+
+        WidgetService.generateThumbnail(createdWidget);
+
         return createdWidget;
+    }
+
+    static async generateThumbnail(widget) {
+        logger.debug('[WidgetService]: Creating thumbnail');
+        try {
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(widget);
+            widget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
+            widget.save();
+        } catch (err) {
+            logger.error('Error generating widget thumbnail.');
+            throw new Error(`Error generating widget thumbnail: ${err.message}`);
+        }
     }
 
 
