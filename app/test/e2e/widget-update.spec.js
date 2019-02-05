@@ -144,7 +144,6 @@ describe('Update widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
 
         databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -153,7 +152,6 @@ describe('Update widgets tests', () => {
         databaseWidget.description.should.equal(widget.description);
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
-        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
 
     });
@@ -258,7 +256,6 @@ describe('Update widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
 
         databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -267,7 +264,6 @@ describe('Update widgets tests', () => {
         databaseWidget.description.should.equal(widget.description);
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
-        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/file.png');
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
 
     });

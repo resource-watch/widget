@@ -77,7 +77,6 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
     });
 
@@ -110,7 +109,6 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
 
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
@@ -119,7 +117,6 @@ describe('Clone widgets tests', () => {
         databaseWidget.description.should.equal(createdWidget.attributes.description);
         databaseWidget.sourceUrl.should.equal(createdWidget.attributes.sourceUrl);
         databaseWidget.queryUrl.should.equal(createdWidget.attributes.queryUrl);
-        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         databaseWidget.widgetConfig.should.deep.equal(createdWidget.attributes.widgetConfig);
 
     });
@@ -173,7 +170,6 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
-        createdWidget.attributes.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
 
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
@@ -182,7 +178,6 @@ describe('Clone widgets tests', () => {
         databaseWidget.description.should.equal(createdWidget.attributes.description);
         databaseWidget.sourceUrl.should.equal(createdWidget.attributes.sourceUrl);
         databaseWidget.queryUrl.should.equal(createdWidget.attributes.queryUrl);
-        databaseWidget.thumbnailUrl.should.equal('http://thumbnail-url.com/cloneFile.png');
         databaseWidget.widgetConfig.should.deep.equal(createdWidget.attributes.widgetConfig);
     });
 
