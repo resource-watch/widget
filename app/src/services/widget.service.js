@@ -172,7 +172,7 @@ class WidgetService {
     static async generateThumbnail(widget) {
         logger.debug('[WidgetService]: Creating thumbnail');
         try {
-            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(widget._id);
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(widget);
             widget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
             widget.save();
         } catch (err) {
