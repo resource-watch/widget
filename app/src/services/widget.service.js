@@ -412,7 +412,7 @@ class WidgetService {
             query.application = resource.app;
         }
         logger.debug(`[WidgetService] IDs query: ${JSON.stringify(query)}`);
-        return await Widget.find(query).exec();
+        return Widget.find(query).exec();
     }
 
     static async hasPermission(id, user) {
