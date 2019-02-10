@@ -4,14 +4,17 @@ const WidgetNotValid = require('errors/widgetNotValid.error');
 class WidgetValidator {
 
     static isString(val) {
-        return typeof val === 'string' ? true : false;
+        return typeof val === 'string';
     }
+
     static isBoolean(val) {
-        return typeof val === 'boolean' ? true : false;
+        return typeof val === 'boolean';
     }
+
     static isArray(val) {
         return val instanceof Array;
     }
+
     static isObject(val) {
         return (val instanceof Object && !(val instanceof Array));
     }
@@ -62,7 +65,7 @@ class WidgetValidator {
             .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('thumbnailUrl')
             .optional()
-            .check(v => WidgetValidator.isString(v), 'must be a string');    
+            .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('widgetConfig');
         koaObj.checkBody('template')
             .optional()
@@ -122,7 +125,7 @@ class WidgetValidator {
             .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('thumbnailUrl')
             .optional()
-            .check(v => WidgetValidator.isString(v), 'must be a string');    
+            .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('widgetConfig');
         koaObj.checkBody('template')
             .optional()
