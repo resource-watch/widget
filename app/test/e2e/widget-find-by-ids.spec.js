@@ -29,48 +29,48 @@ describe('Find widgets by IDs', () => {
         Widget.remove({}).exec();
     });
 
-    // it('Find widgets without ids in body returns a 400 error', async () => {
-    //     const response = await requester
-    //         .post(`/api/v1/widget/find-by-ids`)
-    //         .send({});
-    //
-    //     response.status.should.equal(400);
-    //     response.body.should.have.property('errors').and.be.an('array');
-    //     response.body.errors[0].should.have.property('detail').and.equal(`Bad request - Missing 'ids' from request body`);
-    // });
-    //
-    // it('Find widgets with empty id list returns an empty list (empty db)', async () => {
-    //     const response = await requester
-    //         .post(`/api/v1/widget/find-by-ids`)
-    //         .send({
-    //             ids: []
-    //         });
-    //
-    //     response.status.should.equal(200);
-    //     response.body.should.have.property('data').and.be.an('array').and.length(0);
-    // });
-    //
-    // it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
-    //     const response = await requester
-    //         .post(`/api/v1/widget/find-by-ids`)
-    //         .send({
-    //             ids: ['abcd']
-    //         });
-    //
-    //     response.status.should.equal(200);
-    //     response.body.should.have.property('data').and.be.an('array').and.length(0);
-    // });
-    //
-    // it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
-    //     const response = await requester
-    //         .post(`/api/v1/widget/find-by-ids`)
-    //         .send({
-    //             ids: ['abcd']
-    //         });
-    //
-    //     response.status.should.equal(200);
-    //     response.body.should.have.property('data').and.be.an('array').and.length(0);
-    // });
+    it('Find widgets without ids in body returns a 400 error', async () => {
+        const response = await requester
+            .post(`/api/v1/widget/find-by-ids`)
+            .send({});
+
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`Bad request - Missing 'ids' from request body`);
+    });
+
+    it('Find widgets with empty id list returns an empty list (empty db)', async () => {
+        const response = await requester
+            .post(`/api/v1/widget/find-by-ids`)
+            .send({
+                ids: []
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(0);
+    });
+
+    it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
+        const response = await requester
+            .post(`/api/v1/widget/find-by-ids`)
+            .send({
+                ids: ['abcd']
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(0);
+    });
+
+    it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
+        const response = await requester
+            .post(`/api/v1/widget/find-by-ids`)
+            .send({
+                ids: ['abcd']
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(0);
+    });
 
     it('Find widgets with id list containing a widget that exists returns only the listed widget', async () => {
         widgetOne = await new Widget(createWidget()).save();
