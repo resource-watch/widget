@@ -104,7 +104,7 @@ class WidgetRouter {
         try {
             const { dataset } = ctx.params;
             const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
+            const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user.id);
             ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
@@ -117,7 +117,13 @@ class WidgetRouter {
         try {
             const id = ctx.params.widget;
             const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.clone(id, ctx.request.body, user);
+            let clonedWidgetUserId;
+            if (user && user.id === 'microservice' && ctx.request.body.userId) {
+                clonedWidgetUserId = ctx.request.body.userId;
+            } else {
+                clonedWidgetUserId = user.id;
+            }
+            const widget = await WidgetService.clone(id, ctx.request.body, clonedWidgetUserId);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;

@@ -89,14 +89,14 @@ class WidgetService {
         return newWidget;
     }
 
-    static async create(widget, datasetId, dataset, user) {
+    static async create(widget, datasetId, dataset, userId) {
         logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
         const tempSlug = await WidgetService.getSlug(widget.name);
 
         const newWidget = await new Widget({
             name: widget.name,
             dataset: datasetId || widget.dataset,
-            userId: user.id,
+            userId,
             slug: tempSlug,
             description: widget.description,
             source: widget.source,
@@ -131,7 +131,7 @@ class WidgetService {
         return newWidget;
     }
 
-    static async clone(id, widget, user) {
+    static async clone(id, widget, userId) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.info(`[DBACCESS-FIND]: widget.id: ${id}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
@@ -145,7 +145,7 @@ class WidgetService {
         newWidget.name = widget.name || `${currentWidget.name} - ${new Date().getTime()}`;
         newWidget.description = widget.description || currentWidget.description;
         newWidget.dataset = currentWidget.dataset;
-        newWidget.userId = user.id;
+        newWidget.userId = userId;
         newWidget.source = currentWidget.source;
         newWidget.sourceUrl = currentWidget.sourceUrl;
         newWidget.application = currentWidget.application;
@@ -162,7 +162,7 @@ class WidgetService {
         newWidget.template = currentWidget.template;
         newWidget.layerId = currentWidget.layerId;
 
-        const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, user);
+        const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, userId);
 
         WidgetService.generateThumbnail(createdWidget);
 
