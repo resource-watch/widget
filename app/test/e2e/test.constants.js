@@ -49,6 +49,10 @@ const ROLES = {
                 'data4sdgs'
             ]
         }
+    },
+    MICROSERVICE: {
+        id: 'microservice',
+        createdAt: '2016-09-14'
     }
 };
 
