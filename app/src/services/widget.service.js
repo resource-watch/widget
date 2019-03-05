@@ -81,6 +81,8 @@ class WidgetService {
             currentWidget.freeze = widget.freeze;
         }
 
+        currentWidget.updatedAt = new Date();
+
         const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
 

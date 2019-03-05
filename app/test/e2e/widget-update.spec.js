@@ -2,12 +2,14 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
+const chaiDatetime = require('chai-datetime');
 const { ROLES } = require('./test.constants');
 
 const { getTestServer } = require('./test-server');
 const { widgetConfig, getUUID, createWidget } = require('./utils');
 
 const should = chai.should();
+chai.use(chaiDatetime);
 
 let requester;
 
@@ -118,6 +120,7 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.not.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.not.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.not.deep.equal(widget.widgetConfig);
+        new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
@@ -137,14 +140,16 @@ describe('Update widgets tests', () => {
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
 
-        const createdWidget = response.body.data;
+        const updatedWidget = response.body.data;
 
-        createdWidget.attributes.name.should.equal(widget.name);
-        createdWidget.attributes.description.should.equal(widget.description);
-        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
-        createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
-        createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
-        createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+        updatedWidget.attributes.name.should.equal(widget.name);
+        updatedWidget.attributes.description.should.equal(widget.description);
+        updatedWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        updatedWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
+        updatedWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        updatedWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+        updatedWidget.attributes.updatedAt.should.not.equal(databaseWidget.updatedAt);
+        new Date(updatedWidget.attributes.updatedAt).should.equalDate(new Date());
 
         databaseWidget = await Widget.findById(widgetOne.id).exec();
 
@@ -153,7 +158,8 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
-
+        databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
+        new Date(databaseWidget.updatedAt).should.equalDate(new Date());
     });
 
     it('Update a widget as an USER with a matching app should be successful', async () => {
@@ -230,6 +236,7 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.not.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.not.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.not.deep.equal(widget.widgetConfig);
+        new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
@@ -249,14 +256,15 @@ describe('Update widgets tests', () => {
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
 
-        const createdWidget = response.body.data;
+        const updatedWidget = response.body.data;
 
-        createdWidget.attributes.name.should.equal(widget.name);
-        createdWidget.attributes.description.should.equal(widget.description);
-        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
-        createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
-        createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
-        createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+        updatedWidget.attributes.name.should.equal(widget.name);
+        updatedWidget.attributes.description.should.equal(widget.description);
+        updatedWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        updatedWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
+        updatedWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        updatedWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+        new Date(updatedWidget.attributes.updatedAt).should.equalDate(new Date());
 
         databaseWidget = await Widget.findById(widgetOne.id).exec();
 
@@ -265,7 +273,7 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
-
+        new Date(databaseWidget.updatedAt).should.equalDate(new Date());
     });
 
     it('Update a widget as an USER without a matching app should fail with HTTP 403', async () => {
@@ -361,7 +369,7 @@ describe('Update widgets tests', () => {
         databaseWidget.sourceUrl.should.not.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.not.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.not.deep.equal(widget.widgetConfig);
-
+        new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
     });
 
     afterEach(() => {
