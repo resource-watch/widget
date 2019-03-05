@@ -189,6 +189,8 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+        new Date(createdWidget.attributes.updatedAt).should.equalDate(new Date());
+
 
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
 
@@ -197,6 +199,8 @@ describe('Create widgets tests', () => {
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
+        new Date(databaseWidget.updatedAt).should.equalDate(new Date());
+
     });
 
     it('Create a widget as an USER with a matching app should be successful', async () => {
@@ -289,6 +293,7 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.sourceUrl.should.equal(widget.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widget.queryUrl);
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
+        new Date(createdWidget.attributes.updatedAt).should.equalDate(new Date());
 
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
 
@@ -297,6 +302,7 @@ describe('Create widgets tests', () => {
         databaseWidget.sourceUrl.should.equal(widget.sourceUrl);
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
+        new Date(databaseWidget.updatedAt).should.equalDate(new Date());
     });
 
     it('Create a widget as an USER without a matching app should fail with HTTP 403', async () => {
