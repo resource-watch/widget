@@ -78,6 +78,76 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+        createdWidget.attributes.userId.should.equal(ROLES.ADMIN.id);
+    });
+
+    it('Clone a widget as an ADMIN with a custom user id should be successful and retain the ADMIN\'s userId', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`, { userId: '1322548' })
+            .send({
+                loggedUser: ROLES.ADMIN
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const createdWidget = response.body.data;
+
+        createdWidget.id.should.not.equal(widgetOne.id);
+        createdWidget.attributes.name.should.not.equal(widgetOne.name);
+        createdWidget.attributes.slug.should.not.equal(widgetOne.slug);
+
+        createdWidget.attributes.description.should.equal(widgetOne.description);
+        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+        createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+        createdWidget.attributes.userId.should.equal(ROLES.ADMIN.id);
+        createdWidget.attributes.userId.should.not.equal('1322548');
+    });
+
+    it('Clone a widget as the \'microservice\' user with a custom userId should be successful and retain the custom userId', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+
+        nock(`${process.env.CT_URL}`)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`)
+            .send({
+                userId: '1322548',
+                loggedUser: ROLES.MICROSERVICE
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const createdWidget = response.body.data;
+
+        createdWidget.id.should.not.equal(widgetOne.id);
+        createdWidget.attributes.name.should.not.equal(widgetOne.name);
+        createdWidget.attributes.slug.should.not.equal(widgetOne.slug);
+
+        createdWidget.attributes.description.should.equal(widgetOne.description);
+        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+        createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+        createdWidget.attributes.userId.should.not.equal(ROLES.ADMIN.id);
+        createdWidget.attributes.userId.should.equal('1322548');
     });
 
     it('Clone a widget as an USER with a matching app should be successful', async () => {

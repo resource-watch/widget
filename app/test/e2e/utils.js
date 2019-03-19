@@ -352,7 +352,9 @@ const createWidget = (apps = ['rw']) => {
         default: true,
         verified: false,
         application: apps,
-        env: 'production'
+        env: 'production',
+        createdAt: new Date(2018, 1, 1),
+        updatedAt: new Date(2018, 1, 1)
     };
 };
 

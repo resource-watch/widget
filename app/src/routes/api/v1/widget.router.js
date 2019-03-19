@@ -12,7 +12,7 @@ const { USER_ROLES } = require('app.constants');
 
 const router = new Router();
 
-const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
+const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
     return a;
 }, []).join('&');
@@ -26,7 +26,7 @@ class WidgetRouter {
     static async get(ctx) {
         try {
             const id = ctx.params.widget;
-            const dataset = ctx.params.dataset;
+            const { dataset } = ctx.params;
             logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
             const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
             const widget = await WidgetService.get(id, dataset, includes);
@@ -88,7 +88,7 @@ class WidgetRouter {
             ctx.body = WidgetSerializer.serialize(widget);
             const cache = [id, widget.slug];
             if (includes) {
-                includes.forEach(inc => {
+                includes.forEach((inc) => {
                     cache.push(`${id}-${inc}`);
                     cache.push(`${widget.slug}-${inc}`);
                 });
@@ -104,7 +104,7 @@ class WidgetRouter {
         try {
             const { dataset } = ctx.params;
             const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user);
+            const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user.id);
             ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
@@ -117,7 +117,13 @@ class WidgetRouter {
         try {
             const id = ctx.params.widget;
             const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.clone(id, ctx.request.body, user);
+            let clonedWidgetUserId;
+            if (user && user.id === 'microservice' && ctx.request.body.userId) {
+                clonedWidgetUserId = ctx.request.body.userId;
+            } else {
+                clonedWidgetUserId = user.id;
+            }
+            const widget = await WidgetService.clone(id, ctx.request.body, clonedWidgetUserId);
             ctx.body = WidgetSerializer.serialize(widget);
         } catch (err) {
             throw err;
@@ -157,7 +163,7 @@ class WidgetRouter {
             ctx.body = WidgetSerializer.serialize(widgets);
             const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
             if (widgets) {
-                widgets.forEach(widget => {
+                widgets.forEach((widget) => {
                     uncache.push(widget._id);
                     uncache.push(widget.slug);
                 });
@@ -169,7 +175,7 @@ class WidgetRouter {
     }
 
     static async getAll(ctx) {
-        const query = ctx.query;
+        const { query } = ctx;
         const dataset = ctx.params.dataset || null;
         const userId = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser).id : null;
         delete query.loggedUser;
@@ -211,7 +217,7 @@ class WidgetRouter {
             cache.push(`${ctx.params.dataset}-widget-all`);
         }
         if (includes) {
-            includes.forEach(inc => {
+            includes.forEach((inc) => {
                 cache.push(`widget-${inc}`);
                 if (ctx.params.dataset) {
                     cache.push(`${ctx.params.dataset}-widget-all-${inc}`);
@@ -224,9 +230,7 @@ class WidgetRouter {
     static async update(ctx) {
         const id = ctx.params.widget;
         logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
-        const dataset = ctx.params.dataset || null;
         try {
-            const user = WidgetRouter.getUser(ctx);
             const widget = await WidgetService.update(id, ctx.request.body);
             ctx.body = WidgetSerializer.serialize(widget);
             ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
@@ -240,7 +244,7 @@ class WidgetRouter {
             ctx.request.body.ids = ctx.request.body.widget.ids;
         }
         if (!ctx.request.body.ids) {
-            ctx.throw(400, 'Bad request');
+            ctx.throw(400, 'Bad request - Missing \'ids\' from request body');
             return;
         }
         logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
@@ -249,7 +253,7 @@ class WidgetRouter {
             app: ctx.request.body.app
         };
         if (typeof resource.ids === 'string') {
-            resource.ids = resource.ids.split(',').map((elem) => elem.trim());
+            resource.ids = resource.ids.split(',').map(elem => elem.trim());
         }
         const result = await WidgetService.getByDataset(resource);
         ctx.body = WidgetSerializer.serialize(result);
@@ -260,12 +264,12 @@ class WidgetRouter {
         const widgets = await WidgetService.updateEnvironment(ctx.params.dataset, ctx.params.env);
         const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, 'dataset-widget'];
         if (widgets) {
-            widgets.forEach(widget => {
+            widgets.forEach((widget) => {
                 uncache.push(widget._id);
                 uncache.push(widget.slug);
             });
         }
-        ctx.set('uncache', uncache.join(' '))
+        ctx.set('uncache', uncache.join(' '));
         ctx.body = '';
     }
 
