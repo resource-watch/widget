@@ -59,6 +59,7 @@
     "mongoose-paginate": "^5.0.3",
     "request": "^2.88.0",
     "request-promise": "^4.1.1",
+    "sleep": "^6.0.0",
     "slug": "^0.9.2",
     "validator": "^10.2.0"
   }
