@@ -135,6 +135,7 @@ class WidgetService {
 
     static async clone(id, widget, userId) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
+        logger.debug(`[WidgetService]: New user id: ${userId}`);
         logger.info(`[DBACCESS-FIND]: widget.id: ${id}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
             slug: id
