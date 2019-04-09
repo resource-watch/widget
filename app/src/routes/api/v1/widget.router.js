@@ -114,7 +114,7 @@ class WidgetRouter {
 
     static async clone(ctx) {
         logger.info(`[WidgetRouter] Cloning widget with id: ${ctx.request.body.name}`);
-        logger.debug(`[WidgetRouter] Params in body: ${ctx.request.body}`);
+        logger.debug(`[WidgetRouter] Params in body: ${JSON.stringify(ctx.request.body, null, 4)}`);
         try {
             const id = ctx.params.widget;
             const user = WidgetRouter.getUser(ctx);
