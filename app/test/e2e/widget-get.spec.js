@@ -2,9 +2,10 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { createWidget } = require('./utils');
+const { ROLES } = require('./test.constants');
 
 const { getTestServer } = require('./test-server');
+const { createWidget } = require('./utils');
 
 const should = chai.should();
 
@@ -59,6 +60,21 @@ describe('Get widgets tests', () => {
         widgetTwo.slug.should.equal(responseWidgetTwo.attributes.slug);
         widgetTwo.sourceUrl.should.equal(responseWidgetTwo.attributes.sourceUrl);
         widgetTwo.queryUrl.should.equal(responseWidgetTwo.attributes.queryUrl);
+    });
+
+    it('Get all widgets should return widgets owned by user', async () => {
+        Widget.remove({}).exec();
+        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        const widgetTwo = await new Widget(createWidget()).save();
+
+        const response = await requester.get(`/api/v1/widget?userId=xxx`);
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(1);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data[0];
+        widgetOne.name.should.equal(responseWidgetOne.attributes.name);
     });
 
     afterEach(() => {

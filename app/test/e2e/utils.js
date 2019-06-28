@@ -327,7 +327,7 @@ const widgetConfig = {
     ]
 };
 
-const createWidget = (apps = ['rw']) => {
+const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7') => {
     const uuid = getUUID();
     const datasetUuid = getUUID();
 
@@ -335,7 +335,7 @@ const createWidget = (apps = ['rw']) => {
         _id: uuid,
         name: `Widget ${uuid}`,
         dataset: datasetUuid,
-        userId: '1a10d7c6e0a37126611fd7a7',
+        userId: userId,
         slug: `widget-${uuid}`,
         description: '',
         source: '',
