@@ -215,7 +215,7 @@ class WidgetService {
         }
     }
 
-    static async delete(id) {
+    static async delete(id, dataset) {
         logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
         logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
@@ -235,7 +235,7 @@ class WidgetService {
         }
         logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
         try {
-            await WidgetService.deleteMetadata(id, widget._id);
+            await WidgetService.deleteMetadata(dataset, widget._id);
         } catch (err) {
             logger.error('Error removing metadata of the widget', err);
         }
