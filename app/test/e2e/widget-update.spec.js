@@ -3,10 +3,10 @@ const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
 const chaiDatetime = require('chai-datetime');
-const { ROLES } = require('./test.constants');
+const { ROLES } = require('./src/test.constants');
 
-const { getTestServer } = require('./test-server');
-const { widgetConfig, getUUID, createWidget } = require('./utils');
+const { getTestServer } = require('./src/test-server');
+const { widgetConfig, getUUID, createWidget } = require('./src/utils');
 
 const should = chai.should();
 chai.use(chaiDatetime);
