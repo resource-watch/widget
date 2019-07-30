@@ -1,6 +1,4 @@
-const getUUID = () => Math.random().toString(36).substring(7);
-
-const widgetConfig = {
+const WIDGET_CONFIG = {
     legends: [
         {
             properties: {
@@ -327,39 +325,129 @@ const widgetConfig = {
     ]
 };
 
-const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7') => {
-    const uuid = getUUID();
-    const datasetUuid = getUUID();
+const SINGLE_WIDGET_CONFIG = {
+    data: {
+        format: {
+            property: 'rows',
+            type: 'json'
+        },
+        url: 'http://wri-01.carto.com/api/v2/sql?q=with f as (SELECT crops.*, {{water_column}} FROM crops inner join aqueduct_projections_20150309 ri on ri.basinid=crops.basinid), t as (select sum(area) as area, {{water_column}} as risk, crop from f group by {{water_column}}, crop ), r as (SELECT sum(value) as value, commodity FROM combined01_prepared where year=\'{{year}}\' and impactparameter=\'Food Demand\' group by commodity), d as ( select (value*100/(sum(value) over())) as value, commodity from r ) select crop, risk,value, (area*100/sum(area) over(partition by crop)) area_perc from d inner join t on lower(commodity)=crop order by risk desc, crop asc',
+        name: 'hist'
+    },
+};
 
-    return {
-        _id: uuid,
-        name: `Widget ${uuid}`,
-        dataset: datasetUuid,
-        userId: userId,
-        slug: `widget-${uuid}`,
-        description: '',
-        source: '',
-        sourceUrl: 'http://foo.bar',
-        authors: '',
-        queryUrl: `query/${getUUID()}?sql=select * from crops`,
-        widgetConfig,
-        freeze: false,
-        published: true,
-        template: false,
-        defaultEditableWidget: false,
-        thumbnailUrl: 'http://the-default-thumbnail.com/image.png',
-        protected: false,
-        default: true,
-        verified: false,
-        application: apps,
-        env: 'production',
-        createdAt: new Date(2018, 1, 1),
-        updatedAt: new Date(2018, 1, 1)
-    };
+const DEFAULT_DATASET_ATTRIBUTES = {
+    name: 'Seasonal variability',
+    slug: 'Seasonal-variability',
+    type: null,
+    subtitle: null,
+    application: [
+        'rw'
+    ],
+    dataPath: null,
+    attributesPath: null,
+    connectorType: 'rest',
+    provider: 'cartodb',
+    userId: '1a10d7c6e0a37126611fd7a7',
+    connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
+    tableName: 'rw_projections_20150309',
+    status: 'pending',
+    published: true,
+    overwrite: false,
+    verified: false,
+    blockchain: {},
+    mainDateField: null,
+    env: 'production',
+    geoInfo: false,
+    protected: false,
+    legend: {
+        date: [],
+        region: [],
+        country: [],
+        nested: []
+    },
+    clonedHost: {},
+    errorMessage: null,
+    taskId: null,
+    updatedAt: '2018-11-19T11:45:44.405Z',
+    dataLastUpdated: null,
+    widgetRelevantProps: [],
+    layerRelevantProps: []
+};
+
+const ROLES = {
+    USER: {
+        id: '1a10d7c6e0a37126611fd7a7',
+        role: 'USER',
+        provider: 'local',
+        name: 'test user',
+        email: 'user@control-tower.org',
+        extraUserData: {
+            apps: [
+                'rw',
+                'gfw',
+                'gfw-climate',
+                'prep',
+                'aqueduct',
+                'forest-atlas',
+                'data4sdgs'
+            ]
+        }
+    },
+    MANAGER: {
+        id: '1a10d7c6e0a37126611fd7a7',
+        role: 'MANAGER',
+        provider: 'local',
+        email: 'user@control-tower.org',
+        extraUserData: {
+            apps: [
+                'rw',
+                'gfw',
+                'gfw-climate',
+                'prep',
+                'aqueduct',
+                'forest-atlas',
+                'data4sdgs'
+            ]
+        }
+    },
+    ADMIN: {
+        id: '1a10d7c6e0a37126611fd7a7',
+        role: 'ADMIN',
+        provider: 'local',
+        email: 'user@control-tower.org',
+        extraUserData: {
+            apps: [
+                'rw',
+                'gfw',
+                'gfw-climate',
+                'prep',
+                'aqueduct',
+                'forest-atlas',
+                'data4sdgs'
+            ]
+        }
+    },
+    WRONG_ADMIN: {
+        id: '1a10d7c6e0a37126611fd7a7',
+        role: 'ADMIN',
+        provider: 'local',
+        email: 'user@control-tower.org',
+        extraUserData: {
+            apps: [
+                'test'
+            ]
+        }
+    },
+    MICROSERVICE: {
+        id: 'microservice',
+        createdAt: '2016-09-14'
+    }
 };
 
 module.exports = {
-    createWidget,
-    getUUID,
-    widgetConfig
+    ROLES,
+    WIDGET_CONFIG,
+    DEFAULT_DATASET_ATTRIBUTES,
+    SINGLE_WIDGET_CONFIG,
 };
