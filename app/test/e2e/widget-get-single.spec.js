@@ -1,12 +1,12 @@
 /* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
-const Widget = require('models/widget.model');
-const { ROLES: { USER }, SINGLE_WIDGET_CONFIG } = require('./src/test.constants');
 const chai = require('chai');
+const Widget = require('models/widget.model');
+const { ROLES: { USER }, SINGLE_WIDGET_CONFIG } = require('./utils/test.constants');
 
 const should = chai.should();
 
-const { createRequest } = require('./src/test-server');
+const { createRequest } = require('./utils/test-server');
 const {
     createWidgetINDB,
     getUUID,
@@ -14,8 +14,8 @@ const {
     createAuthCases,
     ensureCorrectError,
     createVocabulary
-} = require('./src/utils');
-const { createMockUser, createMockGetMetadata, createMockVocabulary } = require('./src/mock');
+} = require('./utils/helpers');
+const { createMockUser, createMockGetMetadata, createMockVocabulary } = require('./utils/mock');
 
 const prefix = '/api/v1/widget/';
 let widget;

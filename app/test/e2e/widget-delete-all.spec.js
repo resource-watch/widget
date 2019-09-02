@@ -1,12 +1,12 @@
 /* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
-const { expect } = require('chai');
-const Widget = require('models/widget.model');
-const { ROLES: { MICROSERVICE } } = require('./src/test.constants');
-const { createMockDataset, createMockDeleteMetadata } = require('./src/mock');
-const { createRequest } = require('./src/test-server');
-const { createWidgetINDB, getUUID, createAuthCases } = require('./src/utils');
 const chai = require('chai');
+const Widget = require('models/widget.model');
+const { ROLES: { MICROSERVICE } } = require('./utils/test.constants');
+const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
+const { createRequest } = require('./utils/test-server');
+const { createWidgetINDB, getUUID, createAuthCases } = require('./utils/helpers');
+
 const should = chai.should();
 
 const prefix = '/api/v1/dataset';
@@ -85,7 +85,7 @@ describe('Delete all widgets by dataset endpoint', () => {
         expectedWidgets.map(testWidget);
 
         const widgets = await Widget.find({});
-        expect(widgets).to.be.lengthOf(1);
+        widgets.should.be.lengthOf(1);
     });
 
     afterEach(() => {
