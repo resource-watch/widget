@@ -128,7 +128,7 @@ const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datase
 
 const widgetConfig = WIDGET_CONFIG;
 
-const createWidgetINDB = ({
+const createWidgetInDB = ({
     apps, userId, datasetID, customerWidgetConfig
 }) => new Widget(createWidget(apps, userId, datasetID, customerWidgetConfig)).save();
 
@@ -136,7 +136,7 @@ module.exports = {
     createWidget,
     getUUID,
     widgetConfig,
-    createWidgetINDB,
+    createWidgetInDB,
     createAuthCases,
     ensureCorrectError,
     createWidgetMetadata,

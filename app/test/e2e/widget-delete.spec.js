@@ -6,8 +6,8 @@ const { ROLES } = require('./utils/test.constants');
 
 const { createRequest } = require('./utils/test-server');
 
-const { createWidgetINDB, getUUID, createAuthCases } = require('./utils/helpers');
-const { createMockDataset } = require('./utils/mock');
+const { createWidgetInDB, getUUID, createAuthCases } = require('./utils/helpers');
+const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 
 const should = chai.should();
 
@@ -39,15 +39,17 @@ describe('Delete widgets endpoint', () => {
     it('Deleting widget with being authenticated as USER should fall with HTTP 403', authCases.isUserForbidden());
 
     it('Deleting widget with being authenticated as ADMIN but with wrong app should fall', async () => {
-        const createdWidget = await createWidgetINDB({ userId: ROLES.WRONG_ADMIN.id });
+        const createdWidget = await createWidgetInDB({ userId: ROLES.WRONG_ADMIN.id });
         authCases.isRightAppRequired(createdWidget._id);
     });
 
     it('Deleting widget should delete widget and return deleted widget (happy case)', async () => {
         const datasetID = getUUID();
         createMockDataset(datasetID);
-        await createWidgetINDB({ datasetID });
-        const createdWidget = await createWidgetINDB({ datasetID });
+        await createWidgetInDB({ datasetID });
+        const createdWidget = await createWidgetInDB({ datasetID });
+
+        createMockDeleteMetadata(datasetID, createdWidget._id);
 
         const response = await widget
             .delete(createdWidget._id)
