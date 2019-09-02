@@ -16,7 +16,7 @@ const { createRequest } = require('./utils/test-server');
 const {
     createAuthCases,
     ensureCorrectError,
-    createWidgetINDB,
+    createWidgetInDB,
     getUUID,
 } = require('./utils/helpers');
 const { createMockDataset, createMockDatasetNotFound } = require('./utils/mock');
@@ -88,9 +88,9 @@ describe('Update env of widget by dataset endpoint', () => {
         const datasetID = getUUID();
         createMockDataset(datasetID);
 
-        await createWidgetINDB({ datasetID });
-        await createWidgetINDB({ datasetID });
-        await createWidgetINDB({ datasetID: getUUID() });
+        await createWidgetInDB({ datasetID });
+        await createWidgetInDB({ datasetID });
+        await createWidgetInDB({ datasetID: getUUID() });
 
         const response = await widget.patch(`/${datasetID}/preproduction`).send({ loggedUser: MICROSERVICE });
         response.status.should.equal(200);

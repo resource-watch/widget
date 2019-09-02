@@ -9,10 +9,15 @@ chai.use(chaiHttp);
 
 const createRequest = async (prefix, method) => {
     if (!createdServer) {
+        nock(`${process.env.CT_URL}`)
+            .post(`/api/v1/microservice`)
+            .reply(200);
+
         const serverPromise = require('../../../src/app');
         const { server } = await serverPromise();
         createdServer = server;
     }
+
     const newRequest = chai.request(createdServer).keepOpen();
     const oldHandler = newRequest[method];
 

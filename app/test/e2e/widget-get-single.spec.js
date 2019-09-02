@@ -8,7 +8,7 @@ const should = chai.should();
 
 const { createRequest } = require('./utils/test-server');
 const {
-    createWidgetINDB,
+    createWidgetInDB,
     getUUID,
     createWidgetMetadata,
     createAuthCases,
@@ -70,7 +70,7 @@ describe('Get widget by id endpoint', () => {
     it('Getting widget should return widget (happy case)', async () => {
         const datasetID = getUUID();
 
-        const createdWidget = await createWidgetINDB({ datasetID });
+        const createdWidget = await createWidgetInDB({ datasetID });
         const response = await widget.get(createdWidget._id).send({ dataset: datasetID });
         response.status.should.equal(200);
 
@@ -79,7 +79,7 @@ describe('Get widget by id endpoint', () => {
 
     it('Getting widget with vocabulary should return widget with vocabulary (happy case)', async () => {
         const datasetID = getUUID();
-        const createdWidget = await createWidgetINDB({ datasetID });
+        const createdWidget = await createWidgetInDB({ datasetID });
         const vocabulary = createVocabulary(createdWidget._id);
         createMockVocabulary(vocabulary, datasetID, createdWidget._id);
 
@@ -96,7 +96,7 @@ describe('Get widget by id endpoint', () => {
         createMockUser([USER]);
         const datasetID = getUUID();
 
-        const createdWidget = await createWidgetINDB({ datasetID, userId: USER.id });
+        const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         const response = await widget
             .get(createdWidget._id)
             .query({ includes: 'user' })
@@ -113,7 +113,7 @@ describe('Get widget by id endpoint', () => {
 
     it('Getting widget with metadata should return widget with metadata (happy case)', async () => {
         const datasetID = getUUID();
-        const createdWidget = await createWidgetINDB({ datasetID, userId: USER.id });
+        const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         const metadata = createWidgetMetadata(datasetID, createdWidget._id);
         createMockGetMetadata(metadata, datasetID);
 
@@ -130,7 +130,7 @@ describe('Get widget by id endpoint', () => {
         const datasetID = getUUID();
         const testURL = 'http://testt.test.com';
 
-        const createdWidget = await createWidgetINDB({ datasetID });
+        const createdWidget = await createWidgetInDB({ datasetID });
         const response = await widget
             .get(createdWidget._id)
             .query({ queryUrl: testURL })
@@ -155,7 +155,7 @@ describe('Get widget by id endpoint', () => {
     it('Getting widget with widgetConfig as array with queryURL with custom params should return widget with queryUQL with custom params (happy case)', async () => {
         const datasetID = getUUID();
 
-        const createdWidget = await createWidgetINDB({ datasetID });
+        const createdWidget = await createWidgetInDB({ datasetID });
         const response = await widget
             .get(createdWidget._id)
             .query({ foo: 'bar', bar: 'foo' })
@@ -181,7 +181,7 @@ describe('Get widget by id endpoint', () => {
         const datasetID = getUUID();
         const testURL = 'http://testt.test.com';
 
-        const createdWidget = await createWidgetINDB({ datasetID, customerWidgetConfig: SINGLE_WIDGET_CONFIG });
+        const createdWidget = await createWidgetInDB({ datasetID, customerWidgetConfig: SINGLE_WIDGET_CONFIG });
         const response = await widget
             .get(createdWidget._id)
             .query({ queryUrl: testURL })
@@ -203,7 +203,7 @@ describe('Get widget by id endpoint', () => {
     it('Getting widget with widgetConfig as single object with queryURL with custom params should return widget with queryUQL with custom params (happy case)', async () => {
         const datasetID = getUUID();
 
-        const createdWidget = await createWidgetINDB({ datasetID, customerWidgetConfig: SINGLE_WIDGET_CONFIG });
+        const createdWidget = await createWidgetInDB({ datasetID, customerWidgetConfig: SINGLE_WIDGET_CONFIG });
         const response = await widget
             .get(createdWidget._id)
             .query({ foo: 'bar', bar: 'foo' })
