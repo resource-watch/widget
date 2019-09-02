@@ -1,15 +1,15 @@
 /* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
-const { expect } = require('chai');
-const Widget = require('models/widget.model');
 const chai = require('chai');
+const Widget = require('models/widget.model');
+const { ROLES } = require('./utils/test.constants');
+
+const { createRequest } = require('./utils/test-server');
+
+const { createWidgetINDB, getUUID, createAuthCases } = require('./utils/helpers');
+const { createMockDataset } = require('./utils/mock');
+
 const should = chai.should();
-
-const { ROLES } = require('./src/test.constants');
-
-const { createRequest } = require('./src/test-server');
-const { createWidgetINDB, getUUID, createAuthCases } = require('./src/utils');
-const { createMockDataset, createMockWebshoot } = require('./src/mock');
 
 const prefix = '/api/v1/widget/';
 let widget;
@@ -73,7 +73,7 @@ describe('Delete widgets endpoint', () => {
         data.attributes.should.deep.equal(expectedWidget);
 
         const widgets = await Widget.find({});
-        expect(widgets).to.be.lengthOf(1);
+        widgets.should.be.lengthOf(1);
     });
 
     afterEach(() => {

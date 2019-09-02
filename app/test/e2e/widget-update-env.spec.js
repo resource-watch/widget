@@ -1,24 +1,25 @@
 /* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
 const Widget = require('models/widget.model');
+const chai = require('chai');
 const {
     ROLES: {
         USER, ADMIN, MANAGER, MICROSERVICE
     }
-} = require('./src/test.constants');
-const chai = require('chai');
+} = require('./utils/test.constants');
+
 const { expect } = chai;
 
 const should = chai.should();
 
-const { createRequest } = require('./src/test-server');
+const { createRequest } = require('./utils/test-server');
 const {
     createAuthCases,
     ensureCorrectError,
     createWidgetINDB,
     getUUID,
-} = require('./src/utils');
-const { createMockDataset, createMockDatasetNotFound } = require('./src/mock');
+} = require('./utils/helpers');
+const { createMockDataset, createMockDatasetNotFound } = require('./utils/mock');
 
 const prefix = '/api/v1/widget/change-environment';
 let widget;
