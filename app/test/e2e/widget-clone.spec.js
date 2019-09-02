@@ -2,10 +2,10 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES } = require('./test.constants');
+const { ROLES } = require('./utils/test.constants');
 
-const { getTestServer } = require('./test-server');
-const { getUUID, createWidget } = require('./utils');
+const { getTestServer } = require('./utils/test-server');
+const { getUUID, createWidget } = require('./utils/helpers');
 
 const should = chai.should();
 
@@ -53,6 +53,7 @@ describe('Clone widgets tests', () => {
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -86,6 +87,7 @@ describe('Clone widgets tests', () => {
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -120,6 +122,7 @@ describe('Clone widgets tests', () => {
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -155,6 +158,7 @@ describe('Clone widgets tests', () => {
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -212,6 +216,7 @@ describe('Clone widgets tests', () => {
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }

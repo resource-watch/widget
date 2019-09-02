@@ -2,10 +2,10 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES } = require('./test.constants');
+const { ROLES } = require('./utils/test.constants');
 
-const { getTestServer } = require('./test-server');
-const { widgetConfig } = require('./utils');
+const { getTestServer } = require('./utils/test-server');
+const { widgetConfig } = require('./utils/helpers');
 
 const should = chai.should();
 
