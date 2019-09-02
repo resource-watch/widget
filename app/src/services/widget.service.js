@@ -234,7 +234,7 @@ class WidgetService {
         }
         logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
         try {
-            await WidgetService.deleteMetadata(dataset, widget._id);
+            await WidgetService.deleteMetadata(dataset || widget.dataset, widget._id);
         } catch (err) {
             logger.error('Error removing metadata of the widget', err);
         }
