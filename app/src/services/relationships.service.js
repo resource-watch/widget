@@ -26,11 +26,16 @@ class RelationshipsService {
                         },
                         version: false
                     });
-                    widgets[i].user = {
-                        name: user.data[0].name,
-                        email: user.data[0].email
-                    };
-                    logger.info('Widgets', widgets);
+
+                    if (!user.data[0] || !user.data[0].name || !user.data[0].email) {
+                        logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(user)}`);
+                    } else {
+                        widgets[i].user = {
+                            name: user.data[0].name,
+                            email: user.data[0].email
+                        };
+                        logger.info('Widgets including user data', widgets.map((el) => el.toObject()));
+                    }
                 }
                 if (includes.indexOf('metadata') > -1) {
                     const metadata = await ctRegisterMicroservice.requestToMicroservice({
