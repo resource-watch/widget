@@ -62,7 +62,7 @@ class WidgetSerializer {
                 size: data.limit
             };
         }
-        
+
         return result;
     }
 
