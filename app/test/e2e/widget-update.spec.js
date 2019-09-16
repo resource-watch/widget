@@ -3,7 +3,7 @@ const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
 const chaiDatetime = require('chai-datetime');
-const { ROLES } = require('./utils/test.constants');
+const { USERS } = require('./utils/test.constants');
 
 const { getTestServer } = require('./utils/test-server');
 const { widgetConfig, getUUID, createWidget } = require('./utils/helpers');
@@ -40,7 +40,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${getUUID()}`)
             .send({
-                loggedUser: ROLES.ADMIN
+                loggedUser: USERS.ADMIN
             });
 
         response.status.should.equal(404);
@@ -110,7 +110,7 @@ describe('Update widgets tests', () => {
             status: 1,
             default: true,
             published: true,
-            widgetConfig: Object.assign({}, widgetConfig, { someNewProp: 'someNewValue' })
+            widgetConfig: { ...widgetConfig, someNewProp: 'someNewValue' }
         };
 
         let databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -123,7 +123,7 @@ describe('Update widgets tests', () => {
         new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
@@ -134,7 +134,7 @@ describe('Update widgets tests', () => {
             .send({
                 dataset: widgetOne.dataset,
                 widget,
-                loggedUser: ROLES.ADMIN
+                loggedUser: USERS.ADMIN
             });
 
         response.status.should.equal(200);
@@ -226,7 +226,7 @@ describe('Update widgets tests', () => {
             status: 1,
             default: true,
             published: true,
-            widgetConfig: Object.assign({}, widgetConfig, { someNewProp: 'someNewValue' })
+            widgetConfig: { ...widgetConfig, someNewProp: 'someNewValue' }
         };
 
         let databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -239,7 +239,7 @@ describe('Update widgets tests', () => {
         new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
@@ -250,7 +250,7 @@ describe('Update widgets tests', () => {
             .send({
                 dataset: widgetOne.dataset,
                 widget,
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(200);
@@ -339,7 +339,7 @@ describe('Update widgets tests', () => {
             status: 1,
             default: true,
             published: true,
-            widgetConfig: Object.assign({}, widgetConfig, { someNewProp: 'someNewValue' })
+            widgetConfig: { ...widgetConfig, someNewProp: 'someNewValue' }
         };
 
         let databaseWidget = await Widget.findById(widgetOne.id).exec();
@@ -355,7 +355,7 @@ describe('Update widgets tests', () => {
             .send({
                 dataset: widgetOne.dataset,
                 widget,
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(403);

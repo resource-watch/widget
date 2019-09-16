@@ -1,5 +1,5 @@
 const Widget = require('models/widget.model');
-const { WIDGET_CONFIG, ROLES } = require('./test.constants');
+const { WIDGET_CONFIG, USERS } = require('./test.constants');
 
 const getUUID = () => Math.random().toString(36).substring(7);
 
@@ -10,7 +10,7 @@ const ensureCorrectError = (body, errMessage) => {
 
 const createAuthCases = (url, initMethod, providedRequester) => {
     let requester = providedRequester;
-    const { USER, ADMIN, WRONG_ADMIN } = ROLES;
+    const { USER, ADMIN, WRONG_ADMIN } = USERS;
 
     const setRequester = (req) => { requester = req; };
 
@@ -74,7 +74,7 @@ const createWidgetMetadata = (datasetID, widgetID) => ({
     },
 });
 
-const createVocabulary = widgetID => ({
+const createVocabulary = (widgetID) => ({
     _id: getUUID(),
     type: 'vocabulary',
     attributes: {

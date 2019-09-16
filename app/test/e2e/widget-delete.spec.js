@@ -2,7 +2,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES } = require('./utils/test.constants');
+const { USERS } = require('./utils/test.constants');
 
 const { createRequest } = require('./utils/test-server');
 
@@ -39,7 +39,7 @@ describe('Delete widgets endpoint', () => {
     it('Deleting widget with being authenticated as USER should fall with HTTP 403', authCases.isUserForbidden());
 
     it('Deleting widget with being authenticated as ADMIN but with wrong app should fall', async () => {
-        const createdWidget = await createWidgetInDB({ userId: ROLES.WRONG_ADMIN.id });
+        const createdWidget = await createWidgetInDB({ userId: USERS.WRONG_ADMIN.id });
         authCases.isRightAppRequired(createdWidget._id);
     });
 
@@ -53,7 +53,7 @@ describe('Delete widgets endpoint', () => {
 
         const response = await widget
             .delete(createdWidget._id)
-            .query({ dataset: datasetID, loggedUser: JSON.stringify(ROLES.ADMIN) });
+            .query({ dataset: datasetID, loggedUser: JSON.stringify(USERS.ADMIN) });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.instanceOf(Object);

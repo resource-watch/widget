@@ -2,7 +2,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES: { MICROSERVICE } } = require('./utils/test.constants');
+const { USERS: { MICROSERVICE } } = require('./utils/test.constants');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 const { createRequest } = require('./utils/test-server');
 const { createWidgetInDB, getUUID, createAuthCases } = require('./utils/helpers');
@@ -54,7 +54,7 @@ describe('Delete all widgets by dataset endpoint', () => {
             await createWidgetInDB({ datasetID, userId: MICROSERVICE.id }),
             await createWidgetInDB({ datasetID, userId: MICROSERVICE.id })
         ];
-        expectedWidgets.map(wid => createMockDeleteMetadata(datasetID, wid._id.toString()));
+        expectedWidgets.map((wid) => createMockDeleteMetadata(datasetID, wid._id.toString()));
         await createWidgetInDB({ datasetID: getUUID(), userId: MICROSERVICE.id });
 
         const response = await widget
