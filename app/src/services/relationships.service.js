@@ -4,7 +4,7 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 
 class RelationshipsService {
 
-    static async getRelationships(widgets, includes) {
+    static async getRelationships(widgets, includes, user) {
         logger.info(`Getting relationships of widgets: ${widgets}`);
         for (let i = 0; i < widgets.length; i++) {
             try {
@@ -17,7 +17,7 @@ class RelationshipsService {
                     widgets[i].vocabulary = vocabularies.data;
                 }
                 if (includes.indexOf('user') > -1) {
-                    const user = await ctRegisterMicroservice.requestToMicroservice({
+                    const userData = await ctRegisterMicroservice.requestToMicroservice({
                         uri: `/auth/user/find-by-ids`,
                         method: 'POST',
                         json: true,
@@ -27,13 +27,17 @@ class RelationshipsService {
                         version: false
                     });
 
-                    if (!user.data[0] || !user.data[0].name || !user.data[0].email) {
+                    if (!userData.data[0] || !userData.data[0].name || !userData.data[0].email) {
                         logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(user)}`);
                     } else {
                         widgets[i].user = {
-                            name: user.data[0].name,
-                            email: user.data[0].email
+                            name: userData.data[0].name,
+                            email: userData.data[0].email
                         };
+                        if (user && user.role === 'ADMIN') {
+                            widgets[i].user.role = userData.data[0].role;
+                        }
+
                         logger.info('Widgets including user data', widgets.map((el) => el.toObject()));
                     }
                 }
@@ -67,11 +71,7 @@ class RelationshipsService {
                 }
             });
             logger.debug(result);
-            return result.data.map(col => {
-                return col.attributes.resources.filter(res => res.type === 'widget');
-            }).reduce((pre, cur) => {
-                return pre.concat(cur);
-            }).map(el => el.id);
+            return result.data.map((col) => col.attributes.resources.filter((res) => res.type === 'widget')).reduce((pre, cur) => pre.concat(cur)).map((el) => el.id);
         } catch (e) {
             throw new Error(e);
         }
@@ -89,7 +89,7 @@ class RelationshipsService {
                 }
             });
             logger.debug(result);
-            return result.data.filter(fav => fav.attributes.resourceType === 'widget').map(el => el.attributes.resourceId);
+            return result.data.filter((fav) => fav.attributes.resourceType === 'widget').map((el) => el.attributes.resourceId);
         } catch (e) {
             throw new Error(e);
         }

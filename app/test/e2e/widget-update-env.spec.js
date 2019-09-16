@@ -3,7 +3,7 @@ const nock = require('nock');
 const Widget = require('models/widget.model');
 const chai = require('chai');
 const {
-    ROLES: {
+    USERS: {
         USER, ADMIN, MANAGER, MICROSERVICE
     }
 } = require('./utils/test.constants');

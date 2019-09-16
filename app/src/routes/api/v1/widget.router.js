@@ -12,7 +12,7 @@ const { USER_ROLES } = require('app.constants');
 
 const router = new Router();
 
-const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
+const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
     return a;
 }, []).join('&');
@@ -20,115 +20,104 @@ const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
 class WidgetRouter {
 
     static getUser(ctx) {
-        return Object.assign({}, ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}, ctx.request.body.loggedUser);
+        return { ...(ctx.request.query.loggedUser ? JSON.parse(ctx.request.query.loggedUser) : {}), ...ctx.request.body.loggedUser };
     }
 
     static async get(ctx) {
-        try {
-            const id = ctx.params.widget;
-            const { dataset } = ctx.params;
-            logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-            const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
-            const widget = await WidgetService.get(id, dataset, includes);
-            const queryParams = Object.keys(ctx.query);
-            if (queryParams.indexOf('loggedUser') !== -1) {
-                queryParams.splice(queryParams.indexOf('loggedUser'), 1);
-            }
-            if (queryParams.indexOf('includes') !== -1) {
-                queryParams.splice(queryParams.indexOf('includes'), 1);
-            }
-            if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
-                widget.queryUrl = ctx.query.queryUrl;
-                if (widget.widgetConfig && widget.widgetConfig.data) {
-                    if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
-                        widget.widgetConfig.data[0].url = ctx.query.queryUrl;
-                    } else if (widget.widgetConfig.data.url) {
-                        widget.widgetConfig.data.url = ctx.query.queryUrl;
-                    }
-                }
-                if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
-                    widget.widgetConfig.data[0].url = ctx.query.queryUrl;
-                }
-                queryParams.splice(queryParams.indexOf('queryUrl'), 1);
-
-            }
-            if (queryParams.length > 0) {
-                logger.debug(queryParams);
-                let params = '';
-                for (let i = 0; i < queryParams.length; i++) {
-                    if (params !== '') {
-                        params += '&';
-                    }
-                    params += `${queryParams[i]}=${ctx.query[queryParams[i]]}`;
-                }
-                if (widget.queryUrl) {
-                    if (widget.queryUrl.indexOf('?') >= 0) {
-                        widget.queryUrl += `&${params}`;
-                    } else {
-                        widget.queryUrl += `?${params}`;
-                    }
-                }
-
-                if (widget.widgetConfig && widget.widgetConfig.data) {
-                    if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
-                        if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
-                            widget.widgetConfig.data[0].url += `&${params}`;
-                        } else {
-                            widget.widgetConfig.data[0].url += `?${params}`;
-                        }
-                    } else if (widget.widgetConfig.data.url) {
-                        if (widget.widgetConfig.data.url.indexOf('?') >= 0) {
-                            widget.widgetConfig.data.url += `&${params}`;
-                        } else {
-                            widget.widgetConfig.data.url += `?${params}`;
-                        }
-                    }
-                }
-            }
-            ctx.body = WidgetSerializer.serialize(widget);
-            const cache = [id, widget.slug];
-            if (includes) {
-                includes.forEach((inc) => {
-                    cache.push(`${id}-${inc}`);
-                    cache.push(`${widget.slug}-${inc}`);
-                });
-            }
-            ctx.set('cache', cache.join(' '));
-        } catch (err) {
-            throw err;
+        const id = ctx.params.widget;
+        const { dataset } = ctx.params;
+        const user = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser) : null;
+        logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
+        const includes = ctx.query.includes ? ctx.query.includes.split(',').map((elem) => elem.trim()) : [];
+        const widget = await WidgetService.get(id, dataset, includes, user);
+        const queryParams = Object.keys(ctx.query);
+        if (queryParams.indexOf('loggedUser') !== -1) {
+            queryParams.splice(queryParams.indexOf('loggedUser'), 1);
         }
+        if (queryParams.indexOf('includes') !== -1) {
+            queryParams.splice(queryParams.indexOf('includes'), 1);
+        }
+        if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
+            widget.queryUrl = ctx.query.queryUrl;
+            if (widget.widgetConfig && widget.widgetConfig.data) {
+                if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                    widget.widgetConfig.data[0].url = ctx.query.queryUrl;
+                } else if (widget.widgetConfig.data.url) {
+                    widget.widgetConfig.data.url = ctx.query.queryUrl;
+                }
+            }
+            if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                widget.widgetConfig.data[0].url = ctx.query.queryUrl;
+            }
+            queryParams.splice(queryParams.indexOf('queryUrl'), 1);
+
+        }
+        if (queryParams.length > 0) {
+            logger.debug(queryParams);
+            let params = '';
+            for (let i = 0; i < queryParams.length; i++) {
+                if (params !== '') {
+                    params += '&';
+                }
+                params += `${queryParams[i]}=${ctx.query[queryParams[i]]}`;
+            }
+            if (widget.queryUrl) {
+                if (widget.queryUrl.indexOf('?') >= 0) {
+                    widget.queryUrl += `&${params}`;
+                } else {
+                    widget.queryUrl += `?${params}`;
+                }
+            }
+
+            if (widget.widgetConfig && widget.widgetConfig.data) {
+                if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                    if (widget.widgetConfig.data[0].url.indexOf('?') >= 0) {
+                        widget.widgetConfig.data[0].url += `&${params}`;
+                    } else {
+                        widget.widgetConfig.data[0].url += `?${params}`;
+                    }
+                } else if (widget.widgetConfig.data.url) {
+                    if (widget.widgetConfig.data.url.indexOf('?') >= 0) {
+                        widget.widgetConfig.data.url += `&${params}`;
+                    } else {
+                        widget.widgetConfig.data.url += `?${params}`;
+                    }
+                }
+            }
+        }
+        ctx.body = WidgetSerializer.serialize(widget);
+        const cache = [id, widget.slug];
+        if (includes) {
+            includes.forEach((inc) => {
+                cache.push(`${id}-${inc}`);
+                cache.push(`${widget.slug}-${inc}`);
+            });
+        }
+        ctx.set('cache', cache.join(' '));
     }
 
     static async create(ctx) {
         logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
-        try {
-            const { dataset } = ctx.params;
-            const user = WidgetRouter.getUser(ctx);
-            const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user.id);
-            ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
-            ctx.body = WidgetSerializer.serialize(widget);
-        } catch (err) {
-            throw err;
-        }
+        const { dataset } = ctx.params;
+        const user = WidgetRouter.getUser(ctx);
+        const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user.id);
+        ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
+        ctx.body = WidgetSerializer.serialize(widget);
     }
 
     static async clone(ctx) {
         logger.info(`[WidgetRouter] Cloning widget with id: ${ctx.request.body.name}`);
         logger.debug(`[WidgetRouter] Params in body: ${JSON.stringify(ctx.request.body, null, 4)}`);
-        try {
-            const id = ctx.params.widget;
-            const user = WidgetRouter.getUser(ctx);
-            let clonedWidgetUserId;
-            if (user && user.id === 'microservice' && ctx.request.body.userId) {
-                clonedWidgetUserId = ctx.request.body.userId;
-            } else {
-                clonedWidgetUserId = user.id;
-            }
-            const widget = await WidgetService.clone(id, ctx.request.body, clonedWidgetUserId);
-            ctx.body = WidgetSerializer.serialize(widget);
-        } catch (err) {
-            throw err;
+        const id = ctx.params.widget;
+        const user = WidgetRouter.getUser(ctx);
+        let clonedWidgetUserId;
+        if (user && user.id === 'microservice' && ctx.request.body.userId) {
+            clonedWidgetUserId = ctx.request.body.userId;
+        } else {
+            clonedWidgetUserId = user.id;
         }
+        const widget = await WidgetService.clone(id, ctx.request.body, clonedWidgetUserId);
+        ctx.body = WidgetSerializer.serialize(widget);
     }
 
     static async delete(ctx) {
@@ -159,28 +148,25 @@ class WidgetRouter {
     static async deleteByDataset(ctx) {
         const id = ctx.params.dataset;
         logger.info(`[WidgetRouter] Deleting widgets of dataset with id: ${id}`);
-        try {
-            const widgets = await WidgetService.deleteByDataset(id);
-            ctx.body = WidgetSerializer.serialize(widgets);
-            const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
-            if (widgets) {
-                widgets.forEach((widget) => {
-                    uncache.push(widget._id);
-                    uncache.push(widget.slug);
-                });
-            }
-            ctx.set('uncache', uncache.join(' '));
-        } catch (err) {
-            throw err;
+        const widgets = await WidgetService.deleteByDataset(id);
+        ctx.body = WidgetSerializer.serialize(widgets);
+        const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
+        if (widgets) {
+            widgets.forEach((widget) => {
+                uncache.push(widget._id);
+                uncache.push(widget.slug);
+            });
         }
+        ctx.set('uncache', uncache.join(' '));
     }
 
     static async getAll(ctx) {
         const { query } = ctx;
         const dataset = ctx.params.dataset || null;
-        const userId = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser).id : null;
+        const user = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser) : null;
+        const userId = user ? user.id : null;
         delete query.loggedUser;
-        if (Object.keys(query).find(el => el.indexOf('collection') >= 0)) {
+        if (Object.keys(query).find((el) => el.indexOf('collection') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Collection filter not authorized');
                 return;
@@ -190,7 +176,7 @@ class WidgetRouter {
             ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
             logger.debug('Ids from collections', ctx.query.ids);
         }
-        if (Object.keys(query).find(el => el.indexOf('favourite') >= 0)) {
+        if (Object.keys(query).find((el) => el.indexOf('favourite') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Fav filter not authorized');
                 return;
@@ -200,8 +186,8 @@ class WidgetRouter {
             ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
             logger.debug('Ids from collections', ctx.query.ids);
         }
-        const widgets = await WidgetService.getAll(query, dataset);
-        const clonedQuery = Object.assign({}, query);
+        const widgets = await WidgetService.getAll(query, dataset, user);
+        const clonedQuery = { ...query };
         delete clonedQuery['page[size]'];
         delete clonedQuery['page[number]'];
         delete clonedQuery.ids;
@@ -212,7 +198,7 @@ class WidgetRouter {
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
 
-        const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
+        const includes = ctx.query.includes ? ctx.query.includes.split(',').map((elem) => elem.trim()) : [];
         const cache = ['widget'];
         if (ctx.params.dataset) {
             cache.push(`${ctx.params.dataset}-widget-all`);
@@ -231,13 +217,9 @@ class WidgetRouter {
     static async update(ctx) {
         const id = ctx.params.widget;
         logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
-        try {
-            const widget = await WidgetService.update(id, ctx.request.body);
-            ctx.body = WidgetSerializer.serialize(widget);
-            ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
-        } catch (err) {
-            throw err;
-        }
+        const widget = await WidgetService.update(id, ctx.request.body);
+        ctx.body = WidgetSerializer.serialize(widget);
+        ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
     }
 
     static async getByIds(ctx) {
@@ -254,7 +236,7 @@ class WidgetRouter {
             app: ctx.request.body.app
         };
         if (typeof resource.ids === 'string') {
-            resource.ids = resource.ids.split(',').map(elem => elem.trim());
+            resource.ids = resource.ids.split(',').map((elem) => elem.trim());
         }
         const result = await WidgetService.getByDataset(resource);
         ctx.body = WidgetSerializer.serialize(result);
@@ -357,20 +339,16 @@ const authorizationMiddleware = async (ctx, next) => {
             return;
         }
         if (newWidgetUpdate || newWidgetClone) {
-            try {
-                const permission = await WidgetService.hasPermission(ctx.params.widget, user);
-                if (!permission) {
-                    ctx.throw(403, 'Forbidden');
-                    return;
-                }
-            } catch (err) {
-                throw err;
+            const permission = await WidgetService.hasPermission(ctx.params.widget, user);
+            if (!permission) {
+                ctx.throw(403, 'Forbidden');
+                return;
             }
         }
     }
     const application = ctx.request.query.application ? ctx.request.query.application : ctx.request.body.application;
     if (application) {
-        const appPermission = application.find(app => user.extraUserData.apps.find(userApp => userApp === app));
+        const appPermission = application.find((app) => user.extraUserData.apps.find((userApp) => userApp === app));
         if (!appPermission) {
             ctx.throw(403, 'Forbidden'); // if manager or admin but no application -> out
             return;
@@ -378,20 +356,16 @@ const authorizationMiddleware = async (ctx, next) => {
     }
     const allowedOperations = newWidgetCreation;
     if ((user.role === 'MANAGER' || user.role === 'ADMIN') && !allowedOperations) {
-        try {
-            const permission = await WidgetService.hasPermission(ctx.params.widget, user);
-            if (!permission) {
-                ctx.throw(403, 'Forbidden');
-                return;
-            }
-        } catch (err) {
-            throw err;
+        const permission = await WidgetService.hasPermission(ctx.params.widget, user);
+        if (!permission) {
+            ctx.throw(403, 'Forbidden');
+            return;
         }
     }
     await next(); // SUPERADMIN is included here
 };
 
-const isMicroservice = async function (ctx, next) {
+const isMicroservice = async (ctx, next) => {
     logger.debug('Checking if the call is from a microservice');
     if (ctx.request.body && ctx.request.body.loggedUser && ctx.request.body.loggedUser.id === 'microservice') {
         await next();

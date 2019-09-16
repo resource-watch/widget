@@ -2,7 +2,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES: { USER }, SINGLE_WIDGET_CONFIG } = require('./utils/test.constants');
+const { USERS: { USER, MANAGER, ADMIN }, SINGLE_WIDGET_CONFIG } = require('./utils/test.constants');
 
 const should = chai.should();
 
@@ -111,7 +111,7 @@ describe('Get widget by id endpoint', () => {
         });
     });
 
-    it('Getting widget with metadata should return widget with metadata (happy case)', async () => {
+    it('Getting widget with includes=metadata should return widget with metadata (happy case)', async () => {
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         const metadata = createWidgetMetadata(datasetID, createdWidget._id);
@@ -124,6 +124,71 @@ describe('Get widget by id endpoint', () => {
         response.status.should.equal(200);
 
         ensureCorrectWidget(response, createdWidget, { metadata });
+    });
+
+    it('Getting widget as an anonymous user with includes=user should return widget with user name and email (happy case)', async () => {
+        const datasetID = getUUID();
+        const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
+        createMockUser([USER]);
+
+        const response = await widget
+            .get(createdWidget._id)
+            .query({ includes: 'user' })
+            .send({ dataset: datasetID });
+        response.status.should.equal(200);
+
+        ensureCorrectWidget(response, createdWidget, { user: { email: USER.email, name: USER.name } });
+    });
+
+    it('Getting widget with USER role and includes=user should return widget with user name and email (happy case)', async () => {
+        const datasetID = getUUID();
+        const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
+        createMockUser([USER]);
+
+        const response = await widget
+            .get(createdWidget._id)
+            .query({
+                includes: 'user',
+                loggedUser: JSON.stringify(USER)
+            })
+            .send({ dataset: datasetID });
+        response.status.should.equal(200);
+
+        ensureCorrectWidget(response, createdWidget, { user: { email: USER.email, name: USER.name } });
+    });
+
+    it('Getting widget with MANAGER role and includes=user should return widget with user name and email (happy case)', async () => {
+        const datasetID = getUUID();
+        const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
+        createMockUser([USER]);
+
+        const response = await widget
+            .get(createdWidget._id)
+            .query({
+                includes: 'user',
+                loggedUser: JSON.stringify(MANAGER)
+            })
+            .send({ dataset: datasetID });
+        response.status.should.equal(200);
+
+        ensureCorrectWidget(response, createdWidget, { user: { email: USER.email, name: USER.name } });
+    });
+
+    it('Getting widget with ADMIN role and includes=user should return widget with user name and email (happy case)', async () => {
+        const datasetID = getUUID();
+        const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
+        createMockUser([USER]);
+
+        const response = await widget
+            .get(createdWidget._id)
+            .query({
+                includes: 'user',
+                loggedUser: JSON.stringify(ADMIN)
+            })
+            .send({ dataset: datasetID });
+        response.status.should.equal(200);
+
+        ensureCorrectWidget(response, createdWidget, { user: { email: USER.email, name: USER.name, role: USER.role } });
     });
 
     it('Getting widget with widgetConfig as array with queryUrl should return widget with changed queryUrl (happy case)', async () => {
