@@ -1,4 +1,5 @@
 class WidgetSerializer {
+
     static serializeElement(el) {
         return {
             id: el._id,
@@ -38,14 +39,12 @@ class WidgetSerializer {
         const result = {};
         if (data) {
             if (data.docs) {
-                result.data = data.docs.map(el => WidgetSerializer.serializeElement(el));
+                result.data = data.docs.map((el) => WidgetSerializer.serializeElement(el));
+            } else if (Array.isArray(data)) {
+                result.data = data.map((el) => WidgetSerializer.serializeElement(el));
+                // result.data = WidgetSerializer.serializeElement(data[0]);
             } else {
-                if (Array.isArray(data)) {
-                    result.data = data.map(el => WidgetSerializer.serializeElement(el));
-                    // result.data = WidgetSerializer.serializeElement(data[0]);
-                } else {
-                    result.data = WidgetSerializer.serializeElement(data);
-                }
+                result.data = WidgetSerializer.serializeElement(data);
             }
         }
         if (link) {
@@ -62,7 +61,7 @@ class WidgetSerializer {
                 size: data.limit
             };
         }
-        
+
         return result;
     }
 

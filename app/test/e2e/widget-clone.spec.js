@@ -2,10 +2,10 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES } = require('./test.constants');
+const { USERS } = require('./utils/test.constants');
 
-const { getTestServer } = require('./test-server');
-const { getUUID, createWidget } = require('./utils');
+const { getTestServer } = require('./utils/test-server');
+const { getUUID, createWidget } = require('./utils/helpers');
 
 const should = chai.should();
 
@@ -42,7 +42,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetId}/clone`)
             .send({
-                loggedUser: ROLES.ADMIN
+                loggedUser: USERS.ADMIN
             });
 
         response.status.should.equal(404);
@@ -52,7 +52,8 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -61,7 +62,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .send({
-                loggedUser: ROLES.ADMIN
+                loggedUser: USERS.ADMIN
             });
 
         response.status.should.equal(200);
@@ -78,14 +79,15 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
-        createdWidget.attributes.userId.should.equal(ROLES.ADMIN.id);
+        createdWidget.attributes.userId.should.equal(USERS.ADMIN.id);
     });
 
     it('Clone a widget as an ADMIN with a custom user id should be successful and retain the ADMIN\'s userId', async () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -94,7 +96,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`, { userId: '1322548' })
             .send({
-                loggedUser: ROLES.ADMIN
+                loggedUser: USERS.ADMIN
             });
 
         response.status.should.equal(200);
@@ -111,7 +113,7 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
-        createdWidget.attributes.userId.should.equal(ROLES.ADMIN.id);
+        createdWidget.attributes.userId.should.equal(USERS.ADMIN.id);
         createdWidget.attributes.userId.should.not.equal('1322548');
     });
 
@@ -119,7 +121,8 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -129,7 +132,7 @@ describe('Clone widgets tests', () => {
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .send({
                 userId: '1322548',
-                loggedUser: ROLES.MICROSERVICE
+                loggedUser: USERS.MICROSERVICE
             });
 
         response.status.should.equal(200);
@@ -146,7 +149,7 @@ describe('Clone widgets tests', () => {
         createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
         createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
         createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
-        createdWidget.attributes.userId.should.not.equal(ROLES.ADMIN.id);
+        createdWidget.attributes.userId.should.not.equal(USERS.ADMIN.id);
         createdWidget.attributes.userId.should.equal('1322548');
     });
 
@@ -154,7 +157,8 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -163,7 +167,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .send({
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(200);
@@ -199,7 +203,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .send({
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(403);
@@ -211,7 +215,8 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
@@ -222,7 +227,7 @@ describe('Clone widgets tests', () => {
             .send({
                 name: 'new name',
                 description: 'new description',
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(200);

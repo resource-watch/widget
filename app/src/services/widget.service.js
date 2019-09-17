@@ -135,6 +135,7 @@ class WidgetService {
 
     static async clone(id, widget, userId) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
+        logger.debug(`[WidgetService]: New user id: ${userId}`);
         logger.info(`[DBACCESS-FIND]: widget.id: ${id}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
             slug: id
@@ -193,7 +194,7 @@ class WidgetService {
         return widgets;
     }
 
-    static async get(id, dataset, includes = []) {
+    static async get(id, dataset, includes = [], user = null) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
@@ -204,7 +205,7 @@ class WidgetService {
             } else {
                 if (includes && includes.length > 0) {
                     logger.debug('Finding relationships');
-                    const widgets = await RelationshipsService.getRelationships([widget], includes);
+                    const widgets = await RelationshipsService.getRelationships([widget], includes, user);
                     return widgets[0];
                 }
                 return widget;
@@ -214,7 +215,7 @@ class WidgetService {
         }
     }
 
-    static async delete(id) {
+    static async delete(id, dataset) {
         logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
         logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
@@ -234,7 +235,7 @@ class WidgetService {
         }
         logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
         try {
-            await WidgetService.deleteMetadata(id, widget._id);
+            await WidgetService.deleteMetadata(dataset || widget.dataset, widget._id);
         } catch (err) {
             logger.error('Error removing metadata of the widget', err);
         }
@@ -276,22 +277,22 @@ class WidgetService {
         });
     }
 
-    static async getAll(query = {}, dataset = null) {
+    static async getAll(query = {}, dataset = null, user) {
         logger.info(`[DBACCESS-FIND]: all widgets`);
         const sort = query.sort || '';
         const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
         logger.debug(`pageNumber param: ${page}`);
         const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 10;
         logger.debug(`pageSize param: ${limit}`);
-        const ids = query.ids ? query.ids.split(',').map(el => el.trim()) : [];
-        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
+        const ids = query.ids ? query.ids.split(',').map((el) => el.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map((elem) => elem.trim()) : [];
         logger.debug(`ids param: ${ids}`);
         if (dataset) {
             query.dataset = dataset;
             logger.debug(`[WidgetService] Dataset for filtering is ${dataset})`);
         }
 
-        const filteredQuery = WidgetService.getFilteredQuery(Object.assign({}, query), ids);
+        const filteredQuery = WidgetService.getFilteredQuery({ ...query }, ids);
         logger.debug(`filteredQuery: ${JSON.stringify(filteredQuery)}`);
         const filteredSort = WidgetService.getFilteredSort(sort);
         const options = {
@@ -302,10 +303,10 @@ class WidgetService {
         logger.debug(`[WidgetService] Query options: ${JSON.stringify(options)}`);
         logger.info(`[DBACCESS-FIND]: widget`);
         let pages = await Widget.paginate(filteredQuery, options);
-        pages = Object.assign({}, pages);
+        pages = { ...pages };
         if (includes.length > 0) {
             logger.debug('Finding relationships');
-            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes);
+            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, user);
         }
         return pages;
     }
@@ -342,11 +343,11 @@ class WidgetService {
                     case 'Array':
                         if (query[param].indexOf('@') >= 0) {
                             query[param] = {
-                                $all: query[param].split('@').map(elem => elem.trim())
+                                $all: query[param].split('@').map((elem) => elem.trim())
                             };
                         } else {
                             query[param] = {
-                                $in: query[param].split(',').map(elem => elem.trim())
+                                $in: query[param].split(',').map((elem) => elem.trim())
                             };
                         }
                         break;
@@ -397,11 +398,11 @@ class WidgetService {
         if (resource.app) {
             if (resource.app.indexOf('@') >= 0) {
                 resource.app = {
-                    $all: resource.app.split('@').map(elem => elem.trim())
+                    $all: resource.app.split('@').map((elem) => elem.trim())
                 };
             } else {
                 resource.app = {
-                    $in: resource.app.split(',').map(elem => elem.trim())
+                    $in: resource.app.split(',').map((elem) => elem.trim())
                 };
             }
         }
@@ -420,7 +421,7 @@ class WidgetService {
     static async hasPermission(id, user) {
         let permission = true;
         const widget = await WidgetService.get(id, null, []);
-        const appPermission = widget.application.find(widgetApp => user.extraUserData.apps.find(app => app === widgetApp));
+        const appPermission = widget.application.find((widgetApp) => user.extraUserData.apps.find((app) => app === widgetApp));
         if (!appPermission) {
             permission = false;
         }

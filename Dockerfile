@@ -1,5 +1,5 @@
-FROM mhart/alpine-node:10.13
-MAINTAINER enrique@cornejo.me
+FROM mhart/alpine-node:12.9
+MAINTAINER info@vizzuality.com
 
 ENV NAME widget
 ENV USER microservice

@@ -1,4 +1,5 @@
 class WidgetNotValid extends Error {
+
     constructor(messages) {
         super(messages);
         this.name = 'WidgetNotValid';

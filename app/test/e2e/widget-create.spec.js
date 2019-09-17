@@ -2,10 +2,10 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { ROLES } = require('./test.constants');
+const { USERS } = require('./utils/test.constants');
 
-const { getTestServer } = require('./test-server');
-const { widgetConfig } = require('./utils');
+const { getTestServer } = require('./utils/test-server');
+const { widgetConfig } = require('./utils/helpers');
 
 const should = chai.should();
 
@@ -164,7 +164,7 @@ describe('Create widgets tests', () => {
         };
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
@@ -175,7 +175,7 @@ describe('Create widgets tests', () => {
             .send({
                 dataset: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
                 widget,
-                loggedUser: ROLES.ADMIN
+                loggedUser: USERS.ADMIN
             });
 
         response.status.should.equal(200);
@@ -268,7 +268,7 @@ describe('Create widgets tests', () => {
         };
 
         nock(`${process.env.CT_URL}`)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
@@ -279,7 +279,7 @@ describe('Create widgets tests', () => {
             .send({
                 dataset: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
                 widget,
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(200);
@@ -373,7 +373,7 @@ describe('Create widgets tests', () => {
             .send({
                 dataset: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
                 widget,
-                loggedUser: ROLES.USER
+                loggedUser: USERS.USER
             });
 
         response.status.should.equal(403);

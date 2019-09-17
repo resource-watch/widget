@@ -3,7 +3,7 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 const JSONAPIDeserializer = require('jsonapi-serializer').Deserializer;
 
 
-const deserializer = obj => new Promise((resolve, reject) => {
+const deserializer = (obj) => new Promise((resolve, reject) => {
     new JSONAPIDeserializer({
         keyForAttribute: 'camelCase'
     }).deserialize(obj, (err, data) => {
@@ -35,7 +35,7 @@ class DatasetService {
                 throw err;
             }
         } else {
-            // If no datasets are present, it has to be catched by the validator
+            // If no datasets are present, it has to be caught by the validator
             // Not anymore - need to add it for proper cache tagging
             logger.info(`[DatasetService] No dataset provided in this context.`);
             return null;
@@ -55,6 +55,7 @@ class DatasetService {
             throw err;
         }
     }
+
 }
 
 
