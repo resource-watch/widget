@@ -2,11 +2,11 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-
 const { USERS: { USER, MANAGER, ADMIN } } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
-const { createWidget } = require('./utils/helpers');
-const { createMockUser } = require('./utils/mock');
+const { createWidget, ensureCorrectWidget, getUUID } = require('./utils/helpers');
+const { createMockUser, createMockUserRole } = require('./utils/mock');
+// eslint-disable-next-line import/no-unresolved
 
 const should = chai.should();
 
@@ -48,20 +48,82 @@ describe('Get widgets tests', () => {
         const responseWidgetOne = response.body.data[0];
         const responseWidgetTwo = response.body.data[1];
 
-        widgetOne.name.should.equal(responseWidgetOne.attributes.name);
-        widgetOne.dataset.should.equal(responseWidgetOne.attributes.dataset);
-        widgetOne.userId.should.equal(responseWidgetOne.attributes.userId);
-        widgetOne.slug.should.equal(responseWidgetOne.attributes.slug);
-        widgetOne.sourceUrl.should.equal(responseWidgetOne.attributes.sourceUrl);
-        widgetOne.queryUrl.should.equal(responseWidgetOne.attributes.queryUrl);
-
-        widgetTwo.name.should.equal(responseWidgetTwo.attributes.name);
-        widgetTwo.dataset.should.equal(responseWidgetTwo.attributes.dataset);
-        widgetTwo.userId.should.equal(responseWidgetTwo.attributes.userId);
-        widgetTwo.slug.should.equal(responseWidgetTwo.attributes.slug);
-        widgetTwo.sourceUrl.should.equal(responseWidgetTwo.attributes.sourceUrl);
-        widgetTwo.queryUrl.should.equal(responseWidgetTwo.attributes.queryUrl);
+        ensureCorrectWidget(widgetOne, responseWidgetOne);
+        ensureCorrectWidget(widgetTwo, responseWidgetTwo);
     });
+
+    it('Getting all widgets as ADMIN with query param user.role = ADMIN should return a filtered list of widgets created by ADMIN (populated db)', async () => {
+        const adminID = getUUID();
+
+        const widgetOne = await new Widget(createWidget(['rw'], adminID)).save();
+        await new Widget(createWidget(['rw'], MANAGER.id)).save();
+
+        createMockUserRole('ADMIN', adminID);
+
+        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'ADMIN', loggedUser: JSON.stringify(ADMIN) });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(1);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data[0];
+
+        ensureCorrectWidget(widgetOne, responseWidgetOne);
+    });
+
+    it('Getting all widgets as ADMIN with query param user.role = MANAGER should return a filtered list of widgets created by MANAGER (populated db)', async () => {
+        const managerID = getUUID();
+        const widgetOne = await new Widget(createWidget(['rw'], managerID)).save();
+        await new Widget(createWidget(['rw'], USER.id)).save();
+
+        createMockUserRole('MANAGER', managerID);
+
+        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'MANAGER', loggedUser: JSON.stringify(ADMIN) });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(1);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data[0];
+
+        ensureCorrectWidget(widgetOne, responseWidgetOne);
+    });
+
+    it('Getting all widgets as ADMIN with query param user.role = USER should return a filtered list of widgets created by USER (populated db)', async () => {
+        const userID = getUUID();
+        const widgetOne = await new Widget(createWidget(['rw'], userID)).save();
+        await new Widget(createWidget(['rw'], MANAGER.id)).save();
+
+        createMockUserRole('USER', userID);
+
+        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'USER', loggedUser: JSON.stringify(ADMIN) });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(1);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data[0];
+
+        ensureCorrectWidget(widgetOne, responseWidgetOne);
+    });
+
+    it('Getting all widgets as MANAGER with query param user.role = USER should return an unfiltered list of widgets (populated db)', async () => {
+        const userID = getUUID();
+
+        const widgetOne = await new Widget(createWidget(['rw'], userID)).save();
+        await new Widget(createWidget(['rw'], userID)).save();
+
+        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'USER', loggedUser: JSON.stringify(USER) });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(2);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data[0];
+
+        ensureCorrectWidget(widgetOne, responseWidgetOne);
+    });
+
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, anonymous call)', async () => {
         const widgetOne = await new Widget(createWidget()).save();
