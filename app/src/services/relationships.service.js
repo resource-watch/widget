@@ -77,6 +77,17 @@ class RelationshipsService {
         }
     }
 
+    static async getUsersWithRole(role) {
+        const body = await ctRegisterMicroservice.requestToMicroservice({
+            uri: `/auth/user/ids/${role}`,
+            method: 'GET',
+            json: true,
+            version: false
+        });
+        logger.debug('User ids', body.data);
+        return body.data;
+    }
+
     static async getFavorites(app, userId) {
         try {
             const result = await ctRegisterMicroservice.requestToMicroservice({
