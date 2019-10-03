@@ -11,6 +11,10 @@ const createMockDataset = (datasetID) => nock(process.env.CT_URL)
         }
     });
 
+const createMockUserRole = (role, userID) => nock(process.env.CT_URL)
+    .get(`/auth/user/ids/${role}`)
+    .reply(200, { data: [userID] });
+
 const createMockDatasetNotFound = (datasetID) => nock(process.env.CT_URL)
     .get(`/v1/dataset/${datasetID}`)
     .reply(404, {
@@ -49,5 +53,6 @@ module.exports = {
     createMockDeleteMetadata,
     createMockUser,
     createMockGetMetadata,
-    createMockVocabulary
+    createMockVocabulary,
+    createMockUserRole
 };

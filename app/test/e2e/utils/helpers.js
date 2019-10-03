@@ -126,6 +126,15 @@ const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datase
     };
 };
 
+const ensureCorrectWidget = (actualWidget, expectedWidget) => {
+    actualWidget.name.should.equal(expectedWidget.attributes.name);
+    actualWidget.dataset.should.equal(expectedWidget.attributes.dataset);
+    actualWidget.userId.should.equal(expectedWidget.attributes.userId);
+    actualWidget.slug.should.equal(expectedWidget.attributes.slug);
+    actualWidget.sourceUrl.should.equal(expectedWidget.attributes.sourceUrl);
+    actualWidget.queryUrl.should.equal(expectedWidget.attributes.queryUrl);
+};
+
 const widgetConfig = WIDGET_CONFIG;
 
 const createWidgetInDB = ({
@@ -135,6 +144,7 @@ const createWidgetInDB = ({
 module.exports = {
     createWidget,
     getUUID,
+    ensureCorrectWidget,
     widgetConfig,
     createWidgetInDB,
     createAuthCases,

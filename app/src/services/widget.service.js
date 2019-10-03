@@ -329,9 +329,9 @@ class WidgetService {
         const widgetAttributes = Object.keys(Widget.schema.obj);
         logger.debug(`[getFilteredQuery] widgetAttributes: ${widgetAttributes}`);
         Object.keys(query).forEach((param) => {
-            if (widgetAttributes.indexOf(param) < 0) {
+            if (widgetAttributes.indexOf(param) < 0 && param !== 'usersRole') {
                 delete query[param];
-            } else if (param !== 'env') {
+            } else if (!['env', 'usersRole'].includes(param)) {
                 switch (Widget.schema.paths[param].instance) {
 
                     case 'String':
@@ -361,6 +361,12 @@ class WidgetService {
                         query[param] = query[param];
 
                 }
+            } else if (param === 'usersRole') {
+                logger.debug('Params users roles');
+                query.userId = Object.assign({}, query.userId || {}, {
+                    $in: query[param]
+                });
+                delete query.usersRole;
             } else if (param === 'env') {
                 query.env = {
                     $in: query[param].split(',')
