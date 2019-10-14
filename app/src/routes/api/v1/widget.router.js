@@ -250,7 +250,7 @@ class WidgetRouter {
     }
 
     static async updateEnvironment(ctx) {
-        logger.info('Updating enviroment of all widgets with dataset ', ctx.params.dataset, ' to environment', ctx.params.env);
+        logger.info('Updating environment of all widgets with dataset ', ctx.params.dataset, ' to environment', ctx.params.env);
         const widgets = await WidgetService.updateEnvironment(ctx.params.dataset, ctx.params.env);
         const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, 'dataset-widget'];
         if (widgets) {
