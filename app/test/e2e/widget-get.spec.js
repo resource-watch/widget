@@ -23,8 +23,11 @@ describe('Get widgets tests', () => {
         }
 
         requester = await getTestServer();
+    });
 
-        Widget.remove({}).exec();
+
+    beforeEach(async () => {
+        await Widget.remove({}).exec();
     });
 
     it('Get all widgets should be successful and return an empty list (empty db)', async () => {
@@ -342,7 +345,6 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets should return widgets owned by user', async () => {
-        Widget.remove({}).exec();
         const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
         const widgetTwo = await new Widget(createWidget()).save();
 
@@ -356,11 +358,11 @@ describe('Get widgets tests', () => {
         widgetOne.name.should.equal(responseWidgetOne.attributes.name);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
         }
 
-        Widget.remove({}).exec();
+        await Widget.remove({}).exec();
     });
 });
