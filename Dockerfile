@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:12.9
+FROM mhart/alpine-node:12.11
 MAINTAINER info@vizzuality.com
 
 ENV NAME widget
