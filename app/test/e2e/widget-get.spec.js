@@ -63,7 +63,10 @@ describe('Get widgets tests', () => {
 
         createMockUserRole('ADMIN', adminID);
 
-        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'ADMIN', loggedUser: JSON.stringify(ADMIN) });
+        const response = await requester.get(`/api/v1/widget`).query({
+            'user.role': 'ADMIN',
+            loggedUser: JSON.stringify(ADMIN)
+        });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -81,7 +84,10 @@ describe('Get widgets tests', () => {
 
         createMockUserRole('MANAGER', managerID);
 
-        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'MANAGER', loggedUser: JSON.stringify(ADMIN) });
+        const response = await requester.get(`/api/v1/widget`).query({
+            'user.role': 'MANAGER',
+            loggedUser: JSON.stringify(ADMIN)
+        });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -99,7 +105,10 @@ describe('Get widgets tests', () => {
 
         createMockUserRole('USER', userID);
 
-        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'USER', loggedUser: JSON.stringify(ADMIN) });
+        const response = await requester.get(`/api/v1/widget`).query({
+            'user.role': 'USER',
+            loggedUser: JSON.stringify(ADMIN)
+        });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -116,7 +125,10 @@ describe('Get widgets tests', () => {
         const widgetOne = await new Widget(createWidget(['rw'], userID)).save();
         await new Widget(createWidget(['rw'], userID)).save();
 
-        const response = await requester.get(`/api/v1/widget`).query({ 'user.role': 'USER', loggedUser: JSON.stringify(USER) });
+        const response = await requester.get(`/api/v1/widget`).query({
+            'user.role': 'USER',
+            loggedUser: JSON.stringify(USER)
+        });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -343,6 +355,101 @@ describe('Get widgets tests', () => {
         responseWidgetTwo.attributes.queryUrl.should.equal(widgetTwo.queryUrl);
         responseWidgetTwo.attributes.should.not.have.property('user');
     });
+
+    it('Get all widgets with includes=user should return a list of widgets and user name, email and role, even if only partial data exists', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetThree = await new Widget(createWidget()).save();
+
+        createMockUser([{
+            id: widgetOne.userId,
+            role: 'USER',
+            provider: 'local',
+            email: 'user-one@control-tower.org',
+            name: 'test user',
+            extraUserData: {
+                apps: [
+                    'rw',
+                    'gfw',
+                    'gfw-climate',
+                    'prep',
+                    'aqueduct',
+                    'forest-atlas'
+                ]
+            }
+        }]);
+
+        createMockUser([{
+            id: widgetTwo.userId,
+            role: 'MANAGER',
+            provider: 'local',
+            email: 'user-two@control-tower.org',
+            extraUserData: {
+                apps: [
+                    'rw'
+                ]
+            }
+        }]);
+
+        createMockUser([{
+            id: widgetThree.userId,
+            role: 'MANAGER',
+            provider: 'local',
+            name: 'user three',
+            extraUserData: {
+                apps: [
+                    'rw'
+                ]
+            }
+        }]);
+
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .query({
+                includes: 'user',
+                loggedUser: JSON.stringify(ADMIN)
+            }).send();
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(3);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data.find(widget => widget.id === widgetOne.id);
+        const responseWidgetTwo = response.body.data.find(widget => widget.id === widgetTwo.id);
+        const responseWidgetThree = response.body.data.find(widget => widget.id === widgetThree.id);
+
+        responseWidgetOne.attributes.name.should.equal(widgetOne.name);
+        responseWidgetOne.attributes.dataset.should.equal(widgetOne.dataset);
+        responseWidgetOne.attributes.userId.should.equal(widgetOne.userId);
+        responseWidgetOne.attributes.slug.should.equal(widgetOne.slug);
+        responseWidgetOne.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+        responseWidgetOne.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        responseWidgetOne.attributes.should.have.property('user').and.should.be.an('object');
+        responseWidgetOne.attributes.user.name.should.be.a('string').and.equal('test user');
+        responseWidgetOne.attributes.user.email.should.be.a('string').and.equal('user-one@control-tower.org');
+        responseWidgetOne.attributes.user.role.should.be.a('string').and.equal('USER');
+
+        responseWidgetTwo.attributes.name.should.equal(widgetTwo.name);
+        responseWidgetTwo.attributes.dataset.should.equal(widgetTwo.dataset);
+        responseWidgetTwo.attributes.userId.should.equal(widgetTwo.userId);
+        responseWidgetTwo.attributes.slug.should.equal(widgetTwo.slug);
+        responseWidgetTwo.attributes.sourceUrl.should.equal(widgetTwo.sourceUrl);
+        responseWidgetTwo.attributes.queryUrl.should.equal(widgetTwo.queryUrl);
+        responseWidgetTwo.attributes.user.role.should.be.a('string').and.equal('MANAGER');
+        responseWidgetTwo.attributes.user.email.should.be.a('string').and.equal('user-two@control-tower.org');
+        responseWidgetTwo.attributes.user.should.not.have.property('name');
+
+        responseWidgetThree.attributes.name.should.equal(widgetThree.name);
+        responseWidgetThree.attributes.dataset.should.equal(widgetThree.dataset);
+        responseWidgetThree.attributes.userId.should.equal(widgetThree.userId);
+        responseWidgetThree.attributes.slug.should.equal(widgetThree.slug);
+        responseWidgetThree.attributes.sourceUrl.should.equal(widgetThree.sourceUrl);
+        responseWidgetThree.attributes.queryUrl.should.equal(widgetThree.queryUrl);
+        responseWidgetThree.attributes.user.name.should.be.a('string').and.equal('user three');
+        responseWidgetThree.attributes.user.role.should.be.a('string').and.equal('MANAGER');
+        responseWidgetThree.attributes.user.should.not.have.property('email');
+    });
+
 
     it('Get all widgets should return widgets owned by user', async () => {
         const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
