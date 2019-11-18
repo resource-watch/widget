@@ -26,7 +26,7 @@ describe('Find widgets by IDs', () => {
 
         requester = await getTestServer();
 
-        Widget.remove({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Find widgets without ids in body returns a 400 error', async () => {
@@ -138,7 +138,7 @@ describe('Find widgets by IDs', () => {
         }
     });
 
-    after(() => {
-        Widget.remove({}).exec();
+    after(async () => {
+        await Widget.remove({}).exec();
     });
 });

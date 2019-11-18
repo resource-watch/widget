@@ -41,7 +41,7 @@ describe('Update env of widget by dataset endpoint', () => {
         widget = await createRequest(prefix, 'patch');
         authCases.setRequester(widget);
 
-        Widget.remove({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Updating env of widget by dataset which doesn\'t exist should return not found', async () => {
@@ -102,15 +102,11 @@ describe('Update env of widget by dataset endpoint', () => {
     });
 
 
-    afterEach(() => {
-        Widget.remove({}).exec();
+    afterEach(async () => {
+        await Widget.remove({}).exec();
 
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
         }
-    });
-
-    after(() => {
-        Widget.remove({}).exec();
     });
 });
