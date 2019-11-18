@@ -10,7 +10,7 @@ const {
 
 const { expect } = chai;
 
-const should = chai.should();
+chai.should();
 
 const { createRequest } = require('./utils/test-server');
 const {

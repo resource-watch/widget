@@ -9,7 +9,7 @@ const { createRequest } = require('./utils/test-server');
 const { createWidgetInDB, getUUID, createAuthCases } = require('./utils/helpers');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 
-const should = chai.should();
+chai.should();
 
 const prefix = '/api/v1/widget/';
 let widget;

@@ -7,7 +7,7 @@ const { USERS } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
 const { getUUID, createWidget } = require('./utils/helpers');
 
-const should = chai.should();
+chai.should();
 
 let requester;
 
@@ -23,7 +23,7 @@ describe('Clone widgets tests', () => {
 
         requester = await getTestServer();
 
-        Widget.remove({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Clone a widget as an anonymous user should fail with a 401 error code', async () => {
@@ -262,7 +262,7 @@ describe('Clone widgets tests', () => {
         }
     });
 
-    after(() => {
-        Widget.remove({}).exec();
+    after(async () => {
+        await Widget.remove({}).exec();
     });
 });

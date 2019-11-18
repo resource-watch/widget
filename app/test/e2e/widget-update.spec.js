@@ -8,7 +8,7 @@ const { USERS } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
 const { widgetConfig, getUUID, createWidget } = require('./utils/helpers');
 
-const should = chai.should();
+chai.should();
 chai.use(chaiDatetime);
 
 let requester;
