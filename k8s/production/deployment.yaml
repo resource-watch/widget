@@ -20,9 +20,11 @@ spec:
         imagePullPolicy: Always
         resources:
           requests:
-            memory: "128Mi"
+            cpu: "0.5"
+            memory: "256M"
           limits:
-            memory: "512Mi"
+            cpu: "1"
+            memory: "512M"
         args:
           - start
         env:
@@ -77,5 +79,22 @@ spec:
 
         ports:
           - containerPort: 3050
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /healthcheck
+            port: 3050
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /healthcheck
+            port: 3050
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 15
 
       restartPolicy: Always

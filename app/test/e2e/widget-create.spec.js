@@ -7,7 +7,7 @@ const { USERS } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
 const { widgetConfig } = require('./utils/helpers');
 
-const should = chai.should();
+chai.should();
 
 let requester;
 

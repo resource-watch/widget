@@ -6,7 +6,7 @@ const { createWidget } = require('./utils/helpers');
 
 const { getTestServer } = require('./utils/test-server');
 
-const should = chai.should();
+chai.should();
 
 let requester;
 

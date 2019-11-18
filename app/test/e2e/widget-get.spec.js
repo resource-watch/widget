@@ -8,7 +8,7 @@ const { createWidget, ensureCorrectWidget, getUUID } = require('./utils/helpers'
 const { createMockUser, createMockUserRole } = require('./utils/mock');
 // eslint-disable-next-line import/no-unresolved
 
-const should = chai.should();
+chai.should();
 
 let requester;
 

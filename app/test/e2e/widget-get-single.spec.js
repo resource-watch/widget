@@ -4,7 +4,7 @@ const chai = require('chai');
 const Widget = require('models/widget.model');
 const { USERS: { USER, MANAGER, ADMIN }, SINGLE_WIDGET_CONFIG } = require('./utils/test.constants');
 
-const should = chai.should();
+chai.should();
 
 const { createRequest } = require('./utils/test-server');
 const {
