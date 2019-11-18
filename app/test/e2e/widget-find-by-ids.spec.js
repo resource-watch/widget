@@ -61,17 +61,6 @@ describe('Find widgets by IDs', () => {
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
-    it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
-        const response = await requester
-            .post(`/api/v1/widget/find-by-ids`)
-            .send({
-                ids: ['abcd']
-            });
-
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(0);
-    });
-
     it('Find widgets with id list containing a widget that exists returns only the listed widget', async () => {
         widgetOne = await new Widget(createWidget()).save();
         widgetTwo = await new Widget(createWidget()).save();
@@ -95,7 +84,7 @@ describe('Find widgets by IDs', () => {
         widgetOne.queryUrl.should.equal(responseWidgetOne.attributes.queryUrl);
     });
 
-    it('Find widgets with id list containing widgets that exist returns the listed widgets', async () => {
+    it('Find widgets with id list on the body containing widgets that exist returns the listed widgets', async () => {
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
             .send({
@@ -123,7 +112,7 @@ describe('Find widgets by IDs', () => {
         widgetTwo.queryUrl.should.equal(responseWidgetTwo.attributes.queryUrl);
     });
 
-    it('Find widgets with id list containing widgets that exist returns the listed widgets', async () => {
+    it('Find widgets with id list on query param and the body containing widgets that exist returns the listed widgets from the body list, ignores query param', async () => {
         const response = await requester
             .post(`/api/v1/widget/find-by-ids?ids=${widgetTwo.dataset}`)
             .send({

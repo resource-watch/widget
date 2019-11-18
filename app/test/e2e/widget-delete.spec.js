@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars,no-undef */
+/* eslint-disable no-unused-vars,no-undef,no-underscore-dangle */
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');

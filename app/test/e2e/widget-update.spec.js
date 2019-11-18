@@ -123,7 +123,7 @@ describe('Update widgets tests', () => {
         new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }
@@ -239,7 +239,7 @@ describe('Update widgets tests', () => {
         new Date(databaseWidget.updatedAt).should.beforeDate(new Date());
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .reply(
                 200,
                 { data: { widgetThumbnail: 'http://thumbnail-url.com/file.png' } }

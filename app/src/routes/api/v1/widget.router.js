@@ -12,7 +12,7 @@ const { USER_ROLES } = require('app.constants');
 
 const router = new Router();
 
-const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
+const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
     return a;
 }, []).join('&');
@@ -28,7 +28,7 @@ class WidgetRouter {
         const { dataset } = ctx.params;
         const user = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser) : null;
         logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-        const includes = ctx.query.includes ? ctx.query.includes.split(',').map((elem) => elem.trim()) : [];
+        const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
         const widget = await WidgetService.get(id, dataset, includes, user);
         const queryParams = Object.keys(ctx.query);
         if (queryParams.indexOf('loggedUser') !== -1) {
@@ -168,7 +168,7 @@ class WidgetRouter {
         const isAdmin = ['ADMIN', 'SUPERADMIN'].includes(user && user.role);
 
         delete query.loggedUser;
-        if (Object.keys(query).find((el) => el.indexOf('collection') >= 0)) {
+        if (Object.keys(query).find(el => el.indexOf('collection') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Collection filter not authorized');
                 return;
@@ -183,7 +183,7 @@ class WidgetRouter {
             ctx.query.usersRole = await RelationshipsService.getUsersWithRole(ctx.query['user.role']);
             logger.debug('Ids from users with role', ctx.query.usersRole);
         }
-        if (Object.keys(query).find((el) => el.indexOf('favourite') >= 0)) {
+        if (Object.keys(query).find(el => el.indexOf('favourite') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Fav filter not authorized');
                 return;
@@ -205,7 +205,7 @@ class WidgetRouter {
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
 
-        const includes = ctx.query.includes ? ctx.query.includes.split(',').map((elem) => elem.trim()) : [];
+        const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
         const cache = ['widget'];
         if (ctx.params.dataset) {
             cache.push(`${ctx.params.dataset}-widget-all`);
@@ -243,7 +243,7 @@ class WidgetRouter {
             app: ctx.request.body.app
         };
         if (typeof resource.ids === 'string') {
-            resource.ids = resource.ids.split(',').map((elem) => elem.trim());
+            resource.ids = resource.ids.split(',').map(elem => elem.trim());
         }
         const result = await WidgetService.getByDataset(resource);
         ctx.body = WidgetSerializer.serialize(result);
@@ -355,7 +355,7 @@ const authorizationMiddleware = async (ctx, next) => {
     }
     const application = ctx.request.query.application ? ctx.request.query.application : ctx.request.body.application;
     if (application) {
-        const appPermission = application.find((app) => user.extraUserData.apps.find((userApp) => userApp === app));
+        const appPermission = application.find(app => user.extraUserData.apps.find(userApp => userApp === app));
         if (!appPermission) {
             ctx.throw(403, 'Forbidden'); // if manager or admin but no application -> out
             return;

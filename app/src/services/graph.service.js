@@ -1,9 +1,6 @@
-const logger = require('logger');
-const ctRegisterMicroservice = require('ct-register-microservice-node');
-
 class GraphService {
 
-    static async createWidget(idDataset, id) {
+    static async createWidget() {
         // logger.debug('[GraphService]: Creating dataset in graph');
         // try {
         //     return await ctRegisterMicroservice.requestToMicroservice({
@@ -16,7 +13,7 @@ class GraphService {
         // }
     }
 
-    static async deleteWidget(id) {
+    static async deleteWidget() {
         // logger.debug('[GraphService]: Deleting widget in graph');
         // try {
         //     return await ctRegisterMicroservice.requestToMicroservice({
@@ -29,7 +26,7 @@ class GraphService {
         // }
     }
 
-    static async associateTags(id, vocabularies) {
+    static async associateTags() {
         // logger.debug('[GraphService]: Associating tags in graph');
         // try {
         //     let tags = [];
