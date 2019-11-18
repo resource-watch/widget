@@ -23,7 +23,7 @@ describe('Create widgets tests', () => {
 
         requester = await getTestServer();
 
-        Widget.remove({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Create a widget as an anonymous user should fail with a 401 error code', async () => {
@@ -387,7 +387,7 @@ describe('Create widgets tests', () => {
         }
     });
 
-    after(() => {
-        Widget.remove({}).exec();
+    after(async () => {
+        await Widget.remove({}).exec();
     });
 });

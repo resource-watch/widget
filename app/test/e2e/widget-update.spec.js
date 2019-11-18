@@ -25,7 +25,7 @@ describe('Update widgets tests', () => {
 
         requester = await getTestServer();
 
-        Widget.remove({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Update a widget as an anonymous user should fail with a 401 error code', async () => {
@@ -378,7 +378,7 @@ describe('Update widgets tests', () => {
         }
     });
 
-    after(() => {
-        Widget.remove({}).exec();
+    after(async () => {
+        await Widget.remove({}).exec();
     });
 });
