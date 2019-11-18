@@ -31,7 +31,7 @@ describe('Delete widgets endpoint', () => {
         widget = await createRequest(prefix, 'delete');
         authCases.setRequester(widget);
 
-        await Widget.deleteMany({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Deleting widget without being authenticated should fall with HTTP 401', authCases.isLoggedUserRequired());
@@ -79,7 +79,7 @@ describe('Delete widgets endpoint', () => {
     });
 
     afterEach(async () => {
-        await Widget.deleteMany({}).exec();
+        await Widget.remove({}).exec();
 
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
@@ -87,6 +87,6 @@ describe('Delete widgets endpoint', () => {
     });
 
     after(async () => {
-        await Widget.deleteMany({}).exec();
+        await Widget.remove({}).exec();
     });
 });

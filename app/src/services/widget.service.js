@@ -42,7 +42,7 @@ class WidgetService {
 
         logger.debug(`[WidgetService]: Widget:  ${currentWidget}`);
         if (!currentWidget) {
-            logger.info(`[WidgetService]: Widget with id ${id} doesn't exist`);
+            logger.error(`[WidgetService]: Widget with id ${id} doesn't exist`);
             throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
         }
 
@@ -88,7 +88,7 @@ class WidgetService {
         const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
 
-        await WidgetService.generateThumbnail(newWidget);
+        WidgetService.generateThumbnail(newWidget);
 
         return newWidget;
     }
@@ -130,7 +130,7 @@ class WidgetService {
             throw new Error(err);
         }
 
-        await WidgetService.generateThumbnail(newWidget);
+        WidgetService.generateThumbnail(newWidget);
 
         return newWidget;
     }
@@ -143,7 +143,7 @@ class WidgetService {
             slug: id
         }).exec();
         if (!currentWidget) {
-            logger.info(`[WidgetService]: Widget with id ${id} doesn't exist`);
+            logger.error(`[WidgetService]: Widget with id ${id} doesn't exist`);
             throw new WidgetNotFound(`Widget with id '${id}' doesn't exist`);
         }
         const newWidget = {};
@@ -169,7 +169,7 @@ class WidgetService {
 
         const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, userId);
 
-        await WidgetService.generateThumbnail(createdWidget);
+        WidgetService.generateThumbnail(createdWidget);
 
         return createdWidget;
     }
@@ -192,7 +192,7 @@ class WidgetService {
         const widgets = await Widget.find({
             dataset
         }).exec();
-        await Widget.updateMany({ dataset }, { $set: { env } }, { multi: true });
+        await Widget.update({ dataset }, { $set: { env } }, { multi: true });
         return widgets;
     }
 

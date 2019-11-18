@@ -27,7 +27,7 @@ describe('Get widgets tests', () => {
 
 
     beforeEach(async () => {
-        await Widget.deleteMany({}).exec();
+        await Widget.remove({}).exec();
     });
 
     it('Get all widgets should be successful and return an empty list (empty db)', async () => {
@@ -470,6 +470,6 @@ describe('Get widgets tests', () => {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
         }
 
-        await Widget.deleteMany({}).exec();
+        await Widget.remove({}).exec();
     });
 });
