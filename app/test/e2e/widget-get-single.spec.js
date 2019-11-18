@@ -58,7 +58,7 @@ describe('Get widget by id endpoint', () => {
         widget = await createRequest(prefix, 'get');
         authCases.setRequester(widget);
 
-        await Widget.remove({}).exec();
+        await Widget.deleteMany({}).exec();
     });
 
     it('Getting widget when widget doesn\'t exist should return not found', async () => {
@@ -288,7 +288,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     afterEach(async () => {
-        await Widget.remove({}).exec();
+        await Widget.deleteMany({}).exec();
 
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
@@ -296,6 +296,6 @@ describe('Get widget by id endpoint', () => {
     });
 
     after(async () => {
-        await Widget.remove({}).exec();
+        await Widget.deleteMany({}).exec();
     });
 });
