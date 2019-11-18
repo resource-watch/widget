@@ -28,6 +28,8 @@ class WidgetService {
             }
             i++;
         }
+
+        return null;
     }
 
     static async update(id, widget) {
@@ -284,8 +286,8 @@ class WidgetService {
         logger.debug(`pageNumber param: ${page}`);
         const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 10;
         logger.debug(`pageSize param: ${limit}`);
-        const ids = query.ids ? query.ids.split(',').map((el) => el.trim()) : [];
-        const includes = query.includes ? query.includes.split(',').map((elem) => elem.trim()) : [];
+        const ids = query.ids ? query.ids.split(',').map(el => el.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
         logger.debug(`ids param: ${ids}`);
         if (dataset) {
             query.dataset = dataset;
@@ -343,11 +345,11 @@ class WidgetService {
                     case 'Array':
                         if (query[param].indexOf('@') >= 0) {
                             query[param] = {
-                                $all: query[param].split('@').map((elem) => elem.trim())
+                                $all: query[param].split('@').map(elem => elem.trim())
                             };
                         } else {
                             query[param] = {
-                                $in: query[param].split(',').map((elem) => elem.trim())
+                                $in: query[param].split(',').map(elem => elem.trim())
                             };
                         }
                         break;
@@ -404,11 +406,11 @@ class WidgetService {
         if (resource.app) {
             if (resource.app.indexOf('@') >= 0) {
                 resource.app = {
-                    $all: resource.app.split('@').map((elem) => elem.trim())
+                    $all: resource.app.split('@').map(elem => elem.trim())
                 };
             } else {
                 resource.app = {
-                    $in: resource.app.split(',').map((elem) => elem.trim())
+                    $in: resource.app.split(',').map(elem => elem.trim())
                 };
             }
         }
@@ -427,7 +429,7 @@ class WidgetService {
     static async hasPermission(id, user) {
         let permission = true;
         const widget = await WidgetService.get(id, null, []);
-        const appPermission = widget.application.find((widgetApp) => user.extraUserData.apps.find((app) => app === widgetApp));
+        const appPermission = widget.application.find(widgetApp => user.extraUserData.apps.find(app => app === widgetApp));
         if (!appPermission) {
             permission = false;
         }

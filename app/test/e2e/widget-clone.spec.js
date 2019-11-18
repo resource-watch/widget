@@ -52,7 +52,7 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -86,7 +86,7 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -121,7 +121,7 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -157,7 +157,7 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -215,7 +215,7 @@ describe('Clone widgets tests', () => {
         const widgetOne = await new Widget(createWidget()).save();
 
         nock(`${process.env.CT_URL}`)
-            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,

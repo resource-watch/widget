@@ -74,7 +74,7 @@ const createWidgetMetadata = (datasetID, widgetID) => ({
     },
 });
 
-const createVocabulary = (widgetID) => ({
+const createVocabulary = widgetID => ({
     _id: getUUID(),
     type: 'vocabulary',
     attributes: {

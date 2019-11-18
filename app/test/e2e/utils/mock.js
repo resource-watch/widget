@@ -1,7 +1,7 @@
 const nock = require('nock');
 const { DEFAULT_DATASET_ATTRIBUTES } = require('./test.constants');
 
-const createMockDataset = (datasetID) => nock(process.env.CT_URL)
+const createMockDataset = datasetID => nock(process.env.CT_URL)
     .get(`/v1/dataset/${datasetID}`)
     .reply(200, {
         data: {
@@ -15,7 +15,7 @@ const createMockUserRole = (role, userID) => nock(process.env.CT_URL)
     .get(`/auth/user/ids/${role}`)
     .reply(200, { data: [userID] });
 
-const createMockDatasetNotFound = (datasetID) => nock(process.env.CT_URL)
+const createMockDatasetNotFound = datasetID => nock(process.env.CT_URL)
     .get(`/v1/dataset/${datasetID}`)
     .reply(404, {
         error: 'Dataset not found'
@@ -39,9 +39,9 @@ const createMockVocabulary = (mockVocabulary, datasetID, widgetID) => nock(proce
         data: mockVocabulary,
     });
 
-const createMockUser = (mockUser) => nock(process.env.CT_URL)
+const createMockUser = mockUser => nock(process.env.CT_URL)
     .post(`/auth/user/find-by-ids`, {
-        ids: mockUser.map((e) => e.id)
+        ids: mockUser.map(e => e.id)
     })
     .reply(200, {
         data: mockUser

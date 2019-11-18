@@ -3,7 +3,7 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 const JSONAPIDeserializer = require('jsonapi-serializer').Deserializer;
 
 
-const deserializer = (obj) => new Promise((resolve, reject) => {
+const deserializer = obj => new Promise((resolve, reject) => {
     new JSONAPIDeserializer({
         keyForAttribute: 'camelCase'
     }).deserialize(obj, (err, data) => {

@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars,no-undef */
+/* eslint-disable no-unused-vars,no-undef,no-underscore-dangle */
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
@@ -54,7 +54,7 @@ describe('Delete all widgets by dataset endpoint', () => {
             await createWidgetInDB({ datasetID, userId: MICROSERVICE.id }),
             await createWidgetInDB({ datasetID, userId: MICROSERVICE.id })
         ];
-        expectedWidgets.map((wid) => createMockDeleteMetadata(datasetID, wid._id.toString()));
+        expectedWidgets.map(wid => createMockDeleteMetadata(datasetID, wid._id.toString()));
         await createWidgetInDB({ datasetID: getUUID(), userId: MICROSERVICE.id });
 
         const response = await widget

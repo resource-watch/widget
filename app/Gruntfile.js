@@ -1,7 +1,8 @@
 
-module.exports = function (grunt) {
+module.exports = (grunt) => {
 
     grunt.file.setBase('..');
+    // eslint-disable-next-line import/no-extraneous-dependencies
     require('load-grunt-tasks')(grunt);
 
     grunt.initConfig({

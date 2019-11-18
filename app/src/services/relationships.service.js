@@ -38,7 +38,7 @@ class RelationshipsService {
                             widgets[i].user.role = userData.data[0].role;
                         }
 
-                        logger.info('Widgets including user data', widgets.map((el) => el.toObject()));
+                        logger.info('Widgets including user data', widgets.map(el => el.toObject()));
                     }
                 }
                 if (includes.indexOf('metadata') > -1) {
@@ -71,7 +71,7 @@ class RelationshipsService {
                 }
             });
             logger.debug(result);
-            return result.data.map((col) => col.attributes.resources.filter((res) => res.type === 'widget')).reduce((pre, cur) => pre.concat(cur)).map((el) => el.id);
+            return result.data.map(col => col.attributes.resources.filter(res => res.type === 'widget')).reduce((pre, cur) => pre.concat(cur)).map(el => el.id);
         } catch (e) {
             throw new Error(e);
         }
@@ -100,7 +100,7 @@ class RelationshipsService {
                 }
             });
             logger.debug(result);
-            return result.data.filter((fav) => fav.attributes.resourceType === 'widget').map((el) => el.attributes.resourceId);
+            return result.data.filter(fav => fav.attributes.resourceType === 'widget').map(el => el.attributes.resourceId);
         } catch (e) {
             throw new Error(e);
         }
