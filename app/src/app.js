@@ -75,7 +75,6 @@ async function init() {
             koaValidate(app);
 
             loader.loadRoutes(app);
-            // nock.recorder.rec();
 
             const server = app.listen(process.env.PORT, () => {
                 ctRegisterMicroservice.register({
