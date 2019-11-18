@@ -9,15 +9,10 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 const koaValidate = require('koa-validate');
 const ErrorSerializer = require('serializers/error.serializer');
 const sleep = require('sleep');
+const koaBody = require('koa-body');
+const mongooseOptions = require('../../config/mongoose');
 
 const mongoUri = process.env.MONGO_URI || `mongodb://${config.get('mongodb.host')}:${config.get('mongodb.port')}/${config.get('mongodb.database')}`;
-
-const koaBody = require('koa-body')({
-    multipart: true,
-    jsonLimit: '50mb',
-    formLimit: '50mb',
-    textLimit: '50mb'
-});
 
 let retries = 10;
 
@@ -29,7 +24,7 @@ async function init() {
                     retries -= 1;
                     logger.error(`Failed to connect to MongoDB uri ${mongoUri}, retrying...`);
                     sleep.sleep(5);
-                    mongoose.connect(mongoUri, onDbReady);
+                    mongoose.connect(mongoUri, mongooseOptions, onDbReady);
                 } else {
                     logger.error('MongoURI', mongoUri);
                     logger.error(err);
@@ -41,7 +36,12 @@ async function init() {
 
             const app = new Koa();
 
-            app.use(koaBody);
+            app.use(koaBody({
+                multipart: true,
+                jsonLimit: '50mb',
+                formLimit: '50mb',
+                textLimit: '50mb'
+            }));
             app.use(koaSimpleHealthCheck());
 
             app.use(async (ctx, next) => {
@@ -52,7 +52,7 @@ async function init() {
                     try {
                         error = JSON.parse(inErr);
                     } catch (e) {
-                        logger.error('Parsing error');
+                        logger.debug('Could not parse error message - is it JSON?: ', inErr);
                         error = inErr;
                     }
                     ctx.status = error.status || ctx.status || 500;
@@ -101,7 +101,7 @@ async function init() {
         }
 
         logger.info(`Connecting to MongoDB URL ${mongoUri}`);
-        mongoose.connect(mongoUri, onDbReady);
+        mongoose.connect(mongoUri, mongooseOptions, onDbReady);
     });
 }
 

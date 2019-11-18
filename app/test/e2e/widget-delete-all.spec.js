@@ -29,7 +29,7 @@ describe('Delete all widgets by dataset endpoint', () => {
         widget = await createRequest(prefix, 'delete');
         authCases.setRequester(widget);
 
-        await Widget.remove({}).exec();
+        await Widget.deleteMany({}).exec();
     });
 
     it('Deleting all widgets by dataset without being authenticated should fall with HTTP 401', async () => {
@@ -89,7 +89,7 @@ describe('Delete all widgets by dataset endpoint', () => {
     });
 
     afterEach(async () => {
-        await Widget.remove({}).exec();
+        await Widget.deleteMany({}).exec();
 
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
@@ -97,6 +97,6 @@ describe('Delete all widgets by dataset endpoint', () => {
     });
 
     after(async () => {
-        await Widget.remove({}).exec();
+        await Widget.deleteMany({}).exec();
     });
 });
