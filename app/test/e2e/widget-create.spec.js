@@ -5,7 +5,7 @@ const Widget = require('models/widget.model');
 const { USERS } = require('./utils/test.constants');
 
 const { getTestServer } = require('./utils/test-server');
-const { widgetConfig } = require('./utils/helpers');
+const { widgetConfig, mockDataset } = require('./utils/helpers');
 
 chai.should();
 
@@ -15,7 +15,6 @@ nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
 describe('Create widgets tests', () => {
-
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
@@ -27,52 +26,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an anonymous user should fail with a 401 error code', async () => {
-        nock(`${process.env.CT_URL}/v1`)
-            .get('/dataset/39f5dc1f-5e45-41d8-bcd5-96941c8a7e79')
-            .reply(200, {
-                data: {
-                    id: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
-                    type: 'dataset',
-                    attributes: {
-                        name: 'Seasonal variability',
-                        slug: 'Seasonal-variability',
-                        type: null,
-                        subtitle: null,
-                        application: [
-                            'rw'
-                        ],
-                        dataPath: null,
-                        attributesPath: null,
-                        connectorType: 'rest',
-                        provider: 'cartodb',
-                        userId: '1a10d7c6e0a37126611fd7a7',
-                        connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
-                        tableName: 'rw_projections_20150309',
-                        status: 'pending',
-                        published: true,
-                        overwrite: false,
-                        verified: false,
-                        blockchain: {},
-                        mainDateField: null,
-                        env: 'production',
-                        geoInfo: false,
-                        protected: false,
-                        legend: {
-                            date: [],
-                            region: [],
-                            country: [],
-                            nested: []
-                        },
-                        clonedHost: {},
-                        errorMessage: null,
-                        taskId: null,
-                        updatedAt: '2018-11-19T11:45:44.405Z',
-                        dataLastUpdated: null,
-                        widgetRelevantProps: [],
-                        layerRelevantProps: []
-                    }
-                }
-            });
+        mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
             name: 'Widget default',
@@ -100,52 +54,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an ADMIN should be successful', async () => {
-        nock(`${process.env.CT_URL}/v1`)
-            .get('/dataset/39f5dc1f-5e45-41d8-bcd5-96941c8a7e79')
-            .reply(200, {
-                data: {
-                    id: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
-                    type: 'dataset',
-                    attributes: {
-                        name: 'Seasonal variability',
-                        slug: 'Seasonal-variability',
-                        type: null,
-                        subtitle: null,
-                        application: [
-                            'rw'
-                        ],
-                        dataPath: null,
-                        attributesPath: null,
-                        connectorType: 'rest',
-                        provider: 'cartodb',
-                        userId: '1a10d7c6e0a37126611fd7a7',
-                        connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
-                        tableName: 'rw_projections_20150309',
-                        status: 'pending',
-                        published: true,
-                        overwrite: false,
-                        verified: false,
-                        blockchain: {},
-                        mainDateField: null,
-                        env: 'production',
-                        geoInfo: false,
-                        protected: false,
-                        legend: {
-                            date: [],
-                            region: [],
-                            country: [],
-                            nested: []
-                        },
-                        clonedHost: {},
-                        errorMessage: null,
-                        taskId: null,
-                        updatedAt: '2018-11-19T11:45:44.405Z',
-                        dataLastUpdated: null,
-                        widgetRelevantProps: [],
-                        layerRelevantProps: []
-                    }
-                }
-            });
+        mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
             name: 'Widget default',
@@ -204,52 +113,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER with a matching app should be successful', async () => {
-        nock(`${process.env.CT_URL}/v1`)
-            .get('/dataset/39f5dc1f-5e45-41d8-bcd5-96941c8a7e79')
-            .reply(200, {
-                data: {
-                    id: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
-                    type: 'dataset',
-                    attributes: {
-                        name: 'Seasonal variability',
-                        slug: 'Seasonal-variability',
-                        type: null,
-                        subtitle: null,
-                        application: [
-                            'rw'
-                        ],
-                        dataPath: null,
-                        attributesPath: null,
-                        connectorType: 'rest',
-                        provider: 'cartodb',
-                        userId: '1a10d7c6e0a37126611fd7a7',
-                        connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
-                        tableName: 'rw_projections_20150309',
-                        status: 'pending',
-                        published: true,
-                        overwrite: false,
-                        verified: false,
-                        blockchain: {},
-                        mainDateField: null,
-                        env: 'production',
-                        geoInfo: false,
-                        protected: false,
-                        legend: {
-                            date: [],
-                            region: [],
-                            country: [],
-                            nested: []
-                        },
-                        clonedHost: {},
-                        errorMessage: null,
-                        taskId: null,
-                        updatedAt: '2018-11-19T11:45:44.405Z',
-                        dataLastUpdated: null,
-                        widgetRelevantProps: [],
-                        layerRelevantProps: []
-                    }
-                }
-            });
+        mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
             name: 'Widget default',
@@ -306,52 +170,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        nock(`${process.env.CT_URL}/v1`)
-            .get('/dataset/39f5dc1f-5e45-41d8-bcd5-96941c8a7e79')
-            .reply(200, {
-                data: {
-                    id: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
-                    type: 'dataset',
-                    attributes: {
-                        name: 'Seasonal variability',
-                        slug: 'Seasonal-variability',
-                        type: null,
-                        subtitle: null,
-                        application: [
-                            'potato'
-                        ],
-                        dataPath: null,
-                        attributesPath: null,
-                        connectorType: 'rest',
-                        provider: 'cartodb',
-                        userId: '1a10d7c6e0a37126611fd7a7',
-                        connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
-                        tableName: 'rw_projections_20150309',
-                        status: 'pending',
-                        published: true,
-                        overwrite: false,
-                        verified: false,
-                        blockchain: {},
-                        mainDateField: null,
-                        env: 'production',
-                        geoInfo: false,
-                        protected: false,
-                        legend: {
-                            date: [],
-                            region: [],
-                            country: [],
-                            nested: []
-                        },
-                        clonedHost: {},
-                        errorMessage: null,
-                        taskId: null,
-                        updatedAt: '2018-11-19T11:45:44.405Z',
-                        dataLastUpdated: null,
-                        widgetRelevantProps: [],
-                        layerRelevantProps: []
-                    }
-                }
-            });
+        mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79', { application: ['potato'] });
 
         const widget = {
             name: 'Widget default',
@@ -382,52 +201,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget when taking a snapshot fails should return 200 OK with the created widget data', async () => {
-        nock(`${process.env.CT_URL}/v1`)
-            .get('/dataset/39f5dc1f-5e45-41d8-bcd5-96941c8a7e79')
-            .reply(200, {
-                data: {
-                    id: '39f5dc1f-5e45-41d8-bcd5-96941c8a7e79',
-                    type: 'dataset',
-                    attributes: {
-                        name: 'Seasonal variability',
-                        slug: 'Seasonal-variability',
-                        type: null,
-                        subtitle: null,
-                        application: [
-                            'rw'
-                        ],
-                        dataPath: null,
-                        attributesPath: null,
-                        connectorType: 'rest',
-                        provider: 'cartodb',
-                        userId: '1a10d7c6e0a37126611fd7a7',
-                        connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
-                        tableName: 'rw_projections_20150309',
-                        status: 'pending',
-                        published: true,
-                        overwrite: false,
-                        verified: false,
-                        blockchain: {},
-                        mainDateField: null,
-                        env: 'production',
-                        geoInfo: false,
-                        protected: false,
-                        legend: {
-                            date: [],
-                            region: [],
-                            country: [],
-                            nested: []
-                        },
-                        clonedHost: {},
-                        errorMessage: null,
-                        taskId: null,
-                        updatedAt: '2018-11-19T11:45:44.405Z',
-                        dataLastUpdated: null,
-                        widgetRelevantProps: [],
-                        layerRelevantProps: []
-                    }
-                }
-            });
+        mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
             name: 'Widget default',
