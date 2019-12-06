@@ -1,3 +1,4 @@
+const nock = require('nock');
 const Widget = require('models/widget.model');
 const { WIDGET_CONFIG, USERS } = require('./test.constants');
 
@@ -141,6 +142,55 @@ const createWidgetInDB = ({
     apps, userId, datasetID, customerWidgetConfig
 }) => new Widget(createWidget(apps, userId, datasetID, customerWidgetConfig)).save();
 
+const mockDataset = (id, responseData = {}) => {
+    nock(`${process.env.CT_URL}/v1`)
+        .get(`/dataset/${id}`)
+        .reply(200, {
+            data: Object.assign({}, {
+                id,
+                type: 'dataset',
+                attributes: {
+                    name: 'Seasonal variability',
+                    slug: 'Seasonal-variability',
+                    type: null,
+                    subtitle: null,
+                    application: [
+                        'rw'
+                    ],
+                    dataPath: null,
+                    attributesPath: null,
+                    connectorType: 'rest',
+                    provider: 'cartodb',
+                    userId: '1a10d7c6e0a37126611fd7a7',
+                    connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
+                    tableName: 'rw_projections_20150309',
+                    status: 'pending',
+                    published: true,
+                    overwrite: false,
+                    verified: false,
+                    blockchain: {},
+                    mainDateField: null,
+                    env: 'production',
+                    geoInfo: false,
+                    protected: false,
+                    legend: {
+                        date: [],
+                        region: [],
+                        country: [],
+                        nested: []
+                    },
+                    clonedHost: {},
+                    errorMessage: null,
+                    taskId: null,
+                    updatedAt: '2018-11-19T11:45:44.405Z',
+                    dataLastUpdated: null,
+                    widgetRelevantProps: [],
+                    layerRelevantProps: []
+                }
+            }, responseData)
+        });
+};
+
 module.exports = {
     createWidget,
     getUUID,
@@ -150,5 +200,6 @@ module.exports = {
     createAuthCases,
     ensureCorrectError,
     createWidgetMetadata,
-    createVocabulary
+    createVocabulary,
+    mockDataset
 };
