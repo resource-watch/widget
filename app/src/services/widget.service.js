@@ -176,14 +176,16 @@ class WidgetService {
 
     static async generateThumbnail(widget) {
         logger.debug('[WidgetService]: Creating thumbnail');
+        let thumbURL = '';
         try {
             const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(widget);
-            widget.thumbnailUrl = widgetThumbnail.data.widgetThumbnail;
-            widget.save();
+            thumbURL = widgetThumbnail.data.widgetThumbnail;
         } catch (err) {
-            logger.error('Error generating widget thumbnail.');
-            throw new Error(`Error generating widget thumbnail: ${err.message}`);
+            logger.error(`Error generating widget thumbnail: ${err.message}`);
         }
+
+        widget.thumbnailUrl = thumbURL;
+        widget.save();
     }
 
 
