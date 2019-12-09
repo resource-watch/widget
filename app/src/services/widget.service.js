@@ -88,7 +88,7 @@ class WidgetService {
         const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
 
-        await WidgetService.generateThumbnail(newWidget);
+        WidgetService.generateThumbnail(newWidget);
 
         return newWidget;
     }
@@ -130,7 +130,7 @@ class WidgetService {
             throw new Error(err);
         }
 
-        await WidgetService.generateThumbnail(newWidget);
+        WidgetService.generateThumbnail(newWidget);
 
         return newWidget;
     }
@@ -169,7 +169,7 @@ class WidgetService {
 
         const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, userId);
 
-        await WidgetService.generateThumbnail(createdWidget);
+        WidgetService.generateThumbnail(createdWidget);
 
         return createdWidget;
     }
