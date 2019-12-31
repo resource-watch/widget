@@ -163,7 +163,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an USER with a matching app should be successful', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, USERS.USER.id)).save();
 
         nock(`${process.env.CT_URL}/v1`)
             .get(`/dataset/${widgetOne.dataset}`)

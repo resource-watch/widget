@@ -137,9 +137,16 @@ const ensureCorrectWidget = (actualWidget, expectedWidget) => {
 
 const widgetConfig = WIDGET_CONFIG;
 
-const createWidgetInDB = ({
-    apps, userId, datasetID, customerWidgetConfig
-}) => new Widget(createWidget(apps, userId, datasetID, customerWidgetConfig)).save();
+const createWidgetInDB = async ({
+    apps,
+    userId,
+    datasetID,
+    customerWidgetConfig,
+}) => {
+    const data = createWidget(apps, userId, datasetID, customerWidgetConfig);
+    const savedWidget = await new Widget(data).save();
+    return Widget.findById(savedWidget._id);
+};
 
 module.exports = {
     createWidget,

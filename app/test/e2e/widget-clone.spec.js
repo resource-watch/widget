@@ -5,7 +5,7 @@ const Widget = require('models/widget.model');
 const { USERS } = require('./utils/test.constants');
 
 const { getTestServer } = require('./utils/test-server');
-const { getUUID, createWidget } = require('./utils/helpers');
+const { getUUID, createWidget, createWidgetInDB } = require('./utils/helpers');
 
 chai.should();
 
@@ -154,7 +154,7 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER with a matching app should be successful', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(['rw'], USERS.USER.id)).save();
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
@@ -166,9 +166,7 @@ describe('Clone widgets tests', () => {
 
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
-            .send({
-                loggedUser: USERS.USER
-            });
+            .send({ loggedUser: USERS.USER });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -196,15 +194,13 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        const widgetWithFakeApp = createWidget();
+        const widgetWithFakeApp = createWidget(['rw'], USERS.USER.id);
         widgetWithFakeApp.application = ['potato'];
         const widgetOne = await new Widget(widgetWithFakeApp).save();
 
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
-            .send({
-                loggedUser: USERS.USER
-            });
+            .send({ loggedUser: USERS.USER });
 
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array').and.length(1);
@@ -212,7 +208,7 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an ADMIN overwriting data should be successful', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(['rw'], USERS.USER.id)).save();
 
         nock(`${process.env.CT_URL}`)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))

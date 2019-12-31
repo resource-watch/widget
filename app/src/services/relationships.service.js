@@ -106,6 +106,19 @@ class RelationshipsService {
         }
     }
 
+    static async getUsersInfoByIds(ids) {
+        logger.debug('Fetching all users\' information');
+        const body = await ctRegisterMicroservice.requestToMicroservice({
+            uri: `/auth/user/find-by-ids`,
+            method: 'POST',
+            json: true,
+            version: false,
+            body: { ids: ids.sort() }
+        });
+
+        return body.data;
+    }
+
 }
 
 module.exports = RelationshipsService;

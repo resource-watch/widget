@@ -8,6 +8,7 @@ const WidgetValidator = require('validators/widget.validator');
 const WidgetNotValid = require('errors/widgetNotValid.error');
 const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
+const WidgetModel = require('models/widget.model');
 const { USER_ROLES } = require('app.constants');
 
 const router = new Router();
@@ -166,8 +167,22 @@ class WidgetRouter {
         const user = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser) : null;
         const userId = user ? user.id : null;
         const isAdmin = ['ADMIN', 'SUPERADMIN'].includes(user && user.role);
-
         delete query.loggedUser;
+
+        if (ctx.query.sort && (ctx.query.sort.includes('user.role') || ctx.query.sort.includes('user.name'))) {
+            logger.debug('Detected sorting by user role or name');
+            if (!user || !isAdmin) {
+                ctx.throw(403, 'Sorting by user name or role not authorized.');
+                return;
+            }
+            const ids = await WidgetService.getAllWidgetsUserIds();
+            const users = await RelationshipsService.getUsersInfoByIds(ids);
+            await Promise.all(users.map(u => WidgetModel.updateMany(
+                { userId: u._id },
+                { userRole: u.role, userName: u.name },
+            )));
+        }
+
         if (Object.keys(query).find(el => el.indexOf('collection') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Collection filter not authorized');

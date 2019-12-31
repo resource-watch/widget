@@ -40,12 +40,9 @@ const createMockVocabulary = (mockVocabulary, datasetID, widgetID) => nock(proce
     });
 
 const createMockUser = mockUser => nock(process.env.CT_URL)
-    .post(`/auth/user/find-by-ids`, {
-        ids: mockUser.map(e => e.id)
-    })
-    .reply(200, {
-        data: mockUser
-    });
+    .post(`/auth/user/find-by-ids`, JSON.stringify({ ids: mockUser.map(e => e.id).sort() }))
+    .reply(200, { data: mockUser })
+    .log(console.log);
 
 module.exports = {
     createMockDataset,

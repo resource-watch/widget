@@ -31,6 +31,8 @@ const Widget = new Schema({
     template: { type: Boolean, default: false },
     published: { type: Boolean, default: true },
     freeze: { type: Boolean, default: false },
+    userRole: { type: String, default: null, select: false },
+    userName: { type: String, default: null, select: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });

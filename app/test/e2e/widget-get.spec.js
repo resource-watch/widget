@@ -141,8 +141,8 @@ describe('Get widgets tests', () => {
 
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, anonymous call)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -180,8 +180,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, USER role)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -224,8 +224,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, MANAGER role)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -268,8 +268,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, ADMIN role)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);

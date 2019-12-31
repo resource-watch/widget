@@ -383,8 +383,22 @@ class WidgetService {
         return query;
     }
 
+    static async getAllWidgetsUserIds() {
+        logger.debug(`[WidgetService]: Getting the user ids of all widgets`);
+        const widgets = await Widget.find({}, 'userId').lean();
+        const userIds = widgets.map(w => w.userId);
+        return userIds.filter((item, idx) => userIds.indexOf(item) === idx && item !== 'legacy');
+    }
+
+    static processSortParam(sort) {
+        let processedStr = sort;
+        if (sort.includes('user.role')) processedStr = processedStr.replace(/user.role/g, 'userRole');
+        if (sort.includes('user.name')) processedStr = processedStr.replace(/user.name/g, 'userName');
+        return processedStr;
+    }
+
     static getFilteredSort(sort) {
-        const sortParams = sort.split(',');
+        const sortParams = WidgetService.processSortParam(sort).split(',');
         const filteredSort = {};
         const widgetAttributes = Object.keys(Widget.schema.obj);
         sortParams.forEach((param) => {
