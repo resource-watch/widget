@@ -362,45 +362,24 @@ describe('Get widgets tests', () => {
         const widgetThree = await new Widget(createWidget()).save();
 
         createMockUser([{
-            id: widgetOne.userId,
-            role: 'USER',
-            provider: 'local',
+            ...USER,
+            _id: widgetOne.userId,
             email: 'user-one@control-tower.org',
-            name: 'test user',
-            extraUserData: {
-                apps: [
-                    'rw',
-                    'gfw',
-                    'gfw-climate',
-                    'prep',
-                    'aqueduct',
-                    'forest-atlas'
-                ]
-            }
+            name: 'test user'
         }]);
 
         createMockUser([{
-            id: widgetTwo.userId,
-            role: 'MANAGER',
-            provider: 'local',
-            email: 'user-two@control-tower.org',
-            extraUserData: {
-                apps: [
-                    'rw'
-                ]
-            }
+            ...MANAGER,
+            _id: widgetTwo.userId,
+            name: undefined,
+            email: 'user-two@control-tower.org'
         }]);
 
         createMockUser([{
-            id: widgetThree.userId,
-            role: 'MANAGER',
-            provider: 'local',
+            ...MANAGER,
+            _id: widgetThree.userId,
             name: 'user three',
-            extraUserData: {
-                apps: [
-                    'rw'
-                ]
-            }
+            email: undefined
         }]);
 
         const response = await requester

@@ -391,10 +391,7 @@ class WidgetService {
     }
 
     static processSortParam(sort) {
-        let processedStr = sort;
-        if (sort.includes('user.role')) processedStr = processedStr.replace(/user.role/g, 'userRole');
-        if (sort.includes('user.name')) processedStr = processedStr.replace(/user.name/g, 'userName');
-        return processedStr;
+        return sort.replace(/user.role/g, 'userRole').replace(/user.name/g, 'userName');
     }
 
     static getFilteredSort(sort) {

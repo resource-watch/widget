@@ -27,17 +27,13 @@ class RelationshipsService {
                         version: false
                     });
 
-                    if (!userData.data[0] || (!userData.data[0].name && !userData.data[0].email)) {
+                    if (!userData.data[0]) {
                         logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(user)}`);
                     } else {
-                        widgets[i].user = {
-                            name: userData.data[0].name,
-                            email: userData.data[0].email
-                        };
-                        if (user && user.role === 'ADMIN') {
-                            widgets[i].user.role = userData.data[0].role;
-                        }
-
+                        widgets[i].user = {};
+                        if (userData.data[0].name) widgets[i].user.name = userData.data[0].name;
+                        if (userData.data[0].email) widgets[i].user.email = userData.data[0].email;
+                        if (user && user.role === 'ADMIN') widgets[i].user.role = userData.data[0].role;
                         logger.info('Widgets including user data', widgets.map(el => el.toObject()));
                     }
                 }
@@ -113,7 +109,7 @@ class RelationshipsService {
             method: 'POST',
             json: true,
             version: false,
-            body: { ids: ids.sort() }
+            body: { ids }
         });
 
         return body.data;
