@@ -1,6 +1,7 @@
 const nock = require('nock');
 const Widget = require('models/widget.model');
 const chai = require('chai');
+const mongoose = require('mongoose');
 const { getTestServer } = require('./utils/test-server');
 const { createWidget } = require('./utils/helpers');
 const { createMockUser } = require('./utils/mock');
@@ -28,14 +29,16 @@ const mockUsersForSort = (users) => {
     createMockUser(fullUsers);
 };
 
-const mockFourWidgetsForSorting = async () => {
+const mockWidgetsForSorting = async () => {
+    const id = mongoose.Types.ObjectId();
     await new Widget(createWidget(['rw'], USER.id)).save();
     await new Widget(createWidget(['rw'], MANAGER.id)).save();
     await new Widget(createWidget(['rw'], ADMIN.id)).save();
     await new Widget(createWidget(['rw'], SUPERADMIN.id)).save();
+    await new Widget(createWidget(['rw'], id)).save();
 
     mockUsersForSort([
-        USER, MANAGER, ADMIN, SUPERADMIN
+        USER, MANAGER, ADMIN, SUPERADMIN, { id }
     ]);
 };
 
@@ -70,51 +73,51 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Getting widgets sorted by user.role ASC should return a list of widgets ordered by the role of the user who created the widget (happy case)', async () => {
-        await mockFourWidgetsForSorting();
+        await mockWidgetsForSorting();
         const response = await requester.get('/api/v1/widget').query({
             includes: 'user',
             sort: 'user.role',
             loggedUser: JSON.stringify(ADMIN),
         });
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(4);
-        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal(['ADMIN', 'MANAGER', 'SUPERADMIN', 'USER']);
+        response.body.should.have.property('data').and.be.an('array').and.length(5);
+        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal([undefined, 'ADMIN', 'MANAGER', 'SUPERADMIN', 'USER']);
     });
 
     it('Getting widgets sorted by user.role DESC should return a list of widgets ordered by the role of the user who created the widget (happy case)', async () => {
-        await mockFourWidgetsForSorting();
+        await mockWidgetsForSorting();
         const response = await requester.get('/api/v1/widget').query({
             includes: 'user',
             sort: '-user.role',
             loggedUser: JSON.stringify(ADMIN),
         });
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(4);
-        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal(['USER', 'SUPERADMIN', 'MANAGER', 'ADMIN']);
+        response.body.should.have.property('data').and.be.an('array').and.length(5);
+        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal(['USER', 'SUPERADMIN', 'MANAGER', 'ADMIN', undefined]);
     });
 
     it('Getting widgets sorted by user.name ASC should return a list of widgets ordered by the name of the user who created the widget (happy case)', async () => {
-        await mockFourWidgetsForSorting();
+        await mockWidgetsForSorting();
         const response = await requester.get('/api/v1/widget').query({
             includes: 'user',
             sort: 'user.name',
             loggedUser: JSON.stringify(ADMIN),
         });
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(4);
-        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['test admin', 'test manager', 'test super admin', 'test user']);
+        response.body.should.have.property('data').and.be.an('array').and.length(5);
+        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal([undefined, 'test admin', 'test manager', 'test super admin', 'test user']);
     });
 
     it('Getting widgets sorted by user.name DESC should return a list of widgets ordered by the name of the user who created the widget (happy case)', async () => {
-        await mockFourWidgetsForSorting();
+        await mockWidgetsForSorting();
         const response = await requester.get('/api/v1/widget').query({
             includes: 'user',
             sort: '-user.name',
             loggedUser: JSON.stringify(ADMIN),
         });
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(4);
-        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['test user', 'test super admin', 'test manager', 'test admin']);
+        response.body.should.have.property('data').and.be.an('array').and.length(5);
+        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['test user', 'test super admin', 'test manager', 'test admin', undefined]);
     });
 
     it('Sorting widgets by user role ASC puts widgets without valid users in the beginning of the list', async () => {
