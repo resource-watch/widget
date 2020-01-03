@@ -95,8 +95,8 @@ const createVocabulary = widgetID => ({
     }
 });
 
-const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datasetID, customerWidgetConfig) => {
-    const uuid = getUUID();
+const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datasetID, customerWidgetConfig, widgetId) => {
+    const uuid = widgetId || getUUID();
     const datasetUuid = datasetID || getUUID();
 
     return {

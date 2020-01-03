@@ -182,6 +182,25 @@ describe('GET widgets sorted by user fields', () => {
         response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['Anthony', 'bernard', 'Carlos']);
     });
 
+    it('Sorting widgets by user.name is deterministic, applying an implicit sort by id after sorting by user.name', async () => {
+        const spoofedUser = { ...USER, name: 'AAA' };
+        const spoofedManager = { ...MANAGER, name: 'AAA' };
+        const spoofedAdmin = { ...ADMIN, name: 'AAA' };
+        await new Widget(createWidget(['rw'], spoofedUser.id, undefined, undefined, '3')).save();
+        await new Widget(createWidget(['rw'], spoofedManager.id, undefined, undefined, '2')).save();
+        await new Widget(createWidget(['rw'], spoofedAdmin.id, undefined, undefined, '1')).save();
+        mockUsersForSort([spoofedUser, spoofedManager, spoofedAdmin]);
+
+        const response = await requester.get('/api/v1/widget').query({
+            includes: 'user',
+            sort: 'user.name',
+            loggedUser: JSON.stringify(ADMIN),
+        });
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(3);
+        response.body.data.map(widget => widget.id).should.be.deep.equal(['1', '2', '3']);
+    });
+
     afterEach(async () => {
         await Widget.deleteMany({}).exec();
 
