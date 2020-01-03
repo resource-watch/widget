@@ -163,6 +163,25 @@ describe('GET widgets sorted by user fields', () => {
         response.body.data.indexOf(returnedNoUserWidget).should.be.equal(4);
     });
 
+    it('Sorting widgets by user.name is case insensitive and returns a list of widgets ordered by the name of the user who created the widget', async () => {
+        const firstUser = { ...USER, name: 'Anthony' };
+        const secondUser = { ...MANAGER, name: 'bernard' };
+        const thirdUser = { ...ADMIN, name: 'Carlos' };
+        await new Widget(createWidget(['rw'], firstUser.id)).save();
+        await new Widget(createWidget(['rw'], secondUser.id)).save();
+        await new Widget(createWidget(['rw'], thirdUser.id)).save();
+        mockUsersForSort([firstUser, secondUser, thirdUser]);
+
+        const response = await requester.get('/api/v1/widget').query({
+            includes: 'user',
+            sort: 'user.name',
+            loggedUser: JSON.stringify(ADMIN),
+        });
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(3);
+        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['Anthony', 'bernard', 'Carlos']);
+    });
+
     afterEach(async () => {
         await Widget.deleteMany({}).exec();
 

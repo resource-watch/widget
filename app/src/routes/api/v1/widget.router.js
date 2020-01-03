@@ -179,7 +179,10 @@ class WidgetRouter {
             const users = await RelationshipsService.getUsersInfoByIds(ids);
             await Promise.all(users.map(u => WidgetModel.updateMany(
                 { userId: u._id },
-                { userRole: u.role, userName: u.name },
+                {
+                    userRole: u.role ? u.role.toLowerCase() : '',
+                    userName: u.name ? u.name.toLowerCase() : '',
+                },
             )));
         }
 
