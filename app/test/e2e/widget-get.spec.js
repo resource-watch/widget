@@ -363,21 +363,21 @@ describe('Get widgets tests', () => {
 
         createMockUser([{
             ...USER,
-            _id: widgetOne.userId,
+            id: widgetOne.userId,
             email: 'user-one@control-tower.org',
             name: 'test user'
         }]);
 
         createMockUser([{
             ...MANAGER,
-            _id: widgetTwo.userId,
+            id: widgetTwo.userId,
             name: undefined,
             email: 'user-two@control-tower.org'
         }]);
 
         createMockUser([{
             ...MANAGER,
-            _id: widgetThree.userId,
+            id: widgetThree.userId,
             name: 'user three',
             email: undefined
         }]);

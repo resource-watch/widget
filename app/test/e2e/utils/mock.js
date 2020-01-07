@@ -43,7 +43,7 @@ const createMockVocabulary = (mockVocabulary, datasetID, widgetID) => nock(proce
 const createMockUser = users => nock(process.env.CT_URL)
     .post(
         `/auth/user/find-by-ids`,
-        body => intersection(body.ids, users.map(e => e._id.toString())).length === body.ids.length
+        body => intersection(body.ids, users.map(e => e.id.toString())).length === body.ids.length
     )
     .query(() => true)
     .reply(200, { data: users });
