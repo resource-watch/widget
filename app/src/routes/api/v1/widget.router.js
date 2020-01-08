@@ -186,9 +186,9 @@ class WidgetRouter {
             )));
         }
 
-        if (query['page[size]'] && query['page[size]'] > 100) {
-            ctx.throw(400, 'Invalid page size');
-        }
+        // if (query['page[size]'] && query['page[size]'] > 100) {
+        //     ctx.throw(400, 'Invalid page size');
+        // }
 
         if (Object.keys(query).find(el => el.indexOf('collection') >= 0)) {
             if (!userId) {
