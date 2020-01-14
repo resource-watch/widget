@@ -444,6 +444,10 @@ describe('Get widgets tests', () => {
         widgetOne.name.should.equal(responseWidgetOne.attributes.name);
     });
 
+    /**
+     * We'll want to limit the maximum page size in the future
+     * However, as this will cause a production BC break, we can't enforce it just now
+     */
     // it('Getting widgets with page size over 100 should return 400 Bad Request', async () => {
     //     const list = await requester.get('/api/v1/widget?page[size]=101');
     //     list.status.should.equal(400);
