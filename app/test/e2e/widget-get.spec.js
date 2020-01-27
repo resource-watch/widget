@@ -141,8 +141,8 @@ describe('Get widgets tests', () => {
 
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, anonymous call)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -180,8 +180,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, USER role)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -224,8 +224,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, MANAGER role)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -268,8 +268,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, ADMIN role)', async () => {
-        const widgetOne = await new Widget(createWidget()).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
+        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -362,45 +362,24 @@ describe('Get widgets tests', () => {
         const widgetThree = await new Widget(createWidget()).save();
 
         createMockUser([{
+            ...USER,
             id: widgetOne.userId,
-            role: 'USER',
-            provider: 'local',
             email: 'user-one@control-tower.org',
-            name: 'test user',
-            extraUserData: {
-                apps: [
-                    'rw',
-                    'gfw',
-                    'gfw-climate',
-                    'prep',
-                    'aqueduct',
-                    'forest-atlas'
-                ]
-            }
+            name: 'test user'
         }]);
 
         createMockUser([{
+            ...MANAGER,
             id: widgetTwo.userId,
-            role: 'MANAGER',
-            provider: 'local',
-            email: 'user-two@control-tower.org',
-            extraUserData: {
-                apps: [
-                    'rw'
-                ]
-            }
+            name: undefined,
+            email: 'user-two@control-tower.org'
         }]);
 
         createMockUser([{
+            ...MANAGER,
             id: widgetThree.userId,
-            role: 'MANAGER',
-            provider: 'local',
             name: 'user three',
-            extraUserData: {
-                apps: [
-                    'rw'
-                ]
-            }
+            email: undefined
         }]);
 
         const response = await requester
@@ -464,6 +443,16 @@ describe('Get widgets tests', () => {
         const responseWidgetOne = response.body.data[0];
         widgetOne.name.should.equal(responseWidgetOne.attributes.name);
     });
+
+    /**
+     * We'll want to limit the maximum page size in the future
+     * However, as this will cause a production BC break, we can't enforce it just now
+     */
+    // it('Getting widgets with page size over 100 should return 400 Bad Request', async () => {
+    //     const list = await requester.get('/api/v1/widget?page[size]=101');
+    //     list.status.should.equal(400);
+    //     list.body.errors[0].should.have.property('detail').and.equal('Invalid page size');
+    // });
 
     afterEach(async () => {
         if (!nock.isDone()) {

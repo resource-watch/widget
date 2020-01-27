@@ -377,7 +377,7 @@ const DEFAULT_DATASET_ATTRIBUTES = {
 
 const USERS = {
     USER: {
-        id: '1a10d7c6e0a37126611fd7a7',
+        id: '1a10d7c6e0a37126611fd7a6',
         role: 'USER',
         provider: 'local',
         name: 'test user',
@@ -395,7 +395,7 @@ const USERS = {
         }
     },
     MANAGER: {
-        id: '1a10d7c6e0a37126611fd7a7',
+        id: '1a10d7c6e0a37126611fd7a5',
         role: 'MANAGER',
         provider: 'local',
         name: 'test manager',
@@ -417,6 +417,24 @@ const USERS = {
         role: 'ADMIN',
         provider: 'local',
         name: 'test admin',
+        email: 'user@control-tower.org',
+        extraUserData: {
+            apps: [
+                'rw',
+                'gfw',
+                'gfw-climate',
+                'prep',
+                'aqueduct',
+                'forest-atlas',
+                'data4sdgs'
+            ]
+        }
+    },
+    SUPERADMIN: {
+        id: '1a10d7c6e0a37126601fd7a7',
+        role: 'SUPERADMIN',
+        provider: 'local',
+        name: 'test super admin',
         email: 'user@control-tower.org',
         extraUserData: {
             apps: [

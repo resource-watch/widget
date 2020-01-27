@@ -1,4 +1,5 @@
 const nock = require('nock');
+const intersection = require('lodash/intersection');
 const { DEFAULT_DATASET_ATTRIBUTES } = require('./test.constants');
 
 const createMockDataset = datasetID => nock(process.env.CT_URL)
@@ -39,13 +40,13 @@ const createMockVocabulary = (mockVocabulary, datasetID, widgetID) => nock(proce
         data: mockVocabulary,
     });
 
-const createMockUser = mockUser => nock(process.env.CT_URL)
-    .post(`/auth/user/find-by-ids`, {
-        ids: mockUser.map(e => e.id)
-    })
-    .reply(200, {
-        data: mockUser
-    });
+const createMockUser = users => nock(process.env.CT_URL)
+    .post(
+        `/auth/user/find-by-ids`,
+        body => intersection(body.ids, users.map(e => e.id.toString())).length === body.ids.length
+    )
+    .query(() => true)
+    .reply(200, { data: users });
 
 module.exports = {
     createMockDataset,
