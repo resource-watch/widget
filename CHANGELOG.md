@@ -1,3 +1,7 @@
+# 27/01/2020
+
+- Add possibility of sorting widgets by user fields (such as name or role).
+
 # 18/11/2019
 
 - Add support for dataset overwrite using multiple files in parallel.

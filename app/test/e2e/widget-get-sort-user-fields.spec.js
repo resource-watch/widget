@@ -81,7 +81,7 @@ describe('GET widgets sorted by user fields', () => {
         });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
-        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal([undefined, 'ADMIN', 'MANAGER', 'SUPERADMIN', 'USER']);
+        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal(['ADMIN', 'MANAGER', 'SUPERADMIN', 'USER', undefined]);
     });
 
     it('Getting widgets sorted by user.role DESC should return a list of widgets ordered by the role of the user who created the widget (happy case)', async () => {
@@ -93,7 +93,7 @@ describe('GET widgets sorted by user fields', () => {
         });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
-        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal(['USER', 'SUPERADMIN', 'MANAGER', 'ADMIN', undefined]);
+        response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal([undefined, 'USER', 'SUPERADMIN', 'MANAGER', 'ADMIN']);
     });
 
     it('Getting widgets sorted by user.name ASC should return a list of widgets ordered by the name of the user who created the widget (happy case)', async () => {
@@ -105,7 +105,7 @@ describe('GET widgets sorted by user fields', () => {
         });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
-        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal([undefined, 'test admin', 'test manager', 'test super admin', 'test user']);
+        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['test admin', 'test manager', 'test super admin', 'test user', undefined]);
     });
 
     it('Getting widgets sorted by user.name DESC should return a list of widgets ordered by the name of the user who created the widget (happy case)', async () => {
@@ -117,19 +117,25 @@ describe('GET widgets sorted by user fields', () => {
         });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
-        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['test user', 'test super admin', 'test manager', 'test admin', undefined]);
+        response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal([undefined, 'test user', 'test super admin', 'test manager', 'test admin']);
     });
 
-    it('Sorting widgets by user role ASC puts widgets without valid users in the beginning of the list', async () => {
+    it('Sorting widgets by user role ASC puts widgets without valid users in the end of the list', async () => {
         await new Widget(createWidget(['rw'], USER.id)).save();
         await new Widget(createWidget(['rw'], MANAGER.id)).save();
         await new Widget(createWidget(['rw'], ADMIN.id)).save();
         await new Widget(createWidget(['rw'], SUPERADMIN.id)).save();
-        const noUserWidget = await new Widget(createWidget(['rw'], 'legacy')).save();
+        const noUserWidget1 = await new Widget(createWidget(['rw'], 'legacy')).save();
+        const noUserWidget2 = await new Widget(createWidget(['rw'], '5accc3660bb7c603ba473d0f')).save();
 
-        mockUsersForSort([
-            USER, MANAGER, ADMIN, SUPERADMIN
-        ]);
+        // Mock requests for includes=user
+        const fullUsers = [USER, MANAGER, ADMIN, SUPERADMIN].map(u => ({ ...u, _id: u.id }));
+
+        // Custom mock find-by-ids call
+        const userIds = [USER.id, MANAGER.id, ADMIN.id, SUPERADMIN.id, '5accc3660bb7c603ba473d0f'];
+        nock(process.env.CT_URL)
+            .post('/auth/user/find-by-ids', { ids: userIds })
+            .reply(200, { data: fullUsers });
 
         const response = await requester.get('/api/v1/widget').query({
             includes: 'user',
@@ -137,22 +143,34 @@ describe('GET widgets sorted by user fields', () => {
             loggedUser: JSON.stringify(ADMIN),
         });
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(5);
+        response.body.should.have.property('data').and.be.an('array').and.length(6);
 
-        const returnedNoUserWidget = response.body.data.find(widget => widget.id === noUserWidget._id);
-        response.body.data.indexOf(returnedNoUserWidget).should.be.equal(0);
+        const returnedNoUserWidget1 = response.body.data.find(dataset => dataset.id === noUserWidget1._id);
+        const returnedNoUserWidget2 = response.body.data.find(dataset => dataset.id === noUserWidget2._id);
+
+        // Grab the last two widgets of the returned data
+        const len = response.body.data.length;
+        const lastTwoWidgets = response.body.data.slice(len - 2, len);
+        lastTwoWidgets.includes(returnedNoUserWidget1).should.be.equal(true);
+        lastTwoWidgets.includes(returnedNoUserWidget2).should.be.equal(true);
     });
 
-    it('Sorting widgets by user role DESC puts widgets without valid users in the end of the list', async () => {
+    it('Sorting widgets by user role DESC puts widgets without valid users in the beginning of the list', async () => {
         await new Widget(createWidget(['rw'], USER.id)).save();
         await new Widget(createWidget(['rw'], MANAGER.id)).save();
         await new Widget(createWidget(['rw'], ADMIN.id)).save();
         await new Widget(createWidget(['rw'], SUPERADMIN.id)).save();
-        const noUserWidget = await new Widget(createWidget(['rw'], 'legacy')).save();
+        const noUserWidget1 = await new Widget(createWidget(['rw'], 'legacy')).save();
+        const noUserWidget2 = await new Widget(createWidget(['rw'], '5accc3660bb7c603ba473d0f')).save();
 
-        mockUsersForSort([
-            USER, MANAGER, ADMIN, SUPERADMIN
-        ]);
+        // Mock requests for includes=user
+        const fullUsers = [USER, MANAGER, ADMIN, SUPERADMIN].map(u => ({ ...u, _id: u.id }));
+
+        // Custom mock find-by-ids call
+        const userIds = [USER.id, MANAGER.id, ADMIN.id, SUPERADMIN.id, '5accc3660bb7c603ba473d0f'];
+        nock(process.env.CT_URL)
+            .post('/auth/user/find-by-ids', { ids: userIds })
+            .reply(200, { data: fullUsers });
 
         const response = await requester.get('/api/v1/widget').query({
             includes: 'user',
@@ -160,10 +178,15 @@ describe('GET widgets sorted by user fields', () => {
             loggedUser: JSON.stringify(ADMIN),
         });
         response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(5);
+        response.body.should.have.property('data').and.be.an('array').and.length(6);
 
-        const returnedNoUserWidget = response.body.data.find(widget => widget.id === noUserWidget._id);
-        response.body.data.indexOf(returnedNoUserWidget).should.be.equal(4);
+        const returnedNoUserWidget1 = response.body.data.find(dataset => dataset.id === noUserWidget1._id);
+        const returnedNoUserWidget2 = response.body.data.find(dataset => dataset.id === noUserWidget2._id);
+
+        // Grab the first two widgets of the returned data
+        const firstTwoWidgets = response.body.data.slice(0, 2);
+        firstTwoWidgets.includes(returnedNoUserWidget1).should.be.equal(true);
+        firstTwoWidgets.includes(returnedNoUserWidget2).should.be.equal(true);
     });
 
     it('Sorting widgets by user.name is case insensitive and returns a list of widgets ordered by the name of the user who created the widget', async () => {

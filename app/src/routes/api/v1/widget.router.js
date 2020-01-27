@@ -175,13 +175,18 @@ class WidgetRouter {
                 ctx.throw(403, 'Sorting by user name or role not authorized.');
                 return;
             }
+
+            // Reset all datasets' sorting columns
+            await WidgetModel.updateMany({}, { userRole: '', userName: '' });
+
+            // Fetch info to sort again
             const ids = await WidgetService.getAllWidgetsUserIds();
             const users = await RelationshipsService.getUsersInfoByIds(ids);
             await Promise.all(users.map(u => WidgetModel.updateMany(
                 { userId: u._id },
                 {
-                    userRole: u.role ? u.role.toLowerCase() : '',
-                    userName: u.name ? u.name.toLowerCase() : '',
+                    userRole: u.role ? u.role.toLowerCase() : '',
+                    userName: u.name ? u.name.toLowerCase() : '',
                 },
             )));
         }
