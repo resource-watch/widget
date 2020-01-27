@@ -1,3 +1,4 @@
+const nock = require('nock');
 const Widget = require('models/widget.model');
 const { WIDGET_CONFIG, USERS } = require('./test.constants');
 
@@ -148,6 +149,64 @@ const createWidgetInDB = async ({
     return Widget.findById(savedWidget._id);
 };
 
+const mockDataset = (id, responseData = {}, twice = false) => {
+    const data = Object.assign({}, {
+        id,
+        type: 'dataset',
+        attributes: {
+            name: 'Seasonal variability',
+            slug: 'Seasonal-variability',
+            type: null,
+            subtitle: null,
+            application: [
+                'rw'
+            ],
+            dataPath: null,
+            attributesPath: null,
+            connectorType: 'rest',
+            provider: 'cartodb',
+            userId: '1a10d7c6e0a37126611fd7a7',
+            connectorUrl: 'https://wri-01.carto.com/tables/rw_projections_20150309/public',
+            tableName: 'rw_projections_20150309',
+            status: 'pending',
+            published: true,
+            overwrite: false,
+            verified: false,
+            blockchain: {},
+            mainDateField: null,
+            env: 'production',
+            geoInfo: false,
+            protected: false,
+            legend: {
+                date: [],
+                region: [],
+                country: [],
+                nested: []
+            },
+            clonedHost: {},
+            errorMessage: null,
+            taskId: null,
+            updatedAt: '2018-11-19T11:45:44.405Z',
+            dataLastUpdated: null,
+            widgetRelevantProps: [],
+            layerRelevantProps: []
+        }
+    }, responseData);
+
+    const scope = nock(`${process.env.CT_URL}/v1`).get(`/dataset/${id}`);
+    if (twice) scope.twice();
+    scope.reply(200, { data });
+
+    return data;
+};
+
+const mockWebshot = (success = true, responseData = {}) => {
+    const data = Object.assign({}, { widgetThumbnail: 'http://thumbnail-url.com/file.png' }, responseData);
+    nock(`${process.env.CT_URL}`)
+        .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        .reply(success ? 200 : 500, { data });
+};
+
 module.exports = {
     createWidget,
     getUUID,
@@ -157,5 +216,7 @@ module.exports = {
     createAuthCases,
     ensureCorrectError,
     createWidgetMetadata,
-    createVocabulary
+    createVocabulary,
+    mockDataset,
+    mockWebshot
 };
