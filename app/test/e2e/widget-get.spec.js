@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
 const chai = require('chai');
+const mongoose = require('mongoose');
 const Widget = require('models/widget.model');
 const { USERS: { USER, MANAGER, ADMIN } } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
@@ -429,10 +430,9 @@ describe('Get widgets tests', () => {
         responseWidgetThree.attributes.user.should.not.have.property('email');
     });
 
-
     it('Get all widgets should return widgets owned by user', async () => {
         const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
-        const widgetTwo = await new Widget(createWidget()).save();
+        await new Widget(createWidget()).save();
 
         const response = await requester.get(`/api/v1/widget?userId=xxx`);
 
@@ -442,6 +442,172 @@ describe('Get widgets tests', () => {
 
         const responseWidgetOne = response.body.data[0];
         widgetOne.name.should.equal(responseWidgetOne.attributes.name);
+    });
+
+    it('Get all widgets with collection filter without being authenticated should return a 403 error', async () => {
+        const response = await requester.get(`/api/v1/widget?collection=xxx`);
+
+        response.status.should.equal(403);
+        response.body.should.have.property('errors').and.be.an('array').and.length(1);
+        response.body.errors[0].should.have.property('detail').and.equal('Collection filter not authorized');
+    });
+
+    it('Get all widgets with collection filter as string should return a 400 error', async () => {
+        nock(process.env.CT_URL)
+            .post('/v1/collection/find-by-ids', {
+                ids: 'xxx',
+                userId: USER.id
+            })
+            .reply(400, '{"errors":[{"status":400,"detail":"[{\\"ids\\":\\"\'ids\' must be a non-empty array\\"}]"}]}');
+
+        const response = await requester.get(`/api/v1/widget?collection=xxx`).query({ loggedUser: JSON.stringify(USER) });
+
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array').and.length(1);
+        response.body.errors[0].should.have.property('detail').and.equal('Error loading associated collection: 400 - {"errors":[{"status":400,"detail":"[{\\"ids\\":\\"\'ids\' must be a non-empty array\\"}]"}]}');
+    });
+
+    it('Get all widgets with collection filter as string should return the matching widgets (happy case)', async () => {
+        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        await new Widget(createWidget()).save();
+        const collectionId = mongoose.Types.ObjectId().toString();
+
+        nock(process.env.CT_URL)
+            .post('/v1/collection/find-by-ids', {
+                ids: collectionId,
+                userId: USER.id
+            })
+            .reply(200, {
+                data: [{
+                    id: collectionId,
+                    type: 'collection',
+                    attributes: {
+                        name: 'some name',
+                        ownerId: USER.id,
+                        application: 'gfw',
+                        resources: [{
+                            id: widgetOne.id,
+                            type: 'widget'
+                        }]
+                    }
+                }]
+
+            });
+
+        const response = await requester.get(`/api/v1/widget`).query({
+            collection: collectionId,
+            loggedUser: JSON.stringify(USER)
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(1);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetOne = response.body.data[0];
+        widgetOne.name.should.equal(responseWidgetOne.attributes.name);
+    });
+
+    it('Get all widgets with collection filter as array should return the matching widgets (happy case)', async () => {
+        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        const widgetTwo = await new Widget(createWidget()).save();
+        const collectionIdOne = mongoose.Types.ObjectId().toString();
+        const collectionIdTwo = mongoose.Types.ObjectId().toString();
+
+        nock(process.env.CT_URL)
+            .post('/v1/collection/find-by-ids', {
+                ids: [collectionIdOne, collectionIdTwo],
+                userId: USER.id
+            })
+            .reply(200, {
+                data: [{
+                    id: collectionIdOne,
+                    type: 'collection',
+                    attributes: {
+                        name: 'some name',
+                        ownerId: USER.id,
+                        application: 'gfw',
+                        resources: [{
+                            id: widgetOne.id,
+                            type: 'widget'
+                        }]
+                    }
+                }, {
+                    id: collectionIdTwo,
+                    type: 'collection',
+                    attributes: {
+                        name: 'some name',
+                        ownerId: USER.id,
+                        application: 'gfw',
+                        resources: [{
+                            id: widgetTwo.id,
+                            type: 'widget'
+                        }]
+                    }
+                }]
+
+            });
+
+        const response = await requester.get(`/api/v1/widget`).query({
+            collection: [collectionIdOne, collectionIdTwo],
+            loggedUser: JSON.stringify(USER)
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(2);
+        response.body.should.have.property('links').and.be.an('object');
+
+        const responseWidgetNames = response.body.data.map(widget => widget.attributes.name);
+        responseWidgetNames.should.contain(widgetOne.name);
+        responseWidgetNames.should.contain(widgetTwo.name);
+    });
+
+    it('Get all widgets with collection filter and with no widget resources on collections should return an empty list', async () => {
+        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        const widgetTwo = await new Widget(createWidget()).save();
+        const collectionIdOne = mongoose.Types.ObjectId().toString();
+        const collectionIdTwo = mongoose.Types.ObjectId().toString();
+
+        nock(process.env.CT_URL)
+            .post('/v1/collection/find-by-ids', {
+                ids: [collectionIdOne, collectionIdTwo],
+                userId: USER.id
+            })
+            .reply(200, {
+                data: [{
+                    id: collectionIdOne,
+                    type: 'collection',
+                    attributes: {
+                        name: 'some name',
+                        ownerId: USER.id,
+                        application: 'gfw',
+                        resources: [{
+                            id: widgetOne.id,
+                            type: 'foo'
+                        }]
+                    }
+                }, {
+                    id: collectionIdTwo,
+                    type: 'collection',
+                    attributes: {
+                        name: 'some name',
+                        ownerId: USER.id,
+                        application: 'gfw',
+                        resources: [{
+                            id: widgetTwo.id,
+                            type: 'bar'
+                        }]
+                    }
+                }]
+
+            });
+
+        const response = await requester.get(`/api/v1/widget`).query({
+            collection: [collectionIdOne, collectionIdTwo],
+            loggedUser: JSON.stringify(USER)
+        });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     /**

@@ -10,6 +10,7 @@ const WidgetNotFound = require('errors/widgetNotFound.error');
 const WidgetProtected = require('errors/widgetProtected.error');
 const WidgetModel = require('models/widget.model');
 const { USER_ROLES } = require('app.constants');
+const GetCollectionInvalidRequest = require('errors/getCollectionInvalidRequest.error');
 
 const router = new Router();
 
@@ -205,7 +206,17 @@ class WidgetRouter {
                 return;
             }
             logger.debug('Obtaining collections', userId);
-            ctx.query.ids = await RelationshipsService.getCollections(ctx.query.collection, userId);
+            try {
+                ctx.query.ids = await RelationshipsService.getCollections(ctx.query.collection, userId);
+            } catch (e) {
+                if (e instanceof GetCollectionInvalidRequest) {
+                    ctx.throw(e.statusCode, `Error loading associated collection: ${e.message}`);
+                } else {
+                    ctx.throw(500, 'Error loading collection');
+                }
+                return;
+            }
+
             ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
             logger.debug('Ids from collections', ctx.query.ids);
         }
