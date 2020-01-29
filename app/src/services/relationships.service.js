@@ -1,5 +1,6 @@
 const logger = require('logger');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
+const GetCollectionInvalidRequest = require('errors/getCollectionInvalidRequest.error');
 
 
 class RelationshipsService {
@@ -65,6 +66,7 @@ class RelationshipsService {
     }
 
     static async getCollections(ids, userId) {
+        logger.debug(`[RelationshipsService] getCollections for ids ${ids} and userID ${userId}.`);
         try {
             const result = await ctRegisterMicroservice.requestToMicroservice({
                 uri: `/collection/find-by-ids`,
@@ -75,10 +77,18 @@ class RelationshipsService {
                     userId
                 }
             });
-            logger.debug(result);
-            return result.data.map(col => col.attributes.resources.filter(res => res.type === 'widget')).reduce((pre, cur) => pre.concat(cur)).map(el => el.id);
+            logger.debug(`[RelationshipsService] Result of getCollections: `, result);
+            const collectionsWithWidgetResources = result.data
+                .map(col => col.attributes.resources.filter(res => res.type === 'widget'));
+
+            if (collectionsWithWidgetResources.length === 0) {
+                return [];
+            }
+
+            return collectionsWithWidgetResources
+                .reduce((pre, cur) => pre.concat(cur)).map(el => el.id);
         } catch (e) {
-            throw new Error(e);
+            throw new GetCollectionInvalidRequest(e.message, e.statusCode || 500);
         }
     }
 
