@@ -4,6 +4,18 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 
 class RelationshipsService {
 
+    static appendUserFieldIfExists(userData, userObject, field) {
+        if (userData[field]) userObject[field] = userData[field];
+    }
+
+    static formatWidgetOwner(userData, user) {
+        const userObject = {};
+        RelationshipsService.appendUserFieldIfExists(userData, userObject, 'name');
+        RelationshipsService.appendUserFieldIfExists(userData, userObject, 'email');
+        if (user && user.role === 'ADMIN') userObject.role = userData.role;
+        return userObject;
+    }
+
     static async getRelationships(widgets, includes, user) {
         logger.info(`Getting relationships of widgets: ${widgets}`);
         for (let i = 0; i < widgets.length; i++) {
@@ -27,17 +39,10 @@ class RelationshipsService {
                         version: false
                     });
 
-                    if (!userData.data[0] || (!userData.data[0].name && !userData.data[0].email)) {
+                    if (!userData.data[0]) {
                         logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(user)}`);
                     } else {
-                        widgets[i].user = {
-                            name: userData.data[0].name,
-                            email: userData.data[0].email
-                        };
-                        if (user && user.role === 'ADMIN') {
-                            widgets[i].user.role = userData.data[0].role;
-                        }
-
+                        widgets[i].user = RelationshipsService.formatWidgetOwner(userData.data[0], user);
                         logger.info('Widgets including user data', widgets.map(el => el.toObject()));
                     }
                 }
@@ -104,6 +109,19 @@ class RelationshipsService {
         } catch (e) {
             throw new Error(e);
         }
+    }
+
+    static async getUsersInfoByIds(ids) {
+        logger.debug('Fetching all users\' information');
+        const body = await ctRegisterMicroservice.requestToMicroservice({
+            uri: `/auth/user/find-by-ids`,
+            method: 'POST',
+            json: true,
+            version: false,
+            body: { ids }
+        });
+
+        return body.data;
     }
 
 }

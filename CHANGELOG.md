@@ -1,3 +1,9 @@
+# v1.1.0
+
+## 27/01/2020
+
+- Add possibility of sorting widgets by user fields (such as name or role).
+
 # v1.0.0
 
 ## 14/01/2020

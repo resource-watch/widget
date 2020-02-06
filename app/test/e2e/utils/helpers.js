@@ -96,8 +96,8 @@ const createVocabulary = widgetID => ({
     }
 });
 
-const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datasetID, customerWidgetConfig) => {
-    const uuid = getUUID();
+const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datasetID, customerWidgetConfig, widgetId) => {
+    const uuid = widgetId || getUUID();
     const datasetUuid = datasetID || getUUID();
 
     return {
@@ -138,9 +138,16 @@ const ensureCorrectWidget = (actualWidget, expectedWidget) => {
 
 const widgetConfig = WIDGET_CONFIG;
 
-const createWidgetInDB = ({
-    apps, userId, datasetID, customerWidgetConfig
-}) => new Widget(createWidget(apps, userId, datasetID, customerWidgetConfig)).save();
+const createWidgetInDB = async ({
+    apps,
+    userId,
+    datasetID,
+    customerWidgetConfig,
+}) => {
+    const data = createWidget(apps, userId, datasetID, customerWidgetConfig);
+    const savedWidget = await new Widget(data).save();
+    return Widget.findById(savedWidget._id);
+};
 
 const mockDataset = (id, responseData = {}, twice = false) => {
     const data = Object.assign({}, {
