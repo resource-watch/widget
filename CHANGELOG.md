@@ -4,7 +4,9 @@
 
 - Improve handling of collection filter for get widgets endpoint
 
-# 27/01/2020
+# v1.1.0
+
+## 27/01/2020
 
 - Add possibility of sorting widgets by user fields (such as name or role).
 
