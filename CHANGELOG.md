@@ -1,3 +1,7 @@
+# 09/03/2020
+
+- Remove `usersRole` query param which generated huge pagination links.
+
 # v1.1.1
 
 ## 28/02/2020
