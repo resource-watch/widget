@@ -610,7 +610,7 @@ describe('Get widgets tests', () => {
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
-    it('Getting datasets with includes user and user role USER should not add the usersRole query param to the pagination links', async () => {
+    it('Getting widgets with includes user and user role USER should not add the usersRole query param to the pagination links', async () => {
         await new Widget(createWidget()).save();
         nock(process.env.CT_URL).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
 
