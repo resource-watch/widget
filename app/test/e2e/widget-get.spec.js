@@ -610,6 +610,27 @@ describe('Get widgets tests', () => {
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
+    it('Getting datasets with includes user and user role USER should not add the usersRole query param to the pagination links', async () => {
+        await new Widget(createWidget()).save();
+        nock(process.env.CT_URL).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
+
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .query({
+                includes: 'user',
+                'user.role': 'USER',
+                loggedUser: JSON.stringify(ADMIN)
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('links').and.be.an('object');
+        response.body.links.should.have.property('first').and.not.contain('usersRole=');
+        response.body.links.should.have.property('last').and.not.contain('usersRole=');
+        response.body.links.should.have.property('prev').and.not.contain('usersRole=');
+        response.body.links.should.have.property('next').and.not.contain('usersRole=');
+        response.body.links.should.have.property('self').and.not.contain('usersRole=');
+    });
+
     /**
      * We'll want to limit the maximum page size in the future
      * However, as this will cause a production BC break, we can't enforce it just now
