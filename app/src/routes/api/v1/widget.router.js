@@ -241,6 +241,7 @@ class WidgetRouter {
         delete clonedQuery['page[number]'];
         delete clonedQuery.ids;
         delete clonedQuery.dataset;
+        delete clonedQuery.usersRole;
         const serializedQuery = serializeObjToQuery(clonedQuery) ? `?${serializeObjToQuery(clonedQuery)}&` : '?';
         const apiVersion = ctx.mountPath.split('/')[ctx.mountPath.split('/').length - 1];
         const link = `${ctx.request.protocol}://${ctx.request.host}/${apiVersion}${ctx.request.path}${serializedQuery}`;
