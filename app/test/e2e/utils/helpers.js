@@ -202,7 +202,7 @@ const mockDataset = (id, responseData = {}, twice = false) => {
 
 const mockWebshot = (success = true, responseData = {}) => {
     const data = Object.assign({}, { widgetThumbnail: 'http://thumbnail-url.com/file.png' }, responseData);
-    nock(`${process.env.CT_URL}`)
+    nock(process.env.CT_URL)
         .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
         .reply(success ? 200 : 500, { data });
 };

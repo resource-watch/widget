@@ -1,3 +1,7 @@
+## 09/06/2020
+
+- Minor refactor of widget screenshot functionality to prevent parallel writes to the database
+
 # v1.1.3
 
 ## 08/04/2020

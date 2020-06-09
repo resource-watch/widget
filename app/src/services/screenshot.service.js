@@ -3,11 +3,11 @@ const ctRegisterMicroservice = require('ct-register-microservice-node');
 
 class ScreenshotService {
 
-    static async takeWidgetScreenshot(widget) {
+    static async takeWidgetScreenshot(id) {
         logger.debug('[ScreenshotService]: Taking screenshot');
         try {
             return await ctRegisterMicroservice.requestToMicroservice({
-                uri: `/webshot/widget/${widget._id}/thumbnail`,
+                uri: `/webshot/widget/${id}/thumbnail`,
                 method: 'POST',
                 json: true
             });

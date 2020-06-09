@@ -9,7 +9,7 @@ chai.use(chaiHttp);
 
 const createRequest = async (prefix, method) => {
     if (!createdServer) {
-        nock(`${process.env.CT_URL}`)
+        nock(process.env.CT_URL)
             .post(`/api/v1/microservice`)
             .reply(200);
 

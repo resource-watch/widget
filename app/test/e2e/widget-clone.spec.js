@@ -51,7 +51,7 @@ describe('Clone widgets tests', () => {
     it('Clone a widget as an ADMIN should be successful', async () => {
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(`${process.env.CT_URL}`)
+        nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -85,7 +85,7 @@ describe('Clone widgets tests', () => {
     it('Clone a widget as an ADMIN with a custom user id should be successful and retain the ADMIN\'s userId', async () => {
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(`${process.env.CT_URL}`)
+        nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -120,7 +120,7 @@ describe('Clone widgets tests', () => {
     it('Clone a widget as the \'microservice\' user with a custom userId should be successful and retain the custom userId', async () => {
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(`${process.env.CT_URL}`)
+        nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -156,7 +156,7 @@ describe('Clone widgets tests', () => {
     it('Clone a widget as an USER with a matching app should be successful', async () => {
         const widgetOne = await new Widget(createWidget(['rw'], USERS.USER.id)).save();
 
-        nock(`${process.env.CT_URL}`)
+        nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -210,7 +210,7 @@ describe('Clone widgets tests', () => {
     it('Clone a widget as an ADMIN overwriting data should be successful', async () => {
         const widgetOne = await new Widget(createWidget(['rw'], USERS.USER.id)).save();
 
-        nock(`${process.env.CT_URL}`)
+        nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
