@@ -41,7 +41,7 @@ class RelationshipsService {
                     });
 
                     if (!userData.data[0]) {
-                        logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(user)}`);
+                        logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(userData)}`);
                     } else {
                         widgets[i].user = RelationshipsService.formatWidgetOwner(userData.data[0], user);
                         logger.info('Widgets including user data', widgets.map(el => el.toObject()));
