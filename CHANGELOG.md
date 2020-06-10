@@ -1,3 +1,7 @@
+## 10/06/2020
+
+- Fix issue in sorting logic.
+
 ## 09/06/2020
 
 - Minor refactor of widget screenshot functionality to prevent parallel writes to the database
