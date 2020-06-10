@@ -51,8 +51,8 @@ describe('Delete all widgets by dataset endpoint', () => {
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const expectedWidgets = [
-            await createWidgetInDB({ datasetID, userId: MICROSERVICE.id }),
-            await createWidgetInDB({ datasetID, userId: MICROSERVICE.id })
+            await createWidgetInDB({ dataset: datasetID, userId: MICROSERVICE.id }),
+            await createWidgetInDB({ dataset: datasetID, userId: MICROSERVICE.id })
         ];
         expectedWidgets.map(wid => createMockDeleteMetadata(datasetID, wid._id.toString()));
         await createWidgetInDB({ datasetID: getUUID(), userId: MICROSERVICE.id });

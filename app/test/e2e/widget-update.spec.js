@@ -105,7 +105,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an USER with a matching app should be successful', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, USERS.USER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
         mockDataset(widgetOne.dataset, {}, true);
 
@@ -161,7 +161,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        const widgetOne = await new Widget(createWidget(['potato'])).save();
+        const widgetOne = await new Widget(createWidget({ application: ['potato'] })).save();
 
         mockDataset(widgetOne.dataset);
 

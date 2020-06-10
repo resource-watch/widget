@@ -59,8 +59,8 @@ describe('Get widgets tests', () => {
     it('Getting all widgets as ADMIN with query param user.role = ADMIN should return a filtered list of widgets created by ADMIN (populated db)', async () => {
         const adminID = getUUID();
 
-        const widgetOne = await new Widget(createWidget(['rw'], adminID)).save();
-        await new Widget(createWidget(['rw'], MANAGER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: adminID })).save();
+        await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUserRole('ADMIN', adminID);
 
@@ -80,7 +80,7 @@ describe('Get widgets tests', () => {
 
     it('Getting all widgets as ADMIN with query param user.role = MANAGER should return a filtered list of widgets created by MANAGER (populated db)', async () => {
         const managerID = getUUID();
-        const widgetOne = await new Widget(createWidget(['rw'], managerID)).save();
+        const widgetOne = await new Widget(createWidget({ userId: managerID })).save();
         await new Widget(createWidget(['rw'], USER.id)).save();
 
         createMockUserRole('MANAGER', managerID);
@@ -101,8 +101,8 @@ describe('Get widgets tests', () => {
 
     it('Getting all widgets as ADMIN with query param user.role = USER should return a filtered list of widgets created by USER (populated db)', async () => {
         const userID = getUUID();
-        const widgetOne = await new Widget(createWidget(['rw'], userID)).save();
-        await new Widget(createWidget(['rw'], MANAGER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: userID })).save();
+        await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUserRole('USER', userID);
 
@@ -123,8 +123,8 @@ describe('Get widgets tests', () => {
     it('Getting all widgets as MANAGER with query param user.role = USER should return an unfiltered list of widgets (populated db)', async () => {
         const userID = getUUID();
 
-        const widgetOne = await new Widget(createWidget(['rw'], userID)).save();
-        await new Widget(createWidget(['rw'], userID)).save();
+        const widgetOne = await new Widget(createWidget({ userId: userID })).save();
+        await new Widget(createWidget({ userId: userID })).save();
 
         const response = await requester.get(`/api/v1/widget`).query({
             'user.role': 'USER',
@@ -142,8 +142,8 @@ describe('Get widgets tests', () => {
 
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, anonymous call)', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
-        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
+        const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -181,8 +181,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, USER role)', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
-        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
+        const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -225,8 +225,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, MANAGER role)', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
-        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
+        const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -269,8 +269,8 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, ADMIN role)', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, ADMIN.id)).save();
-        const widgetTwo = await new Widget(createWidget(undefined, MANAGER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
+        const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
@@ -431,7 +431,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets should return widgets owned by user', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         await new Widget(createWidget()).save();
 
         const response = await requester.get(`/api/v1/widget?userId=xxx`);
@@ -468,7 +468,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as string should return the matching widgets (happy case)', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         await new Widget(createWidget()).save();
         const collectionId = mongoose.Types.ObjectId().toString();
 
@@ -508,7 +508,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as array should return the matching widgets (happy case)', async () => {
-        const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
+        const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         const widgetTwo = await new Widget(createWidget()).save();
         const collectionIdOne = mongoose.Types.ObjectId().toString();
         const collectionIdTwo = mongoose.Types.ObjectId().toString();

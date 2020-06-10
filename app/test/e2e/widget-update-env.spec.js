@@ -88,9 +88,9 @@ describe('Update env of widget by dataset endpoint', () => {
         const datasetID = getUUID();
         createMockDataset(datasetID);
 
-        await createWidgetInDB({ datasetID });
-        await createWidgetInDB({ datasetID });
-        await createWidgetInDB({ datasetID: getUUID() });
+        await createWidgetInDB({ dataset: datasetID });
+        await createWidgetInDB({ dataset: datasetID });
+        await createWidgetInDB();
 
         const response = await widget.patch(`/${datasetID}/preproduction`).send({ loggedUser: MICROSERVICE });
         response.status.should.equal(200);

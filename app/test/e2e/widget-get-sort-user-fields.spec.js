@@ -31,11 +31,11 @@ const mockUsersForSort = (users) => {
 
 const mockWidgetsForSorting = async () => {
     const id = mongoose.Types.ObjectId();
-    await new Widget(createWidget(['rw'], USER.id)).save();
-    await new Widget(createWidget(['rw'], MANAGER.id)).save();
-    await new Widget(createWidget(['rw'], ADMIN.id)).save();
-    await new Widget(createWidget(['rw'], SUPERADMIN.id)).save();
-    await new Widget(createWidget(['rw'], id)).save();
+    await new Widget(createWidget({ userId: USER.id })).save();
+    await new Widget(createWidget({ userId: MANAGER.id })).save();
+    await new Widget(createWidget({ userId: ADMIN.id })).save();
+    await new Widget(createWidget({ userId: SUPERADMIN.id })).save();
+    await new Widget(createWidget({ userId: id })).save();
 
     mockUsersForSort([
         USER, MANAGER, ADMIN, SUPERADMIN, { id }
@@ -59,14 +59,20 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Getting widgets sorted by user.role ASC with user with role USER should return 403 Forbidden', async () => {
-        const response = await requester.get('/api/v1/widget').query({ sort: 'user.role', loggedUser: JSON.stringify(USER) });
+        const response = await requester.get('/api/v1/widget').query({
+            sort: 'user.role',
+            loggedUser: JSON.stringify(USER)
+        });
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.be.equal('Sorting by user name or role not authorized.');
     });
 
     it('Getting widgets sorted by user.role ASC with user with role MANAGER should return 403 Forbidden', async () => {
-        const response = await requester.get('/api/v1/widget').query({ sort: 'user.role', loggedUser: JSON.stringify(MANAGER) });
+        const response = await requester.get('/api/v1/widget').query({
+            sort: 'user.role',
+            loggedUser: JSON.stringify(MANAGER)
+        });
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.be.equal('Sorting by user name or role not authorized.');
@@ -121,12 +127,12 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Sorting widgets by user role ASC puts widgets without valid users in the end of the list', async () => {
-        await new Widget(createWidget(['rw'], USER.id)).save();
-        await new Widget(createWidget(['rw'], MANAGER.id)).save();
-        await new Widget(createWidget(['rw'], ADMIN.id)).save();
-        await new Widget(createWidget(['rw'], SUPERADMIN.id)).save();
-        const noUserWidget1 = await new Widget(createWidget(['rw'], 'legacy')).save();
-        const noUserWidget2 = await new Widget(createWidget(['rw'], '5accc3660bb7c603ba473d0f')).save();
+        await new Widget(createWidget({ userId: USER.id })).save();
+        await new Widget(createWidget({ userId: MANAGER.id })).save();
+        await new Widget(createWidget({ userId: ADMIN.id })).save();
+        await new Widget(createWidget({ userId: SUPERADMIN.id })).save();
+        const noUserWidget1 = await new Widget(createWidget({ userId: 'legacy' })).save();
+        const noUserWidget2 = await new Widget(createWidget({ userId: '5accc3660bb7c603ba473d0f' })).save();
 
         // Mock requests for includes=user
         const fullUsers = [USER, MANAGER, ADMIN, SUPERADMIN].map(u => ({ ...u, _id: u.id }));
@@ -181,12 +187,12 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Sorting widgets by user role DESC puts widgets without valid users in the beginning of the list', async () => {
-        await new Widget(createWidget(['rw'], USER.id)).save();
-        await new Widget(createWidget(['rw'], MANAGER.id)).save();
-        await new Widget(createWidget(['rw'], ADMIN.id)).save();
-        await new Widget(createWidget(['rw'], SUPERADMIN.id)).save();
-        const noUserWidget1 = await new Widget(createWidget(['rw'], 'legacy')).save();
-        const noUserWidget2 = await new Widget(createWidget(['rw'], '5accc3660bb7c603ba473d0f')).save();
+        await new Widget(createWidget({ userId: USER.id })).save();
+        await new Widget(createWidget({ userId: MANAGER.id })).save();
+        await new Widget(createWidget({ userId: ADMIN.id })).save();
+        await new Widget(createWidget({ userId: SUPERADMIN.id })).save();
+        const noUserWidget1 = await new Widget(createWidget({ userId: 'legacy' })).save();
+        const noUserWidget2 = await new Widget(createWidget({ userId: '5accc3660bb7c603ba473d0f' })).save();
 
         // Mock requests for includes=user
         const fullUsers = [USER, MANAGER, ADMIN, SUPERADMIN].map(u => ({ ...u, _id: u.id }));
@@ -243,9 +249,9 @@ describe('GET widgets sorted by user fields', () => {
         const firstUser = { ...USER, name: 'Anthony' };
         const secondUser = { ...MANAGER, name: 'bernard' };
         const thirdUser = { ...ADMIN, name: 'Carlos' };
-        await new Widget(createWidget(['rw'], firstUser.id)).save();
-        await new Widget(createWidget(['rw'], secondUser.id)).save();
-        await new Widget(createWidget(['rw'], thirdUser.id)).save();
+        await new Widget(createWidget({ userId: firstUser.id })).save();
+        await new Widget(createWidget({ userId: secondUser.id })).save();
+        await new Widget(createWidget({ userId: thirdUser.id })).save();
         mockUsersForSort([firstUser, secondUser, thirdUser]);
 
         const response = await requester.get('/api/v1/widget').query({
@@ -262,9 +268,9 @@ describe('GET widgets sorted by user fields', () => {
         const spoofedUser = { ...USER, name: 'AAA' };
         const spoofedManager = { ...MANAGER, name: 'AAA' };
         const spoofedAdmin = { ...ADMIN, name: 'AAA' };
-        await new Widget(createWidget(['rw'], spoofedUser.id, undefined, undefined, '3')).save();
-        await new Widget(createWidget(['rw'], spoofedManager.id, undefined, undefined, '2')).save();
-        await new Widget(createWidget(['rw'], spoofedAdmin.id, undefined, undefined, '1')).save();
+        await new Widget(createWidget({ userId: spoofedUser.id, _id: '3' })).save();
+        await new Widget(createWidget({ userId: spoofedManager.id, _id: '2' })).save();
+        await new Widget(createWidget({ userId: spoofedAdmin.id, _id: '1' })).save();
         mockUsersForSort([spoofedUser, spoofedManager, spoofedAdmin]);
 
         const response = await requester.get('/api/v1/widget').query({

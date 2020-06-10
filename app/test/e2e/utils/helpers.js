@@ -96,22 +96,23 @@ const createVocabulary = widgetID => ({
     }
 });
 
-const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datasetID, customerWidgetConfig, widgetId) => {
-    const uuid = widgetId || getUUID();
-    const datasetUuid = datasetID || getUUID();
+// const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datasetID, customerWidgetConfig, widgetId) => {
+const createWidget = (anotherData = {}) => {
+    const uuid = anotherData._id || getUUID();
+    delete anotherData._id;
 
     return {
         _id: uuid,
         name: `Widget ${uuid}`,
-        dataset: datasetUuid,
-        userId,
+        dataset: getUUID(),
+        userId: '1a10d7c6e0a37126611fd7a7',
         slug: `widget-${uuid}`,
         description: '',
         source: '',
         sourceUrl: 'http://foo.bar',
         authors: '',
         queryUrl: `query/${getUUID()}?sql=select * from crops`,
-        widgetConfig: customerWidgetConfig || WIDGET_CONFIG,
+        widgetConfig: WIDGET_CONFIG,
         freeze: false,
         published: true,
         template: false,
@@ -120,10 +121,11 @@ const createWidget = (apps = ['rw'], userId = '1a10d7c6e0a37126611fd7a7', datase
         protected: false,
         default: true,
         verified: false,
-        application: apps,
+        application: ['rw'],
         env: 'production',
         createdAt: new Date(2018, 1, 1),
-        updatedAt: new Date(2018, 1, 1)
+        updatedAt: new Date(2018, 1, 1),
+        ...anotherData
     };
 };
 
@@ -138,13 +140,8 @@ const ensureCorrectWidget = (actualWidget, expectedWidget) => {
 
 const widgetConfig = WIDGET_CONFIG;
 
-const createWidgetInDB = async ({
-    apps,
-    userId,
-    datasetID,
-    customerWidgetConfig,
-}) => {
-    const data = createWidget(apps, userId, datasetID, customerWidgetConfig);
+const createWidgetInDB = async (widgetData) => {
+    const data = createWidget(widgetData);
     const savedWidget = await new Widget(data).save();
     return Widget.findById(savedWidget._id);
 };

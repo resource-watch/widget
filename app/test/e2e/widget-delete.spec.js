@@ -47,7 +47,7 @@ describe('Delete widgets endpoint', () => {
         const datasetID = getUUID();
         createMockDataset(datasetID);
         await createWidgetInDB({ datasetID });
-        const createdWidget = await createWidgetInDB({ datasetID });
+        const createdWidget = await createWidgetInDB({ dataset: datasetID });
 
         createMockDeleteMetadata(datasetID, createdWidget._id);
 
