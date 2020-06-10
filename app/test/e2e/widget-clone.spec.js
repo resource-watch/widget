@@ -154,7 +154,7 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER with a matching app should be successful', async () => {
-        const widgetOne = await new Widget(createWidget(['rw'], USERS.USER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
         nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
@@ -194,7 +194,7 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        const widgetWithFakeApp = createWidget(['rw'], USERS.USER.id);
+        const widgetWithFakeApp = createWidget({ userId: USERS.USER.id });
         widgetWithFakeApp.application = ['potato'];
         const widgetOne = await new Widget(widgetWithFakeApp).save();
 
@@ -208,7 +208,7 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an ADMIN overwriting data should be successful', async () => {
-        const widgetOne = await new Widget(createWidget(['rw'], USERS.USER.id)).save();
+        const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
         nock(process.env.CT_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
