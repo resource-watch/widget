@@ -407,17 +407,18 @@ class WidgetService {
         const widgetAttributes = Object.keys(Widget.schema.obj);
         sortParams.forEach((param) => {
             let sign = param.substr(0, 1);
-            let realParam = param.substr(1);
-            if (sign !== '-') {
+            let signlessParam = param.substr(1);
+            if (sign !== '-' && sign !== '+') {
+                signlessParam = param;
                 sign = '+';
-                realParam = param;
             }
-            if (widgetAttributes.indexOf(realParam) >= 0) {
-                filteredSort[realParam] = parseInt(sign + 1, 10);
+            if (widgetAttributes.indexOf(signlessParam) >= 0) {
+                filteredSort[signlessParam] = parseInt(sign + 1, 10);
             }
         });
         return filteredSort;
     }
+
 
     static async getByDataset(resource) {
         logger.debug(`[WidgetService] Getting widgets for datasets with ids ${resource.ids}`);
