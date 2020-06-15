@@ -46,6 +46,104 @@ describe('Clone widgets tests', () => {
             });
 
         response.status.should.equal(404);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.be.equal(`Widget with id '${widgetId}' doesn't exist`);
+    });
+
+    it('Clone a widget as an USER that does not own the widget should fail with a 403 code', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`)
+            .send({
+                loggedUser: USERS.USER
+            });
+
+        response.status.should.equal(403);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.be.equal('Forbidden');
+    });
+
+    it('Clone a widget as an USER that does owns the widget but doesn\'t have the same applications should fail with a 403 code', async () => {
+        const widgetOne = await new Widget(createWidget({ userId: '123456789', application: ['potato'] })).save();
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`)
+            .send({
+                loggedUser: USERS.USER
+            });
+
+        response.status.should.equal(403);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.be.equal('Forbidden');
+    });
+
+    it('Clone a widget as an USER that owns the widget should be successful', async () => {
+        const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
+
+        nock(process.env.CT_URL)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`)
+            .send({
+                loggedUser: USERS.USER
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const createdWidget = response.body.data;
+
+        createdWidget.id.should.not.equal(widgetOne.id);
+        createdWidget.attributes.name.should.not.equal(widgetOne.name);
+        createdWidget.attributes.slug.should.not.equal(widgetOne.slug);
+
+        createdWidget.attributes.description.should.equal(widgetOne.description);
+        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+        createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+        createdWidget.attributes.userId.should.equal(USERS.USER.id);
+    });
+
+    it('Clone a widget as an MANAGER should be successful', async () => {
+        const widgetOne = await new Widget(createWidget({ userId: '123456789' })).save();
+
+        nock(process.env.CT_URL)
+            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+            .twice()
+            .reply(
+                200,
+                { data: { widgetThumbnail: 'http://thumbnail-url.com/cloneFile.png' } }
+            );
+
+        const response = await requester
+            .post(`/api/v1/widget/${widgetOne.id}/clone`)
+            .send({
+                loggedUser: USERS.MANAGER
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const createdWidget = response.body.data;
+
+        createdWidget.id.should.not.equal(widgetOne.id);
+        createdWidget.attributes.name.should.not.equal(widgetOne.name);
+        createdWidget.attributes.slug.should.not.equal(widgetOne.slug);
+
+        createdWidget.attributes.description.should.equal(widgetOne.description);
+        createdWidget.attributes.dataset.should.equal(widgetOne.dataset);
+        createdWidget.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+        createdWidget.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+        createdWidget.attributes.widgetConfig.should.deep.equal(widgetOne.widgetConfig);
+        createdWidget.attributes.userId.should.equal(USERS.MANAGER.id);
     });
 
     it('Clone a widget as an ADMIN should be successful', async () => {
