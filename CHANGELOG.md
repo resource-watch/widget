@@ -1,10 +1,10 @@
-## 10/06/2020
+# v1.1.4
 
+## 13/07/2020
+
+- Security updates to the `handlebars` and `websocket-extensions` NPM packages.
 - Fix issue in sorting logic.
-
-## 09/06/2020
-
-- Minor refactor of widget screenshot functionality to prevent parallel writes to the database
+- Minor refactor of widget screenshot functionality to prevent parallel writes to the database.
 
 # v1.1.3
 
