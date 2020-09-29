@@ -1,3 +1,7 @@
+## 29/09/2020
+
+- Fix issue where `widgetConfig` could be set to non-object values.
+
 # v1.1.4
 
 ## 13/07/2020

@@ -5,7 +5,12 @@ const Widget = require('models/widget.model');
 const { USERS } = require('./utils/test.constants');
 
 const { getTestServer } = require('./utils/test-server');
-const { widgetConfig, mockDataset, mockWebshot } = require('./utils/helpers');
+const {
+    widgetConfig,
+    mockDataset,
+    mockWebshot,
+    ensureCorrectError
+} = require('./utils/helpers');
 
 chai.should();
 
@@ -46,6 +51,7 @@ describe('Create widgets tests', () => {
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(401);
+        ensureCorrectError(response.body, 'Unauthorized');
     });
 
     it('Create a widget as an ADMIN should be successful', async () => {
@@ -207,6 +213,31 @@ describe('Create widgets tests', () => {
         databaseWidget.queryUrl.should.equal(widget.queryUrl);
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
         new Date(databaseWidget.updatedAt).should.equalDate(new Date());
+    });
+
+    it('Create a widget with widgetConfig set to a JSON string should fail', async () => {
+        const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
+
+        const widget = {
+            name: 'Widget default',
+            queryUrl: 'query/5be16fea-5b1a-4daf-a9e9-9dc1f6ea6d4e?sql=select * from crops',
+            application: ['rw'],
+            description: '',
+            source: '',
+            sourceUrl: 'http://foo.bar',
+            authors: '',
+            status: 1,
+            default: true,
+            published: true,
+            widgetConfig: '{}'
+        };
+
+        const response = await requester
+            .post(`/api/v1/widget`)
+            .send({ dataset: dataset.id, widget, loggedUser: USERS.USER });
+
+        response.status.should.equal(400);
+        ensureCorrectError(response.body, '- widgetConfig: must be an object - ');
     });
 
     afterEach(() => {
