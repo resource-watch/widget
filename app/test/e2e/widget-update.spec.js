@@ -7,6 +7,7 @@ const { USERS } = require('./utils/test.constants');
 
 const { getTestServer } = require('./utils/test-server');
 const {
+    ensureCorrectError,
     createWidget,
     getUUID,
     mockDataset,
@@ -36,14 +37,17 @@ describe('Update widgets tests', () => {
     it('Update a widget as an anonymous user should fail with a 401 error code', async () => {
         const response = await requester.patch(`/api/v1/widget/${getUUID()}`).send();
         response.status.should.equal(401);
+        ensureCorrectError(response.body, 'Unauthorized');
     });
 
     it('Update a widget that doesn\'t exist should fail with a 404 error code', async () => {
+        const uuid = getUUID();
         const response = await requester
-            .patch(`/api/v1/widget/${getUUID()}`)
+            .patch(`/api/v1/widget/${uuid}`)
             .send({ loggedUser: USERS.ADMIN });
 
         response.status.should.equal(404);
+        ensureCorrectError(response.body, `Widget not found with the id ${uuid}`);
     });
 
     it('Update a widget as an ADMIN should be successful', async () => {
@@ -351,6 +355,39 @@ describe('Update widgets tests', () => {
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
         databaseWidget.widgetConfig.should.deep.equal(widget.widgetConfig);
         new Date(databaseWidget.updatedAt).should.equalDate(new Date());
+    });
+
+    it('Updating a widget with widgetConfig value to a JSON string should fail', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+
+        mockDataset(widgetOne.dataset);
+
+        const widget = {
+            name: 'Widget default',
+            queryUrl: 'query/5be16fea-5b1a-4daf-a9e9-9dc1f6ea6d4e?sql=select * from crops',
+            application: [
+                'rw'
+            ],
+            description: 'widget description',
+            source: 'widget source',
+            sourceUrl: 'http://bar.foo',
+            authors: '',
+            status: 1,
+            default: true,
+            published: true,
+            widgetConfig: '{}'
+        };
+
+        const response = await requester
+            .patch(`/api/v1/widget/${widgetOne.id}`)
+            .send({
+                dataset: widgetOne.dataset,
+                widget,
+                loggedUser: USERS.ADMIN
+            });
+
+        response.status.should.equal(400);
+        ensureCorrectError(response.body, '- widgetConfig: must be an object - ');
     });
 
     afterEach(() => {

@@ -66,7 +66,8 @@ class WidgetValidator {
         koaObj.checkBody('thumbnailUrl')
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
-        koaObj.checkBody('widgetConfig');
+        koaObj.checkBody('widgetConfig')
+            .check(v => WidgetValidator.isObject(v), 'must be an object');
         koaObj.checkBody('template')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
@@ -126,7 +127,9 @@ class WidgetValidator {
         koaObj.checkBody('thumbnailUrl')
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
-        koaObj.checkBody('widgetConfig');
+        koaObj.checkBody('widgetConfig')
+            .optional()
+            .check(v => WidgetValidator.isObject(v), 'must be an object');
         koaObj.checkBody('template')
             .optional()
             .check(v => WidgetValidator.isBoolean(v), 'must be a boolean value');
