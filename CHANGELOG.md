@@ -1,3 +1,7 @@
+## 05/11/2020
+
+- Fix issue where updating widgets string fields with empty strings as values would be ignored.  
+
 ## 29/09/2020
 
 - Fix issue where `widgetConfig` could be set to non-object values.

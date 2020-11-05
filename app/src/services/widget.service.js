@@ -8,6 +8,7 @@ const ScreenshotService = require('services/screenshot.service');
 const RelationshipsService = require('services/relationships.service');
 const ctRegisterMicroservice = require('ct-register-microservice-node');
 const slug = require('slug');
+const isUndefined = require('lodash/isUndefined');
 
 class WidgetService {
 
@@ -47,16 +48,17 @@ class WidgetService {
         }
 
         currentWidget.name = widget.name || currentWidget.name;
-        currentWidget.description = widget.description || currentWidget.description;
+        currentWidget.description = isUndefined(widget.description) ? currentWidget.description : widget.description;
+
         // currentWidget.userId = user.id || currentWidget.userId;
         currentWidget.usedId = currentWidget.userId;
         // ^discuss
-        currentWidget.source = widget.source || currentWidget.source;
+        currentWidget.source = isUndefined(widget.source) ? currentWidget.source : widget.source;
         currentWidget.sourceUrl = widget.sourceUrl || currentWidget.sourceUrl;
         currentWidget.application = widget.application || currentWidget.application;
         currentWidget.layerId = widget.layerId || currentWidget.layerId;
-        currentWidget.authors = widget.authors || currentWidget.authors;
-        currentWidget.queryUrl = widget.queryUrl || currentWidget.queryUrl;
+        currentWidget.authors = isUndefined(widget.authors) ? currentWidget.authors : widget.authors;
+        currentWidget.queryUrl = isUndefined(widget.queryUrl) ? currentWidget.queryUrl : widget.queryUrl;
         currentWidget.thumbnailUrl = widget.thumbnailUrl || currentWidget.thumbnailUrl;
         currentWidget.widgetConfig = widget.widgetConfig || currentWidget.widgetConfig;
         currentWidget.env = widget.env || currentWidget.env;
