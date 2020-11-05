@@ -59,7 +59,7 @@ describe('Update widgets tests', () => {
             name: 'Widget default',
             queryUrl: 'query/5be16fea-5b1a-4daf-a9e9-9dc1f6ea6d4e?sql=select * from crops',
             application: ['rw'],
-            description: 'widget description',
+            description: 'updated widget description',
             source: 'widget source',
             sourceUrl: 'http://bar.foo',
             authors: '',
@@ -117,7 +117,7 @@ describe('Update widgets tests', () => {
             name: 'Widget default',
             queryUrl: 'query/5be16fea-5b1a-4daf-a9e9-9dc1f6ea6d4e?sql=select * from crops',
             application: ['rw'],
-            description: 'widget description',
+            description: 'updated widget description',
             source: 'widget source',
             sourceUrl: 'http://bar.foo',
             authors: '',
@@ -173,7 +173,7 @@ describe('Update widgets tests', () => {
             name: 'Widget default',
             queryUrl: 'query/5be16fea-5b1a-4daf-a9e9-9dc1f6ea6d4e?sql=select * from crops',
             application: ['rw'],
-            description: 'widget description',
+            description: 'updated widget description',
             source: 'widget source',
             sourceUrl: 'http://bar.foo',
             authors: '',
@@ -257,7 +257,7 @@ describe('Update widgets tests', () => {
             name: 'Widget default',
             queryUrl: 'query/5be16fea-5b1a-4daf-a9e9-9dc1f6ea6d4e?sql=select * from crops',
             application: ['rw'],
-            description: 'widget description',
+            description: 'updated widget description',
             source: 'widget source',
             sourceUrl: 'http://bar.foo',
             authors: '',
@@ -304,7 +304,7 @@ describe('Update widgets tests', () => {
             application: [
                 'rw'
             ],
-            description: 'widget description',
+            description: 'updated widget description',
             source: 'widget source',
             sourceUrl: 'http://bar.foo',
             authors: '',
@@ -388,6 +388,53 @@ describe('Update widgets tests', () => {
 
         response.status.should.equal(400);
         ensureCorrectError(response.body, '- widgetConfig: must be an object - ');
+    });
+
+    it('Updating a widget with an empty value for a string field should be successful', async () => {
+        const widgetOne = await new Widget(createWidget({ layerId: 'layer Id' })).save();
+
+        mockDataset(widgetOne.dataset, {}, true);
+
+        const widget = {
+            name: 'Widget default',
+            queryUrl: '',
+            application: [
+                'rw'
+            ],
+            description: '',
+            source: '',
+            authors: ''
+        };
+
+        mockWebshot();
+        const response = await requester
+            .patch(`/api/v1/widget/${widgetOne.id}`)
+            .send({
+                dataset: widgetOne.dataset,
+                widget,
+                loggedUser: USERS.ADMIN
+            });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const updatedWidget = response.body.data;
+
+        updatedWidget.attributes.name.should.equal(widget.name);
+        updatedWidget.attributes.description.should.equal(widget.description);
+        updatedWidget.attributes.source.should.equal(widget.source);
+        updatedWidget.attributes.queryUrl.should.equal(widget.queryUrl);
+        updatedWidget.attributes.authors.should.deep.equal(widget.authors);
+        new Date(updatedWidget.attributes.updatedAt).should.equalDate(new Date());
+
+        const databaseWidget = await Widget.findById(widgetOne.id).exec();
+
+        databaseWidget.name.should.equal(widget.name);
+        databaseWidget.description.should.equal(widget.description);
+        databaseWidget.queryUrl.should.equal(widget.queryUrl);
+        databaseWidget.source.should.equal(widget.source);
+        databaseWidget.authors.should.equal(widget.authors);
+        new Date(databaseWidget.updatedAt).should.equalDate(new Date());
     });
 
     afterEach(() => {
