@@ -15,6 +15,7 @@ services:
       MONGO_PORT_27017_TCP_ADDR: mongo
       CT_URL: http://mymachine:9000
       LOCAL_URL: http://mymachine:3050
+      FASTLY_ENABLED: "false"
     command: test
     depends_on:
       - mongo

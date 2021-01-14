@@ -1,13 +1,13 @@
-/* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
 const chai = require('chai');
 const mongoose = require('mongoose');
 const Widget = require('models/widget.model');
 const { USERS: { USER, MANAGER, ADMIN } } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
-const { createWidget, ensureCorrectWidget, getUUID } = require('./utils/helpers');
+const {
+    createWidget, ensureCorrectWidget, getUUID, mockGetUserFromToken
+} = require('./utils/helpers');
 const { createMockUser, createMockUserRole } = require('./utils/mock');
-// eslint-disable-next-line import/no-unresolved
 
 chai.should();
 
@@ -57,6 +57,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as ADMIN with query param user.role = ADMIN should return a filtered list of widgets created by ADMIN (populated db)', async () => {
+        mockGetUserFromToken(ADMIN);
         const adminID = getUUID();
 
         const widgetOne = await new Widget(createWidget({ userId: adminID })).save();
@@ -64,10 +65,12 @@ describe('Get widgets tests', () => {
 
         createMockUserRole('ADMIN', adminID);
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            'user.role': 'ADMIN',
-            loggedUser: JSON.stringify(ADMIN)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                'user.role': 'ADMIN',
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -79,16 +82,19 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as ADMIN with query param user.role = MANAGER should return a filtered list of widgets created by MANAGER (populated db)', async () => {
+        mockGetUserFromToken(ADMIN);
         const managerID = getUUID();
         const widgetOne = await new Widget(createWidget({ userId: managerID })).save();
         await new Widget(createWidget(['rw'], USER.id)).save();
 
         createMockUserRole('MANAGER', managerID);
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            'user.role': 'MANAGER',
-            loggedUser: JSON.stringify(ADMIN)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                'user.role': 'MANAGER',
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -100,16 +106,19 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as ADMIN with query param user.role = USER should return a filtered list of widgets created by USER (populated db)', async () => {
+        mockGetUserFromToken(ADMIN);
         const userID = getUUID();
         const widgetOne = await new Widget(createWidget({ userId: userID })).save();
         await new Widget(createWidget({ userId: MANAGER.id })).save();
 
         createMockUserRole('USER', userID);
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            'user.role': 'USER',
-            loggedUser: JSON.stringify(ADMIN)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                'user.role': 'USER',
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -121,15 +130,18 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as MANAGER with query param user.role = USER should return an unfiltered list of widgets (populated db)', async () => {
+        mockGetUserFromToken(USER);
         const userID = getUUID();
 
         const widgetOne = await new Widget(createWidget({ userId: userID })).save();
         await new Widget(createWidget({ userId: userID })).save();
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            'user.role': 'USER',
-            loggedUser: JSON.stringify(USER)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                'user.role': 'USER',
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -148,7 +160,9 @@ describe('Get widgets tests', () => {
         createMockUser([ADMIN]);
         createMockUser([MANAGER]);
 
-        const response = await requester.get(`/api/v1/widget?includes=user`).send();
+        const response = await requester
+            .get(`/api/v1/widget?includes=user`)
+            .send();
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -181,6 +195,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, USER role)', async () => {
+        mockGetUserFromToken(USER);
         const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
         const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -190,8 +205,8 @@ describe('Get widgets tests', () => {
         const response = await requester.get(`/api/v1/widget`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(USER)
             })
+            .set('Authorization', `Bearer abcd`)
             .send();
 
         response.status.should.equal(200);
@@ -225,6 +240,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, MANAGER role)', async () => {
+        mockGetUserFromToken(MANAGER);
         const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
         const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -234,8 +250,8 @@ describe('Get widgets tests', () => {
         const response = await requester.get(`/api/v1/widget`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(MANAGER)
             })
+            .set('Authorization', `Bearer abcd`)
             .send();
 
         response.status.should.equal(200);
@@ -269,6 +285,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, ADMIN role)', async () => {
+        mockGetUserFromToken(ADMIN);
         const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
         const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -277,9 +294,9 @@ describe('Get widgets tests', () => {
 
         const response = await requester
             .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(ADMIN)
             })
             .send();
 
@@ -328,7 +345,9 @@ describe('Get widgets tests', () => {
             });
 
 
-        const response = await requester.get(`/api/v1/widget?includes=user`).send();
+        const response = await requester
+            .get(`/api/v1/widget?includes=user`)
+            .send();
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -358,6 +377,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with includes=user should return a list of widgets and user name, email and role, even if only partial data exists', async () => {
+        mockGetUserFromToken(ADMIN);
         const widgetOne = await new Widget(createWidget()).save();
         const widgetTwo = await new Widget(createWidget()).save();
         const widgetThree = await new Widget(createWidget()).save();
@@ -385,9 +405,9 @@ describe('Get widgets tests', () => {
 
         const response = await requester
             .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(ADMIN)
             }).send();
 
         response.status.should.equal(200);
@@ -453,6 +473,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as string should return a 400 error', async () => {
+        mockGetUserFromToken(USER);
         nock(process.env.CT_URL)
             .post('/v1/collection/find-by-ids', {
                 ids: 'xxx',
@@ -460,7 +481,9 @@ describe('Get widgets tests', () => {
             })
             .reply(400, '{"errors":[{"status":400,"detail":"[{\\"ids\\":\\"\'ids\' must be a non-empty array\\"}]"}]}');
 
-        const response = await requester.get(`/api/v1/widget?collection=xxx`).query({ loggedUser: JSON.stringify(USER) });
+        const response = await requester
+            .get(`/api/v1/widget?collection=xxx`)
+            .set('Authorization', `Bearer abcd`);
 
         response.status.should.equal(400);
         response.body.should.have.property('errors').and.be.an('array').and.length(1);
@@ -468,6 +491,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as string should return the matching widgets (happy case)', async () => {
+        mockGetUserFromToken(USER);
         const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         await new Widget(createWidget()).save();
         const collectionId = mongoose.Types.ObjectId().toString();
@@ -494,10 +518,12 @@ describe('Get widgets tests', () => {
 
             });
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            collection: collectionId,
-            loggedUser: JSON.stringify(USER)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                collection: collectionId,
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -508,6 +534,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as array should return the matching widgets (happy case)', async () => {
+        mockGetUserFromToken(USER);
         const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         const widgetTwo = await new Widget(createWidget()).save();
         const collectionIdOne = mongoose.Types.ObjectId().toString();
@@ -547,10 +574,12 @@ describe('Get widgets tests', () => {
 
             });
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            collection: [collectionIdOne, collectionIdTwo],
-            loggedUser: JSON.stringify(USER)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                collection: [collectionIdOne, collectionIdTwo],
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -562,6 +591,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter and with no widget resources on collections should return an empty list', async () => {
+        mockGetUserFromToken(USER);
         const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
         const widgetTwo = await new Widget(createWidget()).save();
         const collectionIdOne = mongoose.Types.ObjectId().toString();
@@ -601,25 +631,28 @@ describe('Get widgets tests', () => {
 
             });
 
-        const response = await requester.get(`/api/v1/widget`).query({
-            collection: [collectionIdOne, collectionIdTwo],
-            loggedUser: JSON.stringify(USER)
-        });
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                collection: [collectionIdOne, collectionIdTwo],
+            });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     it('Getting widgets with includes user and user role USER should not add the usersRole query param to the pagination links', async () => {
+        mockGetUserFromToken(ADMIN);
         await new Widget(createWidget()).save();
         nock(process.env.CT_URL).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
 
         const response = await requester
             .get(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
             .query({
                 includes: 'user',
                 'user.role': 'USER',
-                loggedUser: JSON.stringify(ADMIN)
             });
 
         response.status.should.equal(200);

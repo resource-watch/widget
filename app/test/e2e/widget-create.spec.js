@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
@@ -9,7 +8,8 @@ const {
     widgetConfig,
     mockDataset,
     mockWebshot,
-    ensureCorrectError
+    ensureCorrectError,
+    mockGetUserFromToken
 } = require('./utils/helpers');
 
 chai.should();
@@ -55,6 +55,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an ADMIN should be successful', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -74,7 +75,8 @@ describe('Create widgets tests', () => {
         mockWebshot();
         const response = await requester
             .post(`/api/v1/widget`)
-            .send({ dataset: dataset.id, widget, loggedUser: USERS.ADMIN });
+            .set('Authorization', `Bearer abcd`)
+            .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -101,6 +103,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER with a matching app should be successful', async () => {
+        mockGetUserFromToken(USERS.USER);
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -120,7 +123,8 @@ describe('Create widgets tests', () => {
         mockWebshot();
         const response = await requester
             .post(`/api/v1/widget`)
-            .send({ dataset: dataset.id, widget, loggedUser: USERS.USER });
+            .set('Authorization', `Bearer abcd`)
+            .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -146,6 +150,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER without a matching app should fail with HTTP 403', async () => {
+        mockGetUserFromToken(USERS.USER);
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79', { application: ['potato'] });
 
         const widget = {
@@ -163,7 +168,8 @@ describe('Create widgets tests', () => {
         };
         const response = await requester
             .post(`/api/v1/widget`)
-            .send({ dataset: dataset.id, widget, loggedUser: USERS.USER });
+            .set('Authorization', `Bearer abcd`)
+            .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array').and.length(1);
@@ -171,6 +177,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget when taking a snapshot fails should return 200 OK with the created widget data', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -190,7 +197,8 @@ describe('Create widgets tests', () => {
         mockWebshot(false);
         const response = await requester
             .post(`/api/v1/widget`)
-            .send({ dataset: dataset.id, widget, loggedUser: USERS.ADMIN });
+            .set('Authorization', `Bearer abcd`)
+            .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('object');
@@ -216,6 +224,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget with widgetConfig set to a JSON string should fail', async () => {
+        mockGetUserFromToken(USERS.USER);
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -234,7 +243,8 @@ describe('Create widgets tests', () => {
 
         const response = await requester
             .post(`/api/v1/widget`)
-            .send({ dataset: dataset.id, widget, loggedUser: USERS.USER });
+            .set('Authorization', `Bearer abcd`)
+            .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(400);
         ensureCorrectError(response.body, '- widgetConfig: must be an object - ');

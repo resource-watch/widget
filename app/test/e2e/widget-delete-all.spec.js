@@ -5,7 +5,9 @@ const Widget = require('models/widget.model');
 const { USERS: { MICROSERVICE } } = require('./utils/test.constants');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 const { createRequest } = require('./utils/test-server');
-const { createWidgetInDB, getUUID, createAuthCases } = require('./utils/helpers');
+const {
+    createWidgetInDB, getUUID, createAuthCases, mockGetUserFromToken
+} = require('./utils/helpers');
 
 chai.should();
 
@@ -48,6 +50,7 @@ describe('Delete all widgets by dataset endpoint', () => {
     });
 
     it('Deleting all widgets by dataset should delete widgets in specific dataset (happy case)', async () => {
+        mockGetUserFromToken(MICROSERVICE);
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const expectedWidgets = [
@@ -59,7 +62,8 @@ describe('Delete all widgets by dataset endpoint', () => {
 
         const response = await widget
             .delete(`/${datasetID}/widget`)
-            .query({ loggedUser: JSON.stringify(MICROSERVICE) });
+            .set('Authorization', `Bearer abcd`)
+            .query();
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.instanceOf(Object);

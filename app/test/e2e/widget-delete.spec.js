@@ -7,7 +7,7 @@ const { USERS } = require('./utils/test.constants');
 const { createRequest, getTestServer } = require('./utils/test-server');
 
 const {
-    createWidgetInDB, getUUID, createAuthCases, createWidget
+    createWidgetInDB, getUUID, createAuthCases, createWidget, mockGetUserFromToken
 } = require('./utils/helpers');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 
@@ -42,10 +42,12 @@ describe('Delete widgets endpoint', () => {
     it('Deleting widget without being authenticated should fall with HTTP 401', authCases.isLoggedUserRequired());
 
     it('Deleting widget with being authenticated as USER should fall with HTTP 403', async () => {
+        mockGetUserFromToken(USERS.USER);
         const widgetOne = await new Widget(createWidget()).save();
 
         const response = await requester
-            .delete(`/api/v1/widget/${widgetOne.id}?loggedUser=${JSON.stringify(USERS.USER)}`)
+            .delete(`/api/v1/widget/${widgetOne.id}`)
+            .set('Authorization', `Bearer abcd`)
             .send();
 
         response.status.should.equal(403);
@@ -54,10 +56,12 @@ describe('Delete widgets endpoint', () => {
     });
 
     it('Deleting widget with being authenticated as MANAGER that does not own the widget should fall with HTTP 403', async () => {
+        mockGetUserFromToken(USERS.MANAGER);
         const widgetOne = await new Widget(createWidget()).save();
 
         const response = await requester
-            .delete(`/api/v1/widget/${widgetOne.id}?loggedUser=${JSON.stringify(USERS.MANAGER)}`)
+            .delete(`/api/v1/widget/${widgetOne.id}`)
+            .set('Authorization', `Bearer abcd`)
             .send();
 
         response.status.should.equal(403);
@@ -66,13 +70,15 @@ describe('Delete widgets endpoint', () => {
     });
 
     it('Deleting widget with being authenticated as MANAGER that does own the widget should succeed', async () => {
+        mockGetUserFromToken(USERS.MANAGER);
         const createdWidget = await createWidgetInDB({ userId: USERS.MANAGER.id });
 
         createMockDataset(createdWidget.dataset);
         createMockDeleteMetadata(createdWidget.dataset, createdWidget._id);
 
         const response = await requester
-            .delete(`/api/v1/widget/${createdWidget.id}?loggedUser=${JSON.stringify(USERS.MANAGER)}`)
+            .delete(`/api/v1/widget/${createdWidget.id}`)
+            .set('Authorization', `Bearer abcd`)
             .send();
 
         response.status.should.equal(200);
@@ -104,6 +110,7 @@ describe('Delete widgets endpoint', () => {
     });
 
     it('Deleting widget should delete widget and return deleted widget (happy case)', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
         const datasetID = getUUID();
         createMockDataset(datasetID);
         await createWidgetInDB({ datasetID });
@@ -113,7 +120,8 @@ describe('Delete widgets endpoint', () => {
 
         const response = await widget
             .delete(createdWidget._id)
-            .query({ dataset: datasetID, loggedUser: JSON.stringify(USERS.ADMIN) });
+            .set('Authorization', `Bearer abcd`)
+            .query({ dataset: datasetID });
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.instanceOf(Object);

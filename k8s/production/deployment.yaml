@@ -72,16 +72,23 @@ spec:
                 secretKeyRef:
                   key: CARTODB_USER
                   name: mssecrets
+            - name: FASTLY_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  key: FASTLY_ENABLED
+                  name: mssecrets
             - name: FASTLY_APIKEY
               valueFrom:
                 secretKeyRef:
                   key: FASTLY_APIKEY
-                  name: ctsecrets
+                  name: mssecrets
+                  optional: true
             - name: FASTLY_SERVICEID
               valueFrom:
                 secretKeyRef:
                   key: FASTLY_SERVICEID
-                  name: ctsecrets
+                  name: mssecrets
+                  optional: true
           image: vizzuality/widget
           imagePullPolicy: Always
           livenessProbe:
