@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars,no-undef */
 const nock = require('nock');
 const Widget = require('models/widget.model');
 const chai = require('chai');
@@ -18,6 +17,7 @@ const {
     ensureCorrectError,
     createWidgetInDB,
     getUUID,
+    mockGetUserFromToken
 } = require('./utils/helpers');
 const { createMockDataset, createMockDatasetNotFound } = require('./utils/mock');
 
@@ -46,7 +46,8 @@ describe('Update env of widget by dataset endpoint', () => {
 
     it('Updating env of widget by dataset which doesn\'t exist should return not found', async () => {
         createMockDatasetNotFound('123');
-        const response = await widget.patch('/123/production');
+        const response = await widget
+            .patch('/123/production');
         response.status.should.equal(404);
         ensureCorrectError(response.body, 'Dataset not found');
     });
@@ -60,31 +61,44 @@ describe('Update env of widget by dataset endpoint', () => {
     });
 
     it('Updating env of widget by dataset with being authenticated as USER should fall with HTTP 403', async () => {
+        mockGetUserFromToken(USER);
         const datasetID = getUUID();
         createMockDataset(datasetID);
-        const response = await widget.patch(`/${datasetID}/production`).send({ loggedUser: USER });
+        const response = await widget
+            .patch(`/${datasetID}/production`)
+            .set('Authorization', `Bearer abcd`)
+            .send({});
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
     it('Updating env of widget by dataset with being authenticated as ADMIN should fall with HTTP 403', async () => {
+        mockGetUserFromToken(ADMIN);
         const datasetID = getUUID();
         createMockDataset(datasetID);
-        const response = await widget.patch(`/${datasetID}/production`).send({ loggedUser: ADMIN });
+        const response = await widget
+            .patch(`/${datasetID}/production`)
+            .set('Authorization', `Bearer abcd`)
+            .send({});
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
 
     it('Updating env of widget by dataset with being authenticated as MANAGER should fall with HTTP 403', async () => {
+        mockGetUserFromToken(MANAGER);
         const datasetID = getUUID();
         createMockDataset(datasetID);
-        const response = await widget.patch(`/${datasetID}/production`).send({ loggedUser: MANAGER });
+        const response = await widget
+            .patch(`/${datasetID}/production`)
+            .set('Authorization', `Bearer abcd`)
+            .send({});
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
     it('Updating env of widget by dataset should update all relative widgets to provided dataset', async () => {
+        mockGetUserFromToken(MICROSERVICE);
         const datasetID = getUUID();
         createMockDataset(datasetID);
 
@@ -92,7 +106,10 @@ describe('Update env of widget by dataset endpoint', () => {
         await createWidgetInDB({ dataset: datasetID });
         await createWidgetInDB();
 
-        const response = await widget.patch(`/${datasetID}/preproduction`).send({ loggedUser: MICROSERVICE });
+        const response = await widget
+            .patch(`/${datasetID}/preproduction`)
+            .set('Authorization', `Bearer abcd`)
+            .send({});
         response.status.should.equal(200);
 
         const widgetsWithEnvPreproduction = await Widget.find({ dataset: datasetID, env: 'preproduction' });

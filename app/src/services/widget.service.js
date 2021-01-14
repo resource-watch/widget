@@ -6,7 +6,7 @@ const WidgetProtected = require('errors/widgetProtected.error');
 const GraphService = require('services/graph.service');
 const ScreenshotService = require('services/screenshot.service');
 const RelationshipsService = require('services/relationships.service');
-const ctRegisterMicroservice = require('ct-register-microservice-node');
+const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const slug = require('slug');
 const isUndefined = require('lodash/isUndefined');
 
@@ -282,7 +282,7 @@ class WidgetService {
 
     static async deleteMetadata(datasetId, widgetId) {
         logger.debug('Removing metadata of the layer');
-        await ctRegisterMicroservice.requestToMicroservice({
+        await RWAPIMicroservice.requestToMicroservice({
             uri: `/dataset/${datasetId}/widget/${widgetId}/metadata`,
             method: 'DELETE'
         });

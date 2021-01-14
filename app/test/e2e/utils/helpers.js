@@ -9,6 +9,12 @@ const ensureCorrectError = (body, errMessage) => {
     body.errors[0].should.have.property('detail').and.equal(errMessage);
 };
 
+const mockGetUserFromToken = (userProfile) => {
+    nock(process.env.CT_URL, { reqheaders: { authorization: 'Bearer abcd' } })
+        .get('/auth/user/me')
+        .reply(200, userProfile);
+};
+
 const createAuthCases = (url, initMethod, providedRequester) => {
     let requester = providedRequester;
     const { USER, ADMIN, WRONG_ADMIN } = USERS;
@@ -16,19 +22,22 @@ const createAuthCases = (url, initMethod, providedRequester) => {
     const setRequester = (req) => { requester = req; };
 
     const isUserForbidden = (to = url, method = initMethod) => async () => {
-        const response = await requester[method](to).query({ loggedUser: JSON.stringify(USER) }).send();
+        mockGetUserFromToken(USER);
+        const response = await requester[method](to).send();
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Forbidden');
     };
 
     const isAdminForbidden = (to = url, method = initMethod) => async () => {
-        const response = await requester[method](to).query({ loggedUser: JSON.stringify(ADMIN) }).send();
+        mockGetUserFromToken(ADMIN);
+        const response = await requester[method](to).send();
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     };
 
     const isRightAppRequired = (to = url, method = initMethod) => async () => {
-        const response = await requester[method](to).query({ loggedUser: JSON.stringify(WRONG_ADMIN) }).send();
+        mockGetUserFromToken(WRONG_ADMIN);
+        const response = await requester[method](to).send();
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Forbidden');
     };
@@ -215,5 +224,6 @@ module.exports = {
     createWidgetMetadata,
     createVocabulary,
     mockDataset,
-    mockWebshot
+    mockWebshot,
+    mockGetUserFromToken
 };

@@ -3,7 +3,7 @@ const Widget = require('models/widget.model');
 const chai = require('chai');
 const mongoose = require('mongoose');
 const { getTestServer } = require('./utils/test-server');
-const { createWidget } = require('./utils/helpers');
+const { createWidget, mockGetUserFromToken } = require('./utils/helpers');
 const { createMockUser } = require('./utils/mock');
 const {
     USERS: {
@@ -59,74 +59,93 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Getting widgets sorted by user.role ASC with user with role USER should return 403 Forbidden', async () => {
-        const response = await requester.get('/api/v1/widget').query({
-            sort: 'user.role',
-            loggedUser: JSON.stringify(USER)
-        });
+        mockGetUserFromToken(USER);
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                sort: 'user.role',
+            });
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.be.equal('Sorting by user name or role not authorized.');
     });
 
     it('Getting widgets sorted by user.role ASC with user with role MANAGER should return 403 Forbidden', async () => {
-        const response = await requester.get('/api/v1/widget').query({
-            sort: 'user.role',
-            loggedUser: JSON.stringify(MANAGER)
-        });
+        mockGetUserFromToken(MANAGER);
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                sort: 'user.role',
+            });
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array');
         response.body.errors[0].should.have.property('detail').and.be.equal('Sorting by user name or role not authorized.');
     });
 
     it('Getting widgets sorted by user.role ASC should return a list of widgets ordered by the role of the user who created the widget (happy case)', async () => {
+        mockGetUserFromToken(ADMIN);
         await mockWidgetsForSorting();
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: 'user.role',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: 'user.role',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
         response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal(['ADMIN', 'MANAGER', 'SUPERADMIN', 'USER', undefined]);
     });
 
     it('Getting widgets sorted by user.role DESC should return a list of widgets ordered by the role of the user who created the widget (happy case)', async () => {
+        mockGetUserFromToken(ADMIN);
         await mockWidgetsForSorting();
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: '-user.role',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: '-user.role',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
         response.body.data.map(widget => widget.attributes.user.role).should.be.deep.equal([undefined, 'USER', 'SUPERADMIN', 'MANAGER', 'ADMIN']);
     });
 
     it('Getting widgets sorted by user.name ASC should return a list of widgets ordered by the name of the user who created the widget (happy case)', async () => {
+        mockGetUserFromToken(ADMIN);
         await mockWidgetsForSorting();
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: 'user.name',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: 'user.name',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
         response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['test admin', 'test manager', 'test super admin', 'test user', undefined]);
     });
 
     it('Getting widgets sorted by user.name DESC should return a list of widgets ordered by the name of the user who created the widget (happy case)', async () => {
+        mockGetUserFromToken(ADMIN);
         await mockWidgetsForSorting();
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: '-user.name',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: '-user.name',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(5);
         response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal([undefined, 'test user', 'test super admin', 'test manager', 'test admin']);
     });
 
     it('Sorting widgets by user role ASC puts widgets without valid users in the end of the list', async () => {
+        mockGetUserFromToken(ADMIN);
         await new Widget(createWidget({ userId: USER.id })).save();
         await new Widget(createWidget({ userId: MANAGER.id })).save();
         await new Widget(createWidget({ userId: ADMIN.id })).save();
@@ -168,11 +187,13 @@ describe('GET widgets sorted by user fields', () => {
             .post('/auth/user/find-by-ids', { ids: [noUserWidget2.userId] })
             .reply(200, { data: [] });
 
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: 'user.role',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: 'user.role',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(6);
 
@@ -187,6 +208,7 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Sorting widgets by user role DESC puts widgets without valid users in the beginning of the list', async () => {
+        mockGetUserFromToken(ADMIN);
         await new Widget(createWidget({ userId: USER.id })).save();
         await new Widget(createWidget({ userId: MANAGER.id })).save();
         await new Widget(createWidget({ userId: ADMIN.id })).save();
@@ -228,11 +250,13 @@ describe('GET widgets sorted by user fields', () => {
             .post('/auth/user/find-by-ids', { ids: [noUserWidget2.userId] })
             .reply(200, { data: [] });
 
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: '-user.role',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: '-user.role',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(6);
 
@@ -246,6 +270,7 @@ describe('GET widgets sorted by user fields', () => {
     });
 
     it('Sorting widgets by user.name is case insensitive and returns a list of widgets ordered by the name of the user who created the widget', async () => {
+        mockGetUserFromToken(ADMIN);
         const firstUser = { ...USER, name: 'Anthony' };
         const secondUser = { ...MANAGER, name: 'bernard' };
         const thirdUser = { ...ADMIN, name: 'Carlos' };
@@ -254,17 +279,20 @@ describe('GET widgets sorted by user fields', () => {
         await new Widget(createWidget({ userId: thirdUser.id })).save();
         mockUsersForSort([firstUser, secondUser, thirdUser]);
 
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: 'user.name',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: 'user.name',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(3);
         response.body.data.map(widget => widget.attributes.user.name).should.be.deep.equal(['Anthony', 'bernard', 'Carlos']);
     });
 
     it('Sorting widgets by user.name is deterministic, applying an implicit sort by id after sorting by user.name', async () => {
+        mockGetUserFromToken(ADMIN);
         const spoofedUser = { ...USER, name: 'AAA' };
         const spoofedManager = { ...MANAGER, name: 'AAA' };
         const spoofedAdmin = { ...ADMIN, name: 'AAA' };
@@ -273,11 +301,13 @@ describe('GET widgets sorted by user fields', () => {
         await new Widget(createWidget({ userId: spoofedAdmin.id, _id: '1' })).save();
         mockUsersForSort([spoofedUser, spoofedManager, spoofedAdmin]);
 
-        const response = await requester.get('/api/v1/widget').query({
-            includes: 'user',
-            sort: 'user.name',
-            loggedUser: JSON.stringify(ADMIN),
-        });
+        const response = await requester
+            .get('/api/v1/widget')
+            .set('Authorization', `Bearer abcd`)
+            .query({
+                includes: 'user',
+                sort: 'user.name',
+            });
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(3);
         response.body.data.map(widget => widget.id).should.be.deep.equal(['1', '2', '3']);

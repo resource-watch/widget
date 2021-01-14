@@ -13,7 +13,8 @@ const {
     createWidgetMetadata,
     createAuthCases,
     ensureCorrectError,
-    createVocabulary
+    createVocabulary,
+    mockGetUserFromToken
 } = require('./utils/helpers');
 const { createMockUser, createMockGetMetadata, createMockVocabulary } = require('./utils/mock');
 
@@ -141,15 +142,16 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with USER role and includes=user should return widget with user name and email (happy case)', async () => {
+        mockGetUserFromToken(USER);
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
 
         const response = await widget
             .get(createdWidget._id)
+            .set('Authorization', `Bearer abcd`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(USER)
             })
             .send({ dataset: datasetID });
         response.status.should.equal(200);
@@ -158,15 +160,16 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with MANAGER role and includes=user should return widget with user name and email (happy case)', async () => {
+        mockGetUserFromToken(MANAGER);
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
 
         const response = await widget
             .get(createdWidget._id)
+            .set('Authorization', `Bearer abcd`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(MANAGER)
             })
             .send({ dataset: datasetID });
         response.status.should.equal(200);
@@ -175,15 +178,16 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with ADMIN role and includes=user should return widget with user name and email (happy case)', async () => {
+        mockGetUserFromToken(ADMIN);
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
 
         const response = await widget
             .get(createdWidget._id)
+            .set('Authorization', `Bearer abcd`)
             .query({
                 includes: 'user',
-                loggedUser: JSON.stringify(ADMIN)
             })
             .send({ dataset: datasetID });
         response.status.should.equal(200);

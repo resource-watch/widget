@@ -3,7 +3,7 @@ class GraphService {
     static async createWidget() {
         // logger.debug('[GraphService]: Creating dataset in graph');
         // try {
-        //     return await ctRegisterMicroservice.requestToMicroservice({
+        //     return await RWAPIMicroservice.requestToMicroservice({
         //         uri: `/graph/widget/${idDataset}/${id}`,
         //         method: 'POST',
         //         json: true
@@ -16,7 +16,7 @@ class GraphService {
     static async deleteWidget() {
         // logger.debug('[GraphService]: Deleting widget in graph');
         // try {
-        //     return await ctRegisterMicroservice.requestToMicroservice({
+        //     return await RWAPIMicroservice.requestToMicroservice({
         //         uri: `/graph/widget/${id}`,
         //         method: 'DELETE',
         //         json: true
@@ -34,7 +34,7 @@ class GraphService {
         //         tags = tags.concat(vocabularies[key].tags);
         //         return null;
         //     });
-        //     return await ctRegisterMicroservice.requestToMicroservice({
+        //     return await RWAPIMicroservice.requestToMicroservice({
         //         uri: `/graph/widget/${id}/associate`,
         //         method: 'POST',
         //         json: true,
