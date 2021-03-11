@@ -341,7 +341,6 @@ describe('Update widgets tests', () => {
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
             .send({
-                dataset: widgetOne.dataset,
                 widget,
             });
 
@@ -396,7 +395,6 @@ describe('Update widgets tests', () => {
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
             .send({
-                dataset: widgetOne.dataset,
                 widget,
             });
 
@@ -426,7 +424,6 @@ describe('Update widgets tests', () => {
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
             .send({
-                dataset: widgetOne.dataset,
                 widget,
             });
 

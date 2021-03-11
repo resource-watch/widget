@@ -1,3 +1,7 @@
+## 11/03/2021
+
+- Fix regression where calls to PATCH `/widget/:widget` would not properly load the dataset.
+
 ## 22/02/2021
 
 - Update `rw-api-microservice-node` to fix issue with Fastly headers.

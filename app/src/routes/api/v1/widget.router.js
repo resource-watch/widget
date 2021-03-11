@@ -358,6 +358,26 @@ const datasetValidationMiddleware = async (ctx, next) => {
     await next();
 };
 
+const getDatasetForWidgetMiddleware = async (ctx, next) => {
+    logger.info(`[WidgetRouter] Get dataset for the widget`);
+
+    if (ctx.request.body.dataset) {
+        await next();
+        return;
+    }
+
+    const widgetId = ctx.params.widget;
+    try {
+        const widget = await WidgetService.get(widgetId, null);
+        if (widget && widget.dataset) {
+            ctx.request.body.dataset = widget.dataset;
+        }
+    } catch (err) {
+        logger.warn('Tried to load a dataset from a widgetId but failed', err);
+    }
+    await next();
+};
+
 const isMicroserviceMiddleware = async (ctx, next) => {
     logger.debug('Checking if is a microservice');
     const user = WidgetRouter.getUser(ctx);
@@ -436,7 +456,7 @@ router.post('/dataset/:dataset/widget/', datasetValidationMiddleware, validation
 router.get('/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, WidgetRouter.get);
 // Update
-router.patch('/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
+router.patch('/widget/:widget', getDatasetForWidgetMiddleware, datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
 router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
 // Delete
 router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
