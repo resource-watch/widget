@@ -1,3 +1,7 @@
+## 21/05/2021
+
+- Add support for hosts from `referer` header when generating pagination links.
+
 ## 11/03/2021
 
 - Fix regression where calls to PATCH `/widget/:widget` would not properly load the dataset.

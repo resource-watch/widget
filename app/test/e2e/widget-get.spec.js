@@ -1,5 +1,6 @@
 const nock = require('nock');
 const chai = require('chai');
+const config = require('config');
 const mongoose = require('mongoose');
 const Widget = require('models/widget.model');
 const { USERS: { USER, MANAGER, ADMIN } } = require('./utils/test.constants');
@@ -29,6 +30,37 @@ describe('Get widgets tests', () => {
 
     beforeEach(async () => {
         await Widget.deleteMany({}).exec();
+    });
+
+    describe('Test pagination links', () => {
+        it('Get widgets without referer header should be successful and use the request host', async () => {
+            const response = await requester
+                .get(`/api/v1/widget`);
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+        });
+
+        it('Get widgets with referer header should be successful and use that header on the links on the response', async () => {
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .set('referer', `https://potato.com/get-me-all-the-data`);
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array');
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
+            response.body.links.should.have.property('prev').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
+            response.body.links.should.have.property('next').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
+            response.body.links.should.have.property('first').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
+            response.body.links.should.have.property('last').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
+        });
     });
 
     it('Get all widgets should be successful and return an empty list (empty db)', async () => {
