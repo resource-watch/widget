@@ -60,7 +60,7 @@ The endpoints provided by this microservice should now be available through Cont
 2 - Execute the following command to run Control tower:
 
 ```
-./widget.sh develop
+./widgetAdapter.sh develop
 ```
 
 The endpoints provided by this microservice should now be available through Control Tower's URL.
