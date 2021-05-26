@@ -67,6 +67,7 @@ class WidgetValidator {
             .optional()
             .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('widgetConfig')
+            .optional()
             .check(v => WidgetValidator.isObject(v), 'must be an object');
         koaObj.checkBody('template')
             .optional()
