@@ -102,6 +102,37 @@ describe('Create widgets tests', () => {
         new Date(databaseWidget.updatedAt).should.equalDate(new Date());
     });
 
+    it('Create a widget as an ADMIN should be successful - minimum required fields', async () => {
+        mockGetUserFromToken(USERS.ADMIN);
+        const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
+
+        const widget = {
+            name: 'Widget default',
+            application: ['rw'],
+        };
+
+        mockWebshot();
+        const response = await requester
+            .post(`/api/v1/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .send({ dataset: dataset.id, widget });
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('object');
+
+        const createdWidget = response.body.data;
+
+        createdWidget.attributes.name.should.equal(widget.name);
+        createdWidget.attributes.dataset.should.equal(dataset.id);
+        new Date(createdWidget.attributes.updatedAt).should.equalDate(new Date());
+
+
+        const databaseWidget = await Widget.findById(createdWidget.id).exec();
+
+        databaseWidget.name.should.equal(widget.name);
+        new Date(databaseWidget.updatedAt).should.equalDate(new Date());
+    });
+
     it('Create a widget as an USER with a matching app should be successful', async () => {
         mockGetUserFromToken(USERS.USER);
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
