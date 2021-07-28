@@ -2,8 +2,29 @@ const logger = require('logger');
 const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const GetCollectionInvalidRequest = require('errors/getCollectionInvalidRequest.error');
 
+const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
+    a.push(`${k}=${encodeURIComponent(obj[k])}`);
+    return a;
+}, []).join('&');
 
 class RelationshipsService {
+
+    /**
+     * - Clones the query object
+     * - Strips a few things that should not be passed over to other MSs
+     * - Encodes query into a URL param format
+     *
+     * @TODO: rawQuery is passed by reference, so we should evaluate cloning at an earlier point
+     *
+     * @param rawQuery
+     * @returns {string}
+     */
+    static prepareAndFormatQuery(rawQuery) {
+        const query = { ...rawQuery };
+
+        delete query.includes;
+        return serializeObjToQuery(query);
+    }
 
     static appendUserFieldIfExists(userData, userObject, field) {
         if (userData[field]) userObject[field] = userData[field];
@@ -17,19 +38,24 @@ class RelationshipsService {
         return userObject;
     }
 
-    static async getRelationships(widgets, includes, user) {
+    static async getRelationships(widgets, includes, user, query) {
         logger.info(`Getting relationships of widgets: ${widgets}`);
         for (let i = 0; i < widgets.length; i++) {
             try {
                 if (includes.indexOf('vocabulary') > -1) {
+                    let uriQuery = RelationshipsService.prepareAndFormatQuery(query);
+                    if (uriQuery.length > 0) {
+                        uriQuery = `?${uriQuery}`;
+                    }
                     const vocabularies = await RWAPIMicroservice.requestToMicroservice({
-                        uri: `/dataset/${widgets[i].dataset}/widget/${widgets[i]._id}/vocabulary`,
+                        uri: `/dataset/${widgets[i].dataset}/widget/${widgets[i]._id}/vocabulary${uriQuery}`,
                         method: 'GET',
                         json: true
                     });
                     widgets[i].vocabulary = vocabularies.data;
                 }
                 if (includes.indexOf('user') > -1) {
+                    // TODO add env array from query to body
                     const userData = await RWAPIMicroservice.requestToMicroservice({
                         uri: `/auth/user/find-by-ids`,
                         method: 'POST',

@@ -54,7 +54,7 @@ class WidgetRouter {
         if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
             widget.queryUrl = query.queryUrl;
             if (widget.widgetConfig && widget.widgetConfig.data) {
-                if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
+                if (Array.isArray(widget.widgetConfig.data) && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
                     widget.widgetConfig.data[0].url = query.queryUrl;
                 } else if (widget.widgetConfig.data.url) {
                     widget.widgetConfig.data.url = query.queryUrl;
@@ -285,20 +285,26 @@ class WidgetRouter {
     }
 
     static async getByIds(ctx) {
-        if (ctx.request.body.widget) {
-            ctx.request.body.ids = ctx.request.body.widget.ids;
+        const { request } = ctx;
+        const { body } = request;
+        if (body.widget) {
+            body.ids = body.widget.ids;
         }
-        if (!ctx.request.body.ids) {
+        if (!body.ids) {
             ctx.throw(400, 'Bad request - Missing \'ids\' from request body');
             return;
         }
-        logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${ctx.request.body.ids}`);
+        logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${body.ids}`);
         const resource = {
-            ids: ctx.request.body.ids,
-            app: ctx.request.body.app
+            ids: body.ids,
+            app: body.app,
+            env: body.env
         };
         if (typeof resource.ids === 'string') {
             resource.ids = resource.ids.split(',').map(elem => elem.trim());
+        }
+        if (typeof resource.env === 'string') {
+            resource.env = resource.env.split(',').map(elem => elem.trim());
         }
         const result = await WidgetService.getByDataset(resource);
         ctx.body = WidgetSerializer.serialize(result);
@@ -436,8 +442,7 @@ const authorizationMiddleware = async (ctx, next) => {
             return;
         }
     }
-    const allowedOperations = newWidgetCreation;
-    if ((user.role === 'MANAGER' || user.role === 'ADMIN') && !allowedOperations) {
+    if ((user.role === 'MANAGER' || user.role === 'ADMIN') && !newWidgetCreation) {
         const permission = await WidgetService.hasPermission(ctx.params.widget, user);
         if (!permission) {
             ctx.throw(403, 'Forbidden');
