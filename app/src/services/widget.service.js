@@ -317,7 +317,7 @@ class WidgetService {
         pages = { ...pages };
         if (includes.length > 0) {
             logger.debug('Finding relationships');
-            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, user);
+            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, user, query);
         }
         return pages;
     }
@@ -380,7 +380,7 @@ class WidgetService {
                 delete query.usersRole;
             } else if (param === 'env') {
                 query.env = {
-                    $in: query[param].split(',')
+                    $in: query[param].split(',').map(elem => elem.trim())
                 };
             }
         });
@@ -435,11 +435,20 @@ class WidgetService {
                 };
             }
         }
+
+        if (!resource.env) { // default value
+            resource.env = 'production';
+        }
+
         const query = {
             dataset: {
                 $in: resource.ids
+            },
+            env: {
+                $in: resource.env
             }
         };
+
         if (resource.app) {
             query.application = resource.app;
         }
