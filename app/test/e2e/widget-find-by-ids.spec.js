@@ -14,6 +14,7 @@ nock.enableNetConnect(process.env.HOST_IP);
 
 let widgetOne;
 let widgetTwo;
+let widgetThree;
 
 
 describe('Find widgets by IDs', () => {
@@ -129,6 +130,57 @@ describe('Find widgets by IDs', () => {
         widgetOne.slug.should.equal(responseWidgetOne.attributes.slug);
         widgetOne.sourceUrl.should.equal(responseWidgetOne.attributes.sourceUrl);
         widgetOne.queryUrl.should.equal(responseWidgetOne.attributes.queryUrl);
+    });
+
+    describe('Environment', () => {
+        it('Get widgets with custom env should return empty response', async () => {
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetOne.dataset],
+                    env: 'custom'
+                });
+            response.status.should.equal(200);
+
+            response.body.should.have.property('data').and.be.an('array').and.length(0);
+        });
+
+        it('Get widgets with custom env and created custom widget - should return one widget', async () => {
+            widgetThree = await new Widget(createWidget({ env: 'custom' })).save();
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetThree.dataset],
+                    env: 'custom'
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+        });
+
+        it('Get widgets with custom env and mismatch widget id - should return empty', async () => {
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetOne.dataset],
+                    env: 'custom'
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(0);
+        });
+
+        it('Get widgets with custom and production env', async () => {
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetOne.dataset, widgetTwo.dataset, widgetThree.dataset],
+                    env: ['custom', 'production']
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(3);
+        });
     });
 
     afterEach(() => {

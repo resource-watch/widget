@@ -47,6 +47,7 @@ class WidgetSerializer {
                 result.data = WidgetSerializer.serializeElement(data);
             }
         }
+        console.log('serializer', link);
         if (link) {
             result.links = {
                 self: `${link}page[number]=${data.page}&page[size]=${data.limit}`,
