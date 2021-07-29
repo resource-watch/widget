@@ -6,9 +6,11 @@ const Widget = require('models/widget.model');
 const { USERS: { USER, MANAGER, ADMIN } } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
 const {
-    createWidget, ensureCorrectWidget, getUUID, mockGetUserFromToken
+    createWidget, ensureCorrectWidget, getUUID, mockGetUserFromToken, createVocabulary, createWidgetMetadata
 } = require('./utils/helpers');
-const { createMockUser, createMockUserRole } = require('./utils/mock');
+const {
+    createMockUser, createMockUserRole, createMockVocabulary, createMockGetMetadata
+} = require('./utils/mock');
 
 chai.should();
 
@@ -91,6 +93,153 @@ describe('Get widgets tests', () => {
             response.body.links.should.have.property('next').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
             response.body.links.should.have.property('first').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
             response.body.links.should.have.property('last').and.equal('http://potato.com/v1/widget?page[number]=1&page[size]=10');
+        });
+    });
+
+    describe('Environment', () => {
+        it('Get widgets without env param', async () => {
+            mockGetUserFromToken(ADMIN);
+            const widgetOne = await new Widget(createWidget()).save();
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .set('Authorization', `Bearer abcd`)
+                .query();
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.should.have.property('links').and.be.an('object');
+
+            const responseWidgetOne = response.body.data[0];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne);
+        });
+
+        it('Get widgets without empty cause env is not match', async () => {
+            mockGetUserFromToken(ADMIN);
+            await new Widget(createWidget({ env: 'custom' })).save();
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .set('Authorization', `Bearer abcd`)
+                .query();
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(0);
+            response.body.should.have.property('links').and.be.an('object');
+        });
+
+
+        it('Get widgets with env which is match env', async () => {
+            mockGetUserFromToken(ADMIN);
+            await new Widget(createWidget({ env: 'custom' })).save();
+            await new Widget(createWidget({ env: 'potato' })).save();
+            await new Widget(createWidget({ env: 'dev' })).save();
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .set('Authorization', `Bearer abcd`)
+                .query({
+                    env: ['dev', 'potato'].join(',')
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(2);
+            response.body.should.have.property('links').and.be.an('object');
+        });
+    });
+
+    describe('Includes', () => {
+        it('Get widgets includes metadata', async () => {
+            const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
+            const metadata = createWidgetMetadata(widgetOne.dataset, widgetOne._id);
+            createMockGetMetadata(metadata, widgetOne.dataset, { env: 'custom' });
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .query({ includes: 'metadata', env: 'custom' });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.should.have.property('links').and.be.an('object');
+
+            const responseWidgetOne = response.body.data[0];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne, { metadata });
+        });
+
+        it('Get widgets includes metadata from another env', async () => {
+            const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
+            const metadata = createWidgetMetadata(widgetOne.dataset, widgetOne._id);
+            createMockGetMetadata(metadata, widgetOne.dataset);
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .query({ includes: 'metadata', env: 'custom' });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.should.have.property('links').and.be.an('object');
+
+            const responseWidgetOne = response.body.data[0];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne);
+        });
+
+        it('Get widgets includes vocabulary', async () => {
+            const widgetOne = await new Widget(createWidget()).save();
+            const vocabulary = createVocabulary(widgetOne._id);
+            createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id);
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .query({ includes: 'vocabulary' });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.should.have.property('links').and.be.an('object');
+
+            const responseWidgetOne = response.body.data[0];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne, { vocabulary });
+        });
+
+
+        it('Get widgets includes vocabulary from custom env - shpuld return empty vocabulary', async () => {
+            const widgetOne = await new Widget(createWidget()).save();
+            const vocabulary = createVocabulary(widgetOne._id);
+            createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id, { env: 'custom' });
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .query({ includes: 'vocabulary' });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.should.have.property('links').and.be.an('object');
+
+            const responseWidgetOne = response.body.data[0];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne);
+        });
+
+        it('Get widgets includes metadata, vocabulary and fiter by env', async () => {
+            const widgetOne = await new Widget(createWidget()).save();
+            const vocabulary = createVocabulary(widgetOne._id);
+            createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id);
+            const metadata = createWidgetMetadata(widgetOne.dataset, widgetOne._id);
+            createMockGetMetadata(metadata, widgetOne.dataset);
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .query({ includes: ['metadata', 'vocabulary'].join(',') });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.should.have.property('links').and.be.an('object');
+
+            const responseWidgetOne = response.body.data[0];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne, { vocabulary, metadata });
         });
     });
 
@@ -406,7 +555,6 @@ describe('Get widgets tests', () => {
             .reply(200, {
                 data: []
             });
-
 
         const response = await requester
             .get(`/api/v1/widget?includes=user`)

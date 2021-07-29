@@ -38,7 +38,7 @@ class RelationshipsService {
         return userObject;
     }
 
-    static async getRelationships(widgets, includes, user, query) {
+    static async getRelationships(widgets, includes, user, query = {}) {
         logger.info(`Getting relationships of widgets: ${widgets}`);
         for (let i = 0; i < widgets.length; i++) {
             try {
@@ -74,13 +74,18 @@ class RelationshipsService {
                     }
                 }
                 if (includes.indexOf('metadata') > -1) {
+                    const body = {
+                        ids: [widgets[i].id],
+                    };
+
+                    if (query.env) {
+                        body.env = query.env.split(',').map(elem => elem.trim());
+                    }
                     const metadata = await RWAPIMicroservice.requestToMicroservice({
                         uri: `/dataset/${widgets[i].dataset}/widget/metadata/find-by-ids`,
                         method: 'POST',
                         json: true,
-                        body: {
-                            ids: [widgets[i].id]
-                        }
+                        body,
                     });
                     widgets[i].metadata = metadata.data;
                 }

@@ -28,16 +28,16 @@ const createMockDeleteMetadata = (datasetID, widgetID) => nock(process.env.CT_UR
         data: [],
     });
 
-const createMockGetMetadata = (mockMetadata, datasetID) => nock(process.env.CT_URL)
+const createMockGetMetadata = (mockMetadata, datasetID, anotherData = {}) => nock(process.env.CT_URL)
     .post(`/v1/dataset/${datasetID}/widget/metadata/find-by-ids`)
     .reply(200, {
-        data: mockMetadata,
+        data: { ...mockMetadata, ...anotherData },
     });
 
-const createMockVocabulary = (mockVocabulary, datasetID, widgetID) => nock(process.env.CT_URL)
+const createMockVocabulary = (mockVocabulary, datasetID, widgetID, anotherData = {}) => nock(process.env.CT_URL)
     .get(`/v1/dataset/${datasetID}/widget/${widgetID}/vocabulary`)
     .reply(200, {
-        data: mockVocabulary,
+        data: { ...mockVocabulary, ...anotherData },
     });
 
 const createMockUser = users => nock(process.env.CT_URL)
