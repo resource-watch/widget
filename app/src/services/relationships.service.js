@@ -14,8 +14,6 @@ class RelationshipsService {
      * - Strips a few things that should not be passed over to other MSs
      * - Encodes query into a URL param format
      *
-     * @TODO: rawQuery is passed by reference, so we should evaluate cloning at an earlier point
-     *
      * @param rawQuery
      * @returns {string}
      */
@@ -55,7 +53,6 @@ class RelationshipsService {
                     widgets[i].vocabulary = vocabularies.data;
                 }
                 if (includes.indexOf('user') > -1) {
-                    // TODO add env array from query to body
                     const userData = await RWAPIMicroservice.requestToMicroservice({
                         uri: `/auth/user/find-by-ids`,
                         method: 'POST',
