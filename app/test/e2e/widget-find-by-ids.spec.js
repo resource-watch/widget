@@ -12,11 +12,6 @@ let requester;
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-let widgetOne;
-let widgetTwo;
-let widgetThree;
-
-
 describe('Find widgets by IDs', () => {
 
     before(async () => {
@@ -62,8 +57,8 @@ describe('Find widgets by IDs', () => {
     });
 
     it('Find widgets with id list containing a widget that exists returns only the listed widget', async () => {
-        widgetOne = await new Widget(createWidget()).save();
-        widgetTwo = await new Widget(createWidget()).save();
+        const widgetOne = await new Widget(createWidget()).save();
+        await new Widget(createWidget()).save();
 
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
@@ -85,6 +80,9 @@ describe('Find widgets by IDs', () => {
     });
 
     it('Find widgets with id list on the body containing widgets that exist returns the listed widgets', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+        const widgetTwo = await new Widget(createWidget()).save();
+
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
             .send({
@@ -113,6 +111,9 @@ describe('Find widgets by IDs', () => {
     });
 
     it('Find widgets with id list on query param and the body containing widgets that exist returns the listed widgets from the body list, ignores query param', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+        const widgetTwo = await new Widget(createWidget()).save();
+
         const response = await requester
             .post(`/api/v1/widget/find-by-ids?ids=${widgetTwo.dataset}`)
             .send({
@@ -134,6 +135,8 @@ describe('Find widgets by IDs', () => {
 
     describe('Environment', () => {
         it('Get widgets with custom env should return empty response', async () => {
+            const widgetOne = await new Widget(createWidget()).save();
+
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
                 .send({
@@ -146,19 +149,9 @@ describe('Find widgets by IDs', () => {
         });
 
         it('Get widgets with custom env and created custom widget - should return one widget', async () => {
-            widgetThree = await new Widget(createWidget({ env: 'custom' })).save();
-            const response = await requester
-                .post(`/api/v1/widget/find-by-ids`)
-                .send({
-                    ids: [widgetThree.dataset],
-                    env: 'custom'
-                });
+            const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
+            await new Widget(createWidget()).save();
 
-            response.status.should.equal(200);
-            response.body.should.have.property('data').and.be.an('array').and.length(1);
-        });
-
-        it('Get widgets with custom env and mismatch widget id - should return empty', async () => {
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
                 .send({
@@ -167,10 +160,29 @@ describe('Find widgets by IDs', () => {
                 });
 
             response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+        });
+
+        it('Get widgets with custom env and mismatch widget id - should return empty', async () => {
+            await new Widget(createWidget({ env: 'custom' })).save();
+            const widgetTwo = await new Widget(createWidget()).save();
+
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetTwo.dataset],
+                    env: 'custom'
+                });
+
+            response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(0);
         });
 
         it('Get widgets with custom and production env', async () => {
+            const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
+            const widgetTwo = await new Widget(createWidget()).save();
+            const widgetThree = await new Widget(createWidget()).save();
+
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
                 .send({
@@ -183,13 +195,11 @@ describe('Find widgets by IDs', () => {
         });
     });
 
-    afterEach(() => {
+    afterEach(async () => {
+        await Widget.deleteMany({}).exec();
+
         if (!nock.isDone()) {
             throw new Error(`Not all nock interceptors were used: ${nock.pendingMocks()}`);
         }
-    });
-
-    after(async () => {
-        await Widget.deleteMany({}).exec();
     });
 });

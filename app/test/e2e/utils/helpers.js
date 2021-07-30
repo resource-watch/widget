@@ -138,13 +138,26 @@ const createWidget = (anotherData = {}) => {
     };
 };
 
-const ensureCorrectWidget = (actualWidget, expectedWidget) => {
-    actualWidget.name.should.equal(expectedWidget.attributes.name);
-    actualWidget.dataset.should.equal(expectedWidget.attributes.dataset);
-    actualWidget.userId.should.equal(expectedWidget.attributes.userId);
-    actualWidget.slug.should.equal(expectedWidget.attributes.slug);
-    actualWidget.sourceUrl.should.equal(expectedWidget.attributes.sourceUrl);
-    actualWidget.queryUrl.should.equal(expectedWidget.attributes.queryUrl);
+const ensureCorrectWidget = (actualWidgetModel, expectedWidget) => {
+    const widget = { ...expectedWidget, ...expectedWidget.attributes };
+    delete widget.attributes;
+    delete widget.type;
+
+
+    let actualWidget = actualWidgetModel;
+    if (actualWidgetModel.toObject) {
+        actualWidget = actualWidgetModel.toObject();
+    }
+    actualWidget.id = actualWidget._id;
+    actualWidget.updatedAt = actualWidget.updatedAt.toISOString();
+    actualWidget.createdAt = actualWidget.createdAt.toISOString();
+    // eslint-disable-next-line no-underscore-dangle
+    delete actualWidget.__v;
+    delete actualWidget._id;
+    delete actualWidget.userName;
+    delete actualWidget.userRole;
+
+    actualWidget.should.deep.equal(widget);
 };
 
 const widgetConfig = WIDGET_CONFIG;

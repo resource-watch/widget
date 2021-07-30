@@ -97,9 +97,10 @@ describe('Get widgets tests', () => {
     });
 
     describe('Environment', () => {
-        it('Get widgets without env param', async () => {
+        it('Get widgets without env param should filter by env=production', async () => {
             mockGetUserFromToken(ADMIN);
             const widgetOne = await new Widget(createWidget()).save();
+            await new Widget(createWidget({ env: 'custom' })).save();
 
             const response = await requester
                 .get(`/api/v1/widget`)
@@ -108,6 +109,7 @@ describe('Get widgets tests', () => {
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.data[0].should.have.property('id').and.equal(widgetOne.id);
             response.body.should.have.property('links').and.be.an('object');
 
             const responseWidgetOne = response.body.data[0];
@@ -115,26 +117,12 @@ describe('Get widgets tests', () => {
             ensureCorrectWidget(widgetOne, responseWidgetOne);
         });
 
-        it('Get widgets without empty cause env is not match', async () => {
+
+        it('Get widgets with env query parameter should return the matching widgets (multi-value env)', async () => {
             mockGetUserFromToken(ADMIN);
+            const widgetOne = await new Widget(createWidget({ env: 'potato' })).save();
+            const widgetTwo = await new Widget(createWidget({ env: 'dev' })).save();
             await new Widget(createWidget({ env: 'custom' })).save();
-
-            const response = await requester
-                .get(`/api/v1/widget`)
-                .set('Authorization', `Bearer abcd`)
-                .query();
-
-            response.status.should.equal(200);
-            response.body.should.have.property('data').and.be.an('array').and.length(0);
-            response.body.should.have.property('links').and.be.an('object');
-        });
-
-
-        it('Get widgets with env which is match env', async () => {
-            mockGetUserFromToken(ADMIN);
-            await new Widget(createWidget({ env: 'custom' })).save();
-            await new Widget(createWidget({ env: 'potato' })).save();
-            await new Widget(createWidget({ env: 'dev' })).save();
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
@@ -144,30 +132,18 @@ describe('Get widgets tests', () => {
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(2);
+            response.body.data.map(elem => elem.id).sort().should.deep.equal([widgetOne.id, widgetTwo.id].sort());
             response.body.should.have.property('links').and.be.an('object');
         });
     });
 
+    /*
+    @TODO: metadata don't have envs, so that's fine
+    however, vocabularies will, so you need to properly account for that
+    We should only filter included entities if filterIncludesByEnv is passed as true
+     */
     describe('Includes', () => {
-        it('Get widgets includes metadata', async () => {
-            const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
-            const metadata = createWidgetMetadata(widgetOne.dataset, widgetOne._id);
-            createMockGetMetadata(metadata, widgetOne.dataset, { env: 'custom' });
-
-            const response = await requester
-                .get(`/api/v1/widget`)
-                .query({ includes: 'metadata', env: 'custom' });
-
-            response.status.should.equal(200);
-            response.body.should.have.property('data').and.be.an('array').and.length(1);
-            response.body.should.have.property('links').and.be.an('object');
-
-            const responseWidgetOne = response.body.data[0];
-
-            ensureCorrectWidget(widgetOne, responseWidgetOne, { metadata });
-        });
-
-        it('Get widgets includes metadata from another env', async () => {
+        it('Get widgets including metadata - env filter is ignored for metadata', async () => {
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const metadata = createWidgetMetadata(widgetOne.dataset, widgetOne._id);
             createMockGetMetadata(metadata, widgetOne.dataset);
@@ -182,7 +158,7 @@ describe('Get widgets tests', () => {
 
             const responseWidgetOne = response.body.data[0];
 
-            ensureCorrectWidget(widgetOne, responseWidgetOne);
+            ensureCorrectWidget({ ...widgetOne.toObject(), metadata }, responseWidgetOne);
         });
 
         it('Get widgets includes vocabulary', async () => {
@@ -200,14 +176,14 @@ describe('Get widgets tests', () => {
 
             const responseWidgetOne = response.body.data[0];
 
-            ensureCorrectWidget(widgetOne, responseWidgetOne, { vocabulary });
+            ensureCorrectWidget({ ...widgetOne.toObject(), vocabulary }, responseWidgetOne);
         });
 
 
-        it('Get widgets includes vocabulary from custom env - shpuld return empty vocabulary', async () => {
+        it('Get widgets includes vocabulary from custom env - should return empty vocabulary', async () => {
             const widgetOne = await new Widget(createWidget()).save();
             const vocabulary = createVocabulary(widgetOne._id);
-            createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id, { env: 'custom' });
+            createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id);
 
             const response = await requester
                 .get(`/api/v1/widget`)
@@ -219,10 +195,10 @@ describe('Get widgets tests', () => {
 
             const responseWidgetOne = response.body.data[0];
 
-            ensureCorrectWidget(widgetOne, responseWidgetOne);
+            ensureCorrectWidget({ ...widgetOne.toObject(), vocabulary }, responseWidgetOne);
         });
 
-        it('Get widgets includes metadata, vocabulary and fiter by env', async () => {
+        it('Get widgets includes metadata, vocabulary and filter by env', async () => {
             const widgetOne = await new Widget(createWidget()).save();
             const vocabulary = createVocabulary(widgetOne._id);
             createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id);
@@ -239,7 +215,7 @@ describe('Get widgets tests', () => {
 
             const responseWidgetOne = response.body.data[0];
 
-            ensureCorrectWidget(widgetOne, responseWidgetOne, { vocabulary, metadata });
+            ensureCorrectWidget({ ...widgetOne.toObject(), vocabulary, metadata }, responseWidgetOne);
         });
     });
 
