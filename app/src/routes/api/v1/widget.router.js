@@ -38,12 +38,13 @@ class WidgetRouter {
 
     static async get(ctx) {
         const id = ctx.params.widget;
+        const { query } = ctx;
         const { dataset } = ctx.params;
-        const user = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser) : null;
+        const user = query.loggedUser && query.loggedUser !== 'null' ? JSON.parse(query.loggedUser) : null;
         logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-        const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
         const widget = await WidgetService.get(id, dataset, includes, user);
-        const queryParams = Object.keys(ctx.query);
+        const queryParams = Object.keys(query);
         if (queryParams.indexOf('loggedUser') !== -1) {
             queryParams.splice(queryParams.indexOf('loggedUser'), 1);
         }
@@ -51,16 +52,16 @@ class WidgetRouter {
             queryParams.splice(queryParams.indexOf('includes'), 1);
         }
         if (queryParams.length > 0 && queryParams.indexOf('queryUrl') >= 0) {
-            widget.queryUrl = ctx.query.queryUrl;
+            widget.queryUrl = query.queryUrl;
             if (widget.widgetConfig && widget.widgetConfig.data) {
                 if (Array.isArray() && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
-                    widget.widgetConfig.data[0].url = ctx.query.queryUrl;
+                    widget.widgetConfig.data[0].url = query.queryUrl;
                 } else if (widget.widgetConfig.data.url) {
-                    widget.widgetConfig.data.url = ctx.query.queryUrl;
+                    widget.widgetConfig.data.url = query.queryUrl;
                 }
             }
             if (widget.widgetConfig && widget.widgetConfig.data && widget.widgetConfig.data.length > 0 && widget.widgetConfig.data[0].url) {
-                widget.widgetConfig.data[0].url = ctx.query.queryUrl;
+                widget.widgetConfig.data[0].url = query.queryUrl;
             }
             queryParams.splice(queryParams.indexOf('queryUrl'), 1);
 
@@ -72,7 +73,7 @@ class WidgetRouter {
                 if (params !== '') {
                     params += '&';
                 }
-                params += `${queryParams[i]}=${ctx.query[queryParams[i]]}`;
+                params += `${queryParams[i]}=${query[queryParams[i]]}`;
             }
             if (widget.queryUrl) {
                 if (widget.queryUrl.indexOf('?') >= 0) {
@@ -176,12 +177,12 @@ class WidgetRouter {
     static async getAll(ctx) {
         const { query } = ctx;
         const dataset = ctx.params.dataset || null;
-        const user = ctx.query.loggedUser && ctx.query.loggedUser !== 'null' ? JSON.parse(ctx.query.loggedUser) : null;
+        const user = query.loggedUser && query.loggedUser !== 'null' ? JSON.parse(query.loggedUser) : null;
         const userId = user ? user.id : null;
         const isAdmin = ['ADMIN', 'SUPERADMIN'].includes(user && user.role);
         delete query.loggedUser;
 
-        if (ctx.query.sort && (ctx.query.sort.includes('user.role') || ctx.query.sort.includes('user.name'))) {
+        if (query.sort && (query.sort.includes('user.role') || query.sort.includes('user.name'))) {
             logger.debug('Detected sorting by user role or name');
             if (!user || !isAdmin) {
                 ctx.throw(403, 'Sorting by user name or role not authorized.');
@@ -218,7 +219,7 @@ class WidgetRouter {
             }
             logger.debug('Obtaining collections', userId);
             try {
-                ctx.query.ids = await RelationshipsService.getCollections(ctx.query.collection, userId);
+                query.ids = await RelationshipsService.getCollections(query.collection, userId);
             } catch (e) {
                 if (e instanceof GetCollectionInvalidRequest) {
                     ctx.throw(e.statusCode, `Error loading associated collection: ${e.message}`);
@@ -228,23 +229,23 @@ class WidgetRouter {
                 return;
             }
 
-            ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
-            logger.debug('Ids from collections', ctx.query.ids);
+            query.ids = query.ids.length > 0 ? query.ids.join(',') : '';
+            logger.debug('Ids from collections', query.ids);
         }
         if (Object.keys(query).find(el => el.indexOf('user.role') >= 0) && isAdmin) {
             logger.debug('Obtaining users with role');
-            ctx.query.usersRole = await RelationshipsService.getUsersWithRole(ctx.query['user.role']);
-            logger.debug('Ids from users with role', ctx.query.usersRole);
+            query.usersRole = await RelationshipsService.getUsersWithRole(query['user.role']);
+            logger.debug('Ids from users with role', query.usersRole);
         }
         if (Object.keys(query).find(el => el.indexOf('favourite') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Fav filter not authorized');
                 return;
             }
-            const app = ctx.query.app || ctx.query.application || 'rw';
-            ctx.query.ids = await RelationshipsService.getFavorites(app, userId);
-            ctx.query.ids = ctx.query.ids.length > 0 ? ctx.query.ids.join(',') : '';
-            logger.debug('Ids from collections', ctx.query.ids);
+            const app = query.app || query.application || 'rw';
+            query.ids = await RelationshipsService.getFavorites(app, userId);
+            query.ids = query.ids.length > 0 ? query.ids.join(',') : '';
+            logger.debug('Ids from collections', query.ids);
         }
         const widgets = await WidgetService.getAll(query, dataset, user);
         const clonedQuery = { ...query };
@@ -259,7 +260,7 @@ class WidgetRouter {
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
 
-        const includes = ctx.query.includes ? ctx.query.includes.split(',').map(elem => elem.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
         const cache = ['widget'];
         if (ctx.params.dataset) {
             cache.push(`${ctx.params.dataset}-widget-all`);
