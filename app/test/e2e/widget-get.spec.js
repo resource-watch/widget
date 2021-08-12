@@ -111,12 +111,41 @@ describe('Get widgets tests', () => {
             response.body.should.have.property('data').and.be.an('array').and.length(1);
             response.body.data[0].should.have.property('id').and.equal(widgetOne.id);
             response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?page[number]=1&page[size]=10`);
 
             const responseWidgetOne = response.body.data[0];
 
             ensureCorrectWidget(widgetOne, responseWidgetOne);
         });
 
+        it('Get widgets with env query parameter should return the matching widgets (single value env)', async () => {
+            mockGetUserFromToken(ADMIN);
+            await new Widget(createWidget()).save();
+            await new Widget(createWidget({ env: 'potato' })).save();
+            const widgetTwo = await new Widget(createWidget({ env: 'dev' })).save();
+            await new Widget(createWidget({ env: 'custom' })).save();
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .set('Authorization', `Bearer abcd`)
+                .query({
+                    env: 'dev'
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(1);
+            response.body.data.map(elem => elem.id).sort().should.deep.equal([widgetTwo.id].sort());
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
+        });
 
         it('Get widgets with env query parameter should return the matching widgets (multi-value env)', async () => {
             mockGetUserFromToken(ADMIN);
@@ -134,6 +163,11 @@ describe('Get widgets tests', () => {
             response.body.should.have.property('data').and.be.an('array').and.length(2);
             response.body.data.map(elem => elem.id).sort().should.deep.equal([widgetOne.id, widgetTwo.id].sort());
             response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
         });
     });
 
