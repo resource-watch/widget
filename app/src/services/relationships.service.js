@@ -20,6 +20,12 @@ class RelationshipsService {
     static prepareAndFormatQuery(rawQuery) {
         const query = { ...rawQuery };
 
+        const filterIncludesByEnv = query.filterIncludesByEnv ? query.filterIncludesByEnv : false;
+        if (!filterIncludesByEnv) {
+            delete query.env;
+        }
+
+        delete query.filterIncludesByEnv;
         delete query.includes;
         return serializeObjToQuery(query);
     }
