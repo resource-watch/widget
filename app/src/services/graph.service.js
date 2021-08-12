@@ -4,7 +4,7 @@ class GraphService {
         // logger.debug('[GraphService]: Creating dataset in graph');
         // try {
         //     return await RWAPIMicroservice.requestToMicroservice({
-        //         uri: `/graph/widget/${idDataset}/${id}`,
+        //         uri: `/v1/graph/widget/${idDataset}/${id}`,
         //         method: 'POST',
         //         json: true
         //     });
@@ -17,7 +17,7 @@ class GraphService {
         // logger.debug('[GraphService]: Deleting widget in graph');
         // try {
         //     return await RWAPIMicroservice.requestToMicroservice({
-        //         uri: `/graph/widget/${id}`,
+        //         uri: `/v1/graph/widget/${id}`,
         //         method: 'DELETE',
         //         json: true
         //     });
@@ -35,7 +35,7 @@ class GraphService {
         //         return null;
         //     });
         //     return await RWAPIMicroservice.requestToMicroservice({
-        //         uri: `/graph/widget/${id}/associate`,
+        //         uri: `/v1/graph/widget/${id}/associate`,
         //         method: 'POST',
         //         json: true,
         //         body: {

@@ -10,7 +10,7 @@ const ensureCorrectError = (body, errMessage) => {
 };
 
 const mockGetUserFromToken = (userProfile) => {
-    nock(process.env.CT_URL, { reqheaders: { authorization: 'Bearer abcd' } })
+    nock(process.env.GATEWAY_URL, { reqheaders: { authorization: 'Bearer abcd' } })
         .get('/auth/user/me')
         .reply(200, userProfile);
 };
@@ -212,7 +212,7 @@ const mockDataset = (id, responseData = {}, twice = false) => {
         }
     }, responseData);
 
-    const scope = nock(`${process.env.CT_URL}/v1`).get(`/dataset/${id}`);
+    const scope = nock(`${process.env.GATEWAY_URL}/v1`).get(`/dataset/${id}`);
     if (twice) scope.twice();
     scope.reply(200, { data });
 
@@ -221,7 +221,7 @@ const mockDataset = (id, responseData = {}, twice = false) => {
 
 const mockWebshot = (success = true, responseData = {}) => {
     const data = Object.assign({}, { widgetThumbnail: 'http://thumbnail-url.com/file.png' }, responseData);
-    nock(process.env.CT_URL)
+    nock(process.env.GATEWAY_URL)
         .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
         .reply(success ? 200 : 500, { data });
 };

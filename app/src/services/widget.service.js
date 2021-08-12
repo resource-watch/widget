@@ -283,7 +283,7 @@ class WidgetService {
     static async deleteMetadata(datasetId, widgetId) {
         logger.debug('Removing metadata of the layer');
         await RWAPIMicroservice.requestToMicroservice({
-            uri: `/dataset/${datasetId}/widget/${widgetId}/metadata`,
+            uri: `/v1/dataset/${datasetId}/widget/${widgetId}/metadata`,
             method: 'DELETE'
         });
     }

@@ -1,11 +1,11 @@
-FROM mhart/alpine-node:12.11
+FROM node:12.11-alpine
 MAINTAINER info@vizzuality.com
 
 ENV NAME widget
 ENV USER microservice
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache --update bash git openssh python alpine-sdk
+    apk add --no-cache --update bash python alpine-sdk
 
 RUN addgroup $USER && adduser -s /bin/bash -D -G $USER $USER
 

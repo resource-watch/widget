@@ -83,7 +83,7 @@ describe('Clone widgets tests', () => {
         mockGetUserFromToken(USERS.USER);
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -117,7 +117,7 @@ describe('Clone widgets tests', () => {
         mockGetUserFromToken(USERS.MANAGER);
         const widgetOne = await new Widget(createWidget({ userId: '123456789' })).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -151,7 +151,7 @@ describe('Clone widgets tests', () => {
         mockGetUserFromToken(USERS.ADMIN);
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -185,7 +185,7 @@ describe('Clone widgets tests', () => {
         mockGetUserFromToken(USERS.ADMIN);
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -220,7 +220,7 @@ describe('Clone widgets tests', () => {
         mockGetUserFromToken(USERS.MICROSERVICE);
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -257,7 +257,7 @@ describe('Clone widgets tests', () => {
         mockGetUserFromToken(USERS.USER);
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
@@ -316,7 +316,7 @@ describe('Clone widgets tests', () => {
 
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(

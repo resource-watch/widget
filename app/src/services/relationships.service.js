@@ -52,7 +52,7 @@ class RelationshipsService {
                         uriQuery = `?${uriQuery}`;
                     }
                     const vocabularies = await RWAPIMicroservice.requestToMicroservice({
-                        uri: `/dataset/${widgets[i].dataset}/widget/${widgets[i]._id}/vocabulary${uriQuery}`,
+                        uri: `/v1/dataset/${widgets[i].dataset}/widget/${widgets[i]._id}/vocabulary${uriQuery}`,
                         method: 'GET',
                         json: true
                     });
@@ -85,7 +85,7 @@ class RelationshipsService {
                         body.env = query.env.split(',').map(elem => elem.trim());
                     }
                     const metadata = await RWAPIMicroservice.requestToMicroservice({
-                        uri: `/dataset/${widgets[i].dataset}/widget/metadata/find-by-ids`,
+                        uri: `/v1/dataset/${widgets[i].dataset}/widget/metadata/find-by-ids`,
                         method: 'POST',
                         json: true,
                         body,
@@ -103,7 +103,7 @@ class RelationshipsService {
         logger.debug(`[RelationshipsService] getCollections for ids ${ids} and userID ${userId}.`);
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
-                uri: `/collection/find-by-ids`,
+                uri: `/v1/collection/find-by-ids`,
                 method: 'POST',
                 json: true,
                 body: {
@@ -140,7 +140,7 @@ class RelationshipsService {
     static async getFavorites(app, userId) {
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
-                uri: `/favourite/find-by-user`,
+                uri: `/v1/favourite/find-by-user`,
                 method: 'POST',
                 json: true,
                 body: {
