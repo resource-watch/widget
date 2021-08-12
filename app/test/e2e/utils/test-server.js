@@ -9,7 +9,7 @@ chai.use(chaiHttp);
 
 const createRequest = async (prefix, method) => {
     if (!createdServer) {
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post(`/api/v1/microservice`)
             .reply(200);
 
@@ -30,10 +30,6 @@ const getTestServer = async function getTestServer() {
     if (requester) {
         return requester;
     }
-
-    nock(process.env.CT_URL)
-        .post(`/api/v1/microservice`)
-        .reply(200);
 
     const serverPromise = require('../../../src/app');
     const { server } = await serverPromise();

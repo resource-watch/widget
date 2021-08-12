@@ -7,7 +7,7 @@ class ScreenshotService {
         logger.debug('[ScreenshotService]: Taking screenshot');
         try {
             return await RWAPIMicroservice.requestToMicroservice({
-                uri: `/webshot/widget/${id}/thumbnail`,
+                uri: `/v1/webshot/widget/${id}/thumbnail`,
                 method: 'POST',
                 json: true
             });

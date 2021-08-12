@@ -7,8 +7,6 @@ This repository contains the widget microservice for WRI API
 
 ## Dependencies
 
-You will need [Control Tower](https://github.com/control-tower/control-tower) up and running - either natively or with Docker. Refer to the project's README for information on how to set it up.
-
 The Widget microservice is built using [Node.js](https://nodejs.org/en/), and can be executed either natively or using Docker, each of which has its own set of requirements.
 
 Native execution requires:
@@ -20,7 +18,6 @@ Execution using Docker requires:
 - [Docker Compose](https://docs.docker.com/compose/)
 
 Dependencies on other Microservices:
-- [Control Tower](https://github.com/resource-watch/control-tower)
 - [Dataset](https://github.com/resource-watch/dataset/)
 - [Graph Client](https://github.com/resource-watch/graph-client/)
 - [Vocabulary](https://github.com/resource-watch/vocabulary-tag/)
@@ -51,19 +48,19 @@ yarn install
 yarn start
 ```
 
-The endpoints provided by this microservice should now be available through Control Tower's URL.
+The endpoints provided by this microservice should now be available through the service's URL.
 
 ### Using Docker
 
 1 - Create and complete your `dev.env` file with your configuration. The meaning of the variables is available in this [section](#configuration-environment-variables). You can find an example `dev.env.sample` file in the project root.
 
-2 - Execute the following command to run Control tower:
+2 - Execute the following command to run the microservice:
 
 ```
 ./widgetAdapter.sh develop
 ```
 
-The endpoints provided by this microservice should now be available through Control Tower's URL.
+The endpoints provided by this microservice should now be available through the service's URL.
 
 ## Testing
 
@@ -87,7 +84,7 @@ Follow the instruction above for setting up the runtime environment for Docker e
 
 It is necessary to define these environment variables:
 
-* CT_URL => Control Tower URL
+* GATEWAY_URL => Gateway URL
 * NODE_ENV => Environment (prod, staging, dev)
 
 

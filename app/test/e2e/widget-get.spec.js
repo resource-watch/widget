@@ -447,7 +447,7 @@ describe('Get widgets tests', () => {
 
             createMockUser([ADMIN]);
 
-            nock(process.env.CT_URL)
+            nock(process.env.GATEWAY_URL)
                 .post('/auth/user/find-by-ids', {
                     ids: [widgetTwo.userId]
                 })
@@ -495,7 +495,7 @@ describe('Get widgets tests', () => {
             createMockUser([{
                 ...USER,
                 id: widgetOne.userId,
-                email: 'user-one@control-tower.org',
+                email: 'user-one@wri.org',
                 name: 'test user'
             }]);
 
@@ -503,7 +503,7 @@ describe('Get widgets tests', () => {
                 ...MANAGER,
                 id: widgetTwo.userId,
                 name: undefined,
-                email: 'user-two@control-tower.org'
+                email: 'user-two@wri.org'
             }]);
 
             createMockUser([{
@@ -536,7 +536,7 @@ describe('Get widgets tests', () => {
             responseWidgetOne.attributes.queryUrl.should.equal(widgetOne.queryUrl);
             responseWidgetOne.attributes.should.have.property('user').and.should.be.an('object');
             responseWidgetOne.attributes.user.name.should.be.a('string').and.equal('test user');
-            responseWidgetOne.attributes.user.email.should.be.a('string').and.equal('user-one@control-tower.org');
+            responseWidgetOne.attributes.user.email.should.be.a('string').and.equal('user-one@wri.org');
             responseWidgetOne.attributes.user.role.should.be.a('string').and.equal('USER');
 
             responseWidgetTwo.attributes.name.should.equal(widgetTwo.name);
@@ -546,7 +546,7 @@ describe('Get widgets tests', () => {
             responseWidgetTwo.attributes.sourceUrl.should.equal(widgetTwo.sourceUrl);
             responseWidgetTwo.attributes.queryUrl.should.equal(widgetTwo.queryUrl);
             responseWidgetTwo.attributes.user.role.should.be.a('string').and.equal('MANAGER');
-            responseWidgetTwo.attributes.user.email.should.be.a('string').and.equal('user-two@control-tower.org');
+            responseWidgetTwo.attributes.user.email.should.be.a('string').and.equal('user-two@wri.org');
             responseWidgetTwo.attributes.user.should.not.have.property('name');
 
             responseWidgetThree.attributes.name.should.equal(widgetThree.name);
@@ -563,7 +563,7 @@ describe('Get widgets tests', () => {
         it('Getting widgets with includes user and user role USER should not add the usersRole query param to the pagination links', async () => {
             mockGetUserFromToken(ADMIN);
             await new Widget(createWidget()).save();
-            nock(process.env.CT_URL).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
+            nock(process.env.GATEWAY_URL).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
 
             const response = await requester
                 .get(`/api/v1/widget`)
@@ -803,7 +803,7 @@ describe('Get widgets tests', () => {
 
     it('Get all widgets with collection filter as string should return a 400 error', async () => {
         mockGetUserFromToken(USER);
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/v1/collection/find-by-ids', {
                 ids: 'xxx',
                 userId: USER.id
@@ -825,7 +825,7 @@ describe('Get widgets tests', () => {
         await new Widget(createWidget()).save();
         const collectionId = mongoose.Types.ObjectId().toString();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/v1/collection/find-by-ids', {
                 ids: collectionId,
                 userId: USER.id
@@ -869,7 +869,7 @@ describe('Get widgets tests', () => {
         const collectionIdOne = mongoose.Types.ObjectId().toString();
         const collectionIdTwo = mongoose.Types.ObjectId().toString();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/v1/collection/find-by-ids', {
                 ids: [collectionIdOne, collectionIdTwo],
                 userId: USER.id
@@ -926,7 +926,7 @@ describe('Get widgets tests', () => {
         const collectionIdOne = mongoose.Types.ObjectId().toString();
         const collectionIdTwo = mongoose.Types.ObjectId().toString();
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/v1/collection/find-by-ids', {
                 ids: [collectionIdOne, collectionIdTwo],
                 userId: USER.id

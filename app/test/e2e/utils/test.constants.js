@@ -381,7 +381,7 @@ const USERS = {
         role: 'USER',
         provider: 'local',
         name: 'test user',
-        email: 'user@control-tower.org',
+        email: 'user@wri.org',
         extraUserData: {
             apps: [
                 'rw',
@@ -399,7 +399,7 @@ const USERS = {
         role: 'MANAGER',
         provider: 'local',
         name: 'test manager',
-        email: 'user@control-tower.org',
+        email: 'user@wri.org',
         extraUserData: {
             apps: [
                 'rw',
@@ -417,7 +417,7 @@ const USERS = {
         role: 'ADMIN',
         provider: 'local',
         name: 'test admin',
-        email: 'user@control-tower.org',
+        email: 'user@wri.org',
         extraUserData: {
             apps: [
                 'rw',
@@ -435,7 +435,7 @@ const USERS = {
         role: 'SUPERADMIN',
         provider: 'local',
         name: 'test super admin',
-        email: 'user@control-tower.org',
+        email: 'user@wri.org',
         extraUserData: {
             apps: [
                 'rw',
@@ -452,7 +452,7 @@ const USERS = {
         id: '1a10d7c6e0a37126611fd7a7',
         role: 'ADMIN',
         provider: 'local',
-        email: 'user@control-tower.org',
+        email: 'user@wri.org',
         extraUserData: {
             apps: [
                 'test'

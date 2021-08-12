@@ -1,12 +1,6 @@
 #!/bin/bash
 
 case "$1" in
-    test-e2e)
-        yarn run test-e2e
-        ;;
-    test-unit)
-        yarn run test-unit
-        ;;
     start)
         yarn start
         ;;
@@ -19,7 +13,7 @@ case "$1" in
         docker-compose -f docker-compose-test.yml build && docker-compose -f docker-compose-test.yml up
         ;;
   *)
-        echo "Usage: controlTower.sh {test-e2e|test-unit|start|develop|test}" >&2
+        echo "Usage: widgetAdapter.sh {start|develop|test}" >&2
         exit 1
         ;;
 esac

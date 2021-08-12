@@ -159,31 +159,31 @@ describe('GET widgets sorted by user fields', () => {
         // Custom mock find-by-ids call
         const userIds = [USER.id, MANAGER.id, ADMIN.id, SUPERADMIN.id, '5accc3660bb7c603ba473d0f'];
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: userIds })
             .reply(200, { data: fullUsers });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [USER.id] })
             .reply(200, { data: [{ ...USER, _id: USER.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [MANAGER.id] })
             .reply(200, { data: [{ ...MANAGER, _id: MANAGER.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [ADMIN.id] })
             .reply(200, { data: [{ ...ADMIN, _id: ADMIN.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [SUPERADMIN.id] })
             .reply(200, { data: [{ ...SUPERADMIN, _id: SUPERADMIN.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [noUserWidget1.userId] })
             .reply(200, { data: [] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [noUserWidget2.userId] })
             .reply(200, { data: [] });
 
@@ -222,31 +222,31 @@ describe('GET widgets sorted by user fields', () => {
         // Custom mock find-by-ids call
         const userIds = [USER.id, MANAGER.id, ADMIN.id, SUPERADMIN.id, '5accc3660bb7c603ba473d0f'];
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: userIds })
             .reply(200, { data: fullUsers });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [USER.id] })
             .reply(200, { data: [{ ...USER, _id: USER.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [MANAGER.id] })
             .reply(200, { data: [{ ...MANAGER, _id: MANAGER.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [ADMIN.id] })
             .reply(200, { data: [{ ...ADMIN, _id: ADMIN.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [SUPERADMIN.id] })
             .reply(200, { data: [{ ...SUPERADMIN, _id: SUPERADMIN.id }] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [noUserWidget1.userId] })
             .reply(200, { data: [] });
 
-        nock(process.env.CT_URL)
+        nock(process.env.GATEWAY_URL)
             .post('/auth/user/find-by-ids', { ids: [noUserWidget2.userId] })
             .reply(200, { data: [] });
 
