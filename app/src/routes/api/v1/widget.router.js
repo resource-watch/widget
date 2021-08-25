@@ -290,10 +290,6 @@ class WidgetRouter {
         if (body.widget) {
             body.ids = body.widget.ids;
         }
-        if (!body.ids) {
-            ctx.throw(400, 'Bad request - Missing \'ids\' from request body');
-            return;
-        }
         logger.info(`[WidgetRouter] Getting widgets for datasets with id: ${body.ids}`);
         const resource = {
             ids: body.ids,
@@ -353,6 +349,22 @@ const validationMiddleware = async (ctx, next) => {
         } else {
             await WidgetValidator.validateWidgetUpdate(ctx);
         }
+    } catch (err) {
+        if (err instanceof WidgetNotValid) {
+            ctx.throw(400, err.getMessages());
+            return;
+        }
+        throw err;
+    }
+
+
+    await next();
+};
+
+const findByIdValidationMiddleware = async (ctx, next) => {
+    logger.info(`[WidgetRouter] Validating find by id`);
+    try {
+        await WidgetValidator.validateFindById(ctx);
     } catch (err) {
         if (err instanceof WidgetNotValid) {
             ctx.throw(400, err.getMessages());
@@ -480,7 +492,7 @@ router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget', datasetValidationMiddleware, isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
 // Get by IDs
-router.post('/widget/find-by-ids', WidgetRouter.getByIds);
+router.post('/widget/find-by-ids', findByIdValidationMiddleware, WidgetRouter.getByIds);
 router.patch('/widget/change-environment/:dataset/:env', datasetValidationMiddleware, isMicroservice, WidgetRouter.updateEnvironment);
 // Clone
 router.post('/widget/:widget/clone', authorizationMiddleware, WidgetRouter.clone);

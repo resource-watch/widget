@@ -31,7 +31,7 @@ describe('Find widgets by IDs', () => {
 
         response.status.should.equal(400);
         response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`Bad request - Missing 'ids' from request body`);
+        response.body.errors[0].should.have.property('detail').and.equal(`- ids: must be an array - `);
     });
 
     it('Find widgets with empty id list returns an empty list (empty db)', async () => {
@@ -41,8 +41,9 @@ describe('Find widgets by IDs', () => {
                 ids: []
             });
 
-        response.status.should.equal(200);
-        response.body.should.have.property('data').and.be.an('array').and.length(0);
+        response.status.should.equal(400);
+        response.body.should.have.property('errors').and.be.an('array');
+        response.body.errors[0].should.have.property('detail').and.equal(`- ids: must be an array of strings - `);
     });
 
     it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
@@ -187,11 +188,28 @@ describe('Find widgets by IDs', () => {
                 .post(`/api/v1/widget/find-by-ids`)
                 .send({
                     ids: [widgetOne.dataset, widgetTwo.dataset, widgetThree.dataset],
-                    env: ['custom', 'production']
+                    env: ['custom', 'production'].join(',')
                 });
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(3);
+        });
+
+        it('Get widgets with env as array should fail', async () => {
+            const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
+            const widgetTwo = await new Widget(createWidget()).save();
+            const widgetThree = await new Widget(createWidget()).save();
+
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetOne.dataset, widgetTwo.dataset, widgetThree.dataset],
+                    env: ['custom', 'production']
+                });
+
+            response.status.should.equal(400);
+            response.body.should.have.property('errors').and.be.an('array');
+            response.body.errors[0].should.have.property('detail').and.equal(`- env: must be a string - `);
         });
     });
 

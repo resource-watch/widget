@@ -19,6 +19,24 @@ class WidgetValidator {
         return (val instanceof Object && !(val instanceof Array));
     }
 
+    static async validateFindById(koaObj) {
+        logger.info('[WidgetValidator] Validating find by id body');
+        koaObj.checkBody('env')
+            .optional()
+            .notBlank()
+            .check(v => WidgetValidator.isString(v), 'must be a string');
+        koaObj.checkBody('ids')
+            .check(v => WidgetValidator.isArray(v), 'must be an array')
+            .check(ids => ids.some(id => WidgetValidator.isString(id)), 'must be an array of strings');
+
+        logger.debug(koaObj.errors);
+        if (koaObj.errors) {
+            logger.error('Error validating find by id body');
+            throw new WidgetNotValid(koaObj.errors);
+        }
+        return true;
+    }
+
     static async validateWidgetCreation(koaObj) {
         logger.info('[WidgetValidator] Validating widget creation');
         koaObj.checkBody('name')
