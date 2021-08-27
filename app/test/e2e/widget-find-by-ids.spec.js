@@ -12,7 +12,7 @@ let requester;
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
 
-describe('Find widgets by IDs', () => {
+describe('Find widgets by Ids', () => {
 
     before(async () => {
         if (process.env.NODE_ENV !== 'test') {
@@ -135,6 +135,36 @@ describe('Find widgets by IDs', () => {
     });
 
     describe('Environment', () => {
+        it('Get widgets with no env filter should return all passed widgets', async () => {
+            const widgetOne = await new Widget(createWidget()).save();
+            const widgetTwo = await new Widget(createWidget({ env: 'custom' })).save();
+
+            const response = await requester
+                .post(`/api/v1/widget/find-by-ids`)
+                .send({
+                    ids: [widgetOne.dataset, widgetTwo.dataset],
+                });
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(2);
+
+            const responseWidgetOne = response.body.data[0];
+            const responseWidgetTwo = response.body.data[1];
+
+            responseWidgetOne.attributes.name.should.equal(widgetOne.name);
+            responseWidgetOne.attributes.dataset.should.equal(widgetOne.dataset);
+            responseWidgetOne.attributes.userId.should.equal(widgetOne.userId);
+            responseWidgetOne.attributes.slug.should.equal(widgetOne.slug);
+            responseWidgetOne.attributes.sourceUrl.should.equal(widgetOne.sourceUrl);
+            responseWidgetOne.attributes.queryUrl.should.equal(widgetOne.queryUrl);
+
+            responseWidgetTwo.attributes.name.should.equal(widgetTwo.name);
+            responseWidgetTwo.attributes.dataset.should.equal(widgetTwo.dataset);
+            responseWidgetTwo.attributes.userId.should.equal(widgetTwo.userId);
+            responseWidgetTwo.attributes.slug.should.equal(widgetTwo.slug);
+            responseWidgetTwo.attributes.sourceUrl.should.equal(widgetTwo.sourceUrl);
+            responseWidgetTwo.attributes.queryUrl.should.equal(widgetTwo.queryUrl);
+        });
+
         it('Get widgets with custom env should return empty response', async () => {
             const widgetOne = await new Widget(createWidget()).save();
 

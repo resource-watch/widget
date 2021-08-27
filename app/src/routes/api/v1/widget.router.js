@@ -284,7 +284,7 @@ class WidgetRouter {
         ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
     }
 
-    static async getByIds(ctx) {
+    static async findByIds(ctx) {
         const { request } = ctx;
         const { body } = request;
         if (body.widget) {
@@ -492,7 +492,7 @@ router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget', datasetValidationMiddleware, isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
 // Get by IDs
-router.post('/widget/find-by-ids', findByIdValidationMiddleware, WidgetRouter.getByIds);
+router.post('/widget/find-by-ids', findByIdValidationMiddleware, WidgetRouter.findByIds);
 router.patch('/widget/change-environment/:dataset/:env', datasetValidationMiddleware, isMicroservice, WidgetRouter.updateEnvironment);
 // Clone
 router.post('/widget/:widget/clone', authorizationMiddleware, WidgetRouter.clone);

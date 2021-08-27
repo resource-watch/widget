@@ -436,18 +436,15 @@ class WidgetService {
             }
         }
 
-        if (!resource.env) { // default value
-            resource.env = 'production';
-        }
-
         const query = {
             dataset: {
                 $in: resource.ids
-            },
-            env: {
-                $in: resource.env
             }
         };
+
+        if (resource.env) {
+            query.env = resource.env;
+        }
 
         if (resource.app) {
             query.application = resource.app;
