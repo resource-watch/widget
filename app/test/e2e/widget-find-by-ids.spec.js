@@ -41,9 +41,8 @@ describe('Find widgets by Ids', () => {
                 ids: []
             });
 
-        response.status.should.equal(400);
-        response.body.should.have.property('errors').and.be.an('array');
-        response.body.errors[0].should.have.property('detail').and.equal(`- ids: must be an array of strings - `);
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.be.an('array').and.length(0);
     });
 
     it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
