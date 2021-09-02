@@ -27,7 +27,7 @@ class WidgetValidator {
             .check(v => WidgetValidator.isString(v), 'must be a string');
         koaObj.checkBody('ids')
             .check(v => WidgetValidator.isArray(v), 'must be an array')
-            .check(ids => ids.some(id => WidgetValidator.isString(id)), 'must be an array of strings');
+            .check(ids => ids.length === 0 || ids.some(id => WidgetValidator.isString(id)), 'must be an array of strings');
 
         logger.debug(koaObj.errors);
         if (koaObj.errors) {
