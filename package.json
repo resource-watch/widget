@@ -39,7 +39,7 @@
     "grunt-notify": "^0.4.5",
     "grunt-simple-nyc": "^3.0.0",
     "husky": ">=1",
-    "lint-staged": ">=8",
+    "lint-staged": ">=11",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^6.2.1",
     "nock": "^11.4.0",
