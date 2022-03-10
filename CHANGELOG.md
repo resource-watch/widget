@@ -1,3 +1,7 @@
+## 10/03/2022
+
+- Upgrade node 12 -> 16.
+
 ## 12/08/2021
 
 - Update `rw-api-microservice-node` to remove CT support.
