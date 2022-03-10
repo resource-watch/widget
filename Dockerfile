@@ -1,11 +1,11 @@
-FROM node:12.11-alpine
+FROM node:16-alpine
 MAINTAINER info@vizzuality.com
 
 ENV NAME widget
 ENV USER microservice
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache --update bash python alpine-sdk
+    apk add --no-cache --update bash python3 alpine-sdk
 
 RUN addgroup $USER && adduser -s /bin/bash -D -G $USER $USER
 
@@ -24,7 +24,7 @@ COPY ./app /opt/$NAME/app
 RUN chown $USER:$USER /opt/$NAME
 
 # Tell Docker we are going to use this ports
-EXPOSE 3050
+EXPOSE 30567
 USER $USER
 
 ENTRYPOINT ["./entrypoint.sh"]
