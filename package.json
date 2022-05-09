@@ -47,7 +47,7 @@
     "should": "^13.2.3"
   },
   "dependencies": {
-    "bluebird": "^3.4.7",
+    "bluebird": "^3.7.2",
     "bunyan": "^1.8.5",
     "config": "^3.3.6",
     "rw-api-microservice-node": "^4.0.2",
