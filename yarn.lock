@@ -1568,6 +1568,7 @@ fast-safe-stringify@^2.0.4:
 
 fastly-promises@tiagojsag/fastly-promises#master:
   version "0.0.0-semantically-released"
+  uid "14470364f0d4e62b8ff99c8f7e7dd7cb27039242"
   resolved "https://codeload.github.com/tiagojsag/fastly-promises/tar.gz/14470364f0d4e62b8ff99c8f7e7dd7cb27039242"
   dependencies:
     axios "0.21.1"
@@ -2705,10 +2706,10 @@ json5@^2.1.1:
   dependencies:
     minimist "^1.2.5"
 
-jsonapi-serializer@3.6.3:
-  version "3.6.3"
-  resolved "https://registry.yarnpkg.com/jsonapi-serializer/-/jsonapi-serializer-3.6.3.tgz#77c2b00979231fbf4361af541e454a612e9ebce0"
-  integrity sha512-D2mfIasjcl9p4okDKSZnnXlDhWRC8iJRWq3raNwccln4uzkIyAv2vOlHMJtAdK9iWa8ek8BYnGCxuSTvhIfv7Q==
+jsonapi-serializer@3.6.7:
+  version "3.6.7"
+  resolved "https://registry.yarnpkg.com/jsonapi-serializer/-/jsonapi-serializer-3.6.7.tgz#18299122e7624d962fadaba16c320da6a7c405c0"
+  integrity sha512-usScb34T6mB0QK/AxOpXTpE9iB7JW4/CMhREitzeKv9rV5CdZhdVA8F9zIc7Xz9rjbSv98vOXkuO1HRtM0paSg==
   dependencies:
     inflected "^1.1.6"
     lodash "^4.16.3"
