@@ -379,9 +379,14 @@ class WidgetService {
                 });
                 delete query.usersRole;
             } else if (param === 'env') {
-                query.env = {
-                    $in: query[param].split(',').map(elem => elem.trim())
-                };
+                if (query[param] === 'all') {
+                    logger.debug('Applying all environments filter');
+                    delete query.env;
+                } else {
+                    query.env = {
+                        $in: query[param].split(',')
+                    };
+                }
             }
         });
         if (ids.length > 0 || collection || favourite) {
