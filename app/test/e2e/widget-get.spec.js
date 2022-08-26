@@ -609,6 +609,40 @@ describe('Get widgets tests', () => {
             ensureCorrectWidget(widgetOne, responseWidgetOne);
         });
 
+        it('Get widgets with all env query parameter should return widgets from every env', async () => {
+            mockGetUserFromToken(ADMIN);
+            const widgetOne = await new Widget(createWidget()).save();
+            const widgetTwo = await new Widget(createWidget({ env: 'custom' })).save();
+            const widgetThree = await new Widget(createWidget({ env: 'potato' })).save();
+
+            const response = await requester
+                .get(`/api/v1/widget`)
+                .set('Authorization', `Bearer abcd`)
+                .query({
+                    env: 'all'
+                });
+
+            response.status.should.equal(200);
+            response.body.should.have.property('data').and.be.an('array').and.length(3);
+            response.body.data[0].should.have.property('id').and.equal(widgetOne.id);
+            response.body.data[1].should.have.property('id').and.equal(widgetTwo.id);
+            response.body.data[2].should.have.property('id').and.equal(widgetThree.id);
+            response.body.should.have.property('links').and.be.an('object');
+            response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=all&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=all&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('next').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=all&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('first').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=all&page[number]=1&page[size]=10`);
+            response.body.links.should.have.property('last').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=all&page[number]=1&page[size]=10`);
+
+            const responseWidgetOne = response.body.data[0];
+            const responseWidgetTwo = response.body.data[1];
+            const responseWidgetThree = response.body.data[2];
+
+            ensureCorrectWidget(widgetOne, responseWidgetOne);
+            ensureCorrectWidget(widgetTwo, responseWidgetTwo);
+            ensureCorrectWidget(widgetThree, responseWidgetThree);
+        });
+
         it('Get widgets with env query parameter should return the matching widgets (single value env)', async () => {
             mockGetUserFromToken(ADMIN);
             await new Widget(createWidget()).save();
