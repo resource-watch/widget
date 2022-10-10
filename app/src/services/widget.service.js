@@ -280,8 +280,34 @@ class WidgetService {
         return widgets;
     }
 
+    static async deleteByUserId(userId) {
+        logger.debug(`[WidgetService]: Delete widgets for user with id:  ${userId}`);
+
+        const userWidgets = await WidgetService.getAll({ userId, env: 'all' });
+        if (userWidgets.docs) {
+            await Promise.all(userWidgets.docs.map(async (widget) => {
+                const currentWidgetId = widget._id;
+                const currentWidgetDatasetId = widget.dataset;
+                logger.info(`[DBACCESS-DELETE]: widget.id: ${currentWidgetId}`);
+                await widget.remove();
+                logger.debug('[WidgetService]: Deleting in graph');
+                try {
+                    await GraphService.deleteWidget(currentWidgetId);
+                } catch (err) {
+                    logger.error('Error removing widget of the graph', err);
+                }
+                try {
+                    await WidgetService.deleteMetadata(currentWidgetDatasetId, currentWidgetId);
+                } catch (err) {
+                    logger.error('Error removing metadata of the widget', err);
+                }
+            }));
+        }
+        return userWidgets;
+    }
+
     static async deleteMetadata(datasetId, widgetId) {
-        logger.debug('Removing metadata of the layer');
+        logger.debug('Removing metadata of the widget');
         await RWAPIMicroservice.requestToMicroservice({
             uri: `/v1/dataset/${datasetId}/widget/${widgetId}/metadata`,
             method: 'DELETE'

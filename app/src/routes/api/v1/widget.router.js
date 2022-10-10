@@ -174,6 +174,19 @@ class WidgetRouter {
         ctx.set('uncache', uncache.join(' '));
     }
 
+    static async deleteByUserId(ctx) {
+        const userIdToDelete = ctx.params.userId;
+
+        logger.info(`[WidgetRouter] Deleting all widget for user with id: ${userIdToDelete}`);
+        try {
+            const deletedWidgets = await WidgetService.deleteByUserId(userIdToDelete);
+            ctx.body = WidgetSerializer.serialize(deletedWidgets);
+        } catch (err) {
+            logger.error(`Error deleting widgets from user ${userIdToDelete}`, err);
+            ctx.throw(500, `Error deleting widgets from user ${userIdToDelete}`);
+        }
+    }
+
     static async getAll(ctx) {
         const { query } = ctx;
         const dataset = ctx.params.dataset || null;
@@ -473,6 +486,36 @@ const isMicroservice = async (ctx, next) => {
     }
 };
 
+const isAuthenticatedMiddleware = async (ctx, next) => {
+    logger.info(`Verifying if user is authenticated`);
+
+    const user = WidgetRouter.getUser(ctx);
+
+    if (!user || !user.id) {
+        ctx.throw(401, 'Unauthorized');
+        return;
+    }
+    await next();
+};
+
+const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
+    logger.info(`[WidgetRouter] Checking authorization`);
+    const user = WidgetRouter.getUser(ctx);
+    const userFromParam = ctx.params.userId;
+
+    if (user.id === 'microservice' || user.role === 'ADMIN') {
+        await next();
+        return;
+    }
+
+    if (userFromParam === user.id) {
+        await next();
+        return;
+    }
+
+    ctx.throw(403, 'Forbidden');
+};
+
 
 // Declaring the routes
 // Index
@@ -488,6 +531,7 @@ router.get('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, Widg
 router.patch('/widget/:widget', getDatasetForWidgetMiddleware, datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
 router.patch('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, validationMiddleware, authorizationMiddleware, WidgetRouter.update);
 // Delete
+router.delete('/widget/by-user/:userId', isAuthenticatedMiddleware, deleteResourceAuthorizationMiddleware, WidgetRouter.deleteByUserId);
 router.delete('/widget/:widget', authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget/:widget', datasetValidationMiddleware, authorizationMiddleware, WidgetRouter.delete);
 router.delete('/dataset/:dataset/widget', datasetValidationMiddleware, isMicroserviceMiddleware, WidgetRouter.deleteByDataset);
