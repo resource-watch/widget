@@ -62,12 +62,12 @@ describe('Delete all widgets for a user', () => {
             .set('Authorization', `Bearer abcd`)
             .send();
         response.status.should.equal(200);
-        response.body.data[0].attributes.name.should.equal(widgetOne.name);
-        response.body.data[0].attributes.userId.should.equal(widgetOne.userId);
-        response.body.data[0].attributes.dataset.should.equal(widgetOne.dataset);
-        response.body.data[1].attributes.name.should.equal(widgetTwo.name);
-        response.body.data[1].attributes.userId.should.equal(widgetTwo.userId);
-        response.body.data[1].attributes.dataset.should.equal(widgetTwo.dataset);
+        response.body.deletedWidgets.data[0].attributes.name.should.equal(widgetOne.name);
+        response.body.deletedWidgets.data[0].attributes.userId.should.equal(widgetOne.userId);
+        response.body.deletedWidgets.data[0].attributes.dataset.should.equal(widgetOne.dataset);
+        response.body.deletedWidgets.data[1].attributes.name.should.equal(widgetTwo.name);
+        response.body.deletedWidgets.data[1].attributes.userId.should.equal(widgetTwo.userId);
+        response.body.deletedWidgets.data[1].attributes.dataset.should.equal(widgetTwo.dataset);
 
         const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
         findWidgetByUser.should.be.an('array').with.lengthOf(0);
@@ -100,12 +100,12 @@ describe('Delete all widgets for a user', () => {
             .set('Authorization', `Bearer abcd`)
             .send();
         response.status.should.equal(200);
-        response.body.data[0].attributes.name.should.equal(widgetOne.name);
-        response.body.data[0].attributes.userId.should.equal(widgetOne.userId);
-        response.body.data[0].attributes.dataset.should.equal(widgetOne.dataset);
-        response.body.data[1].attributes.name.should.equal(widgetTwo.name);
-        response.body.data[1].attributes.userId.should.equal(widgetTwo.userId);
-        response.body.data[1].attributes.dataset.should.equal(widgetTwo.dataset);
+        response.body.deletedWidgets.data[0].attributes.name.should.equal(widgetOne.name);
+        response.body.deletedWidgets.data[0].attributes.userId.should.equal(widgetOne.userId);
+        response.body.deletedWidgets.data[0].attributes.dataset.should.equal(widgetOne.dataset);
+        response.body.deletedWidgets.data[1].attributes.name.should.equal(widgetTwo.name);
+        response.body.deletedWidgets.data[1].attributes.userId.should.equal(widgetTwo.userId);
+        response.body.deletedWidgets.data[1].attributes.dataset.should.equal(widgetTwo.dataset);
 
         const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
         findWidgetByUser.should.be.an('array').with.lengthOf(0);
@@ -138,12 +138,12 @@ describe('Delete all widgets for a user', () => {
             .set('Authorization', `Bearer abcd`)
             .send();
         response.status.should.equal(200);
-        response.body.data[0].attributes.name.should.equal(widgetOne.name);
-        response.body.data[0].attributes.userId.should.equal(widgetOne.userId);
-        response.body.data[0].attributes.dataset.should.equal(widgetOne.dataset);
-        response.body.data[1].attributes.name.should.equal(widgetTwo.name);
-        response.body.data[1].attributes.userId.should.equal(widgetTwo.userId);
-        response.body.data[1].attributes.dataset.should.equal(widgetTwo.dataset);
+        response.body.deletedWidgets.data[0].attributes.name.should.equal(widgetOne.name);
+        response.body.deletedWidgets.data[0].attributes.userId.should.equal(widgetOne.userId);
+        response.body.deletedWidgets.data[0].attributes.dataset.should.equal(widgetOne.dataset);
+        response.body.deletedWidgets.data[1].attributes.name.should.equal(widgetTwo.name);
+        response.body.deletedWidgets.data[1].attributes.userId.should.equal(widgetTwo.userId);
+        response.body.deletedWidgets.data[1].attributes.dataset.should.equal(widgetTwo.dataset);
 
         const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
         findWidgetByUser.should.be.an('array').with.lengthOf(0);
@@ -165,7 +165,59 @@ describe('Delete all widgets for a user', () => {
             .send();
 
         response.status.should.equal(200);
-        response.body.data.should.be.an('array').with.lengthOf(0);
+        response.body.deletedWidgets.data.should.be.an('array').with.lengthOf(0);
+    });
+
+    it('Deleting widgets while some of them are protected should only delete unprotected ones', async () => {
+        mockGetUserFromToken(USERS.USER);
+
+        const widgetOne = await new Widget(createWidget({
+            env: 'staging', application: ['rw'], dataset: '123', userId: USERS.USER.id
+        })).save();
+        const widgetTwo = await new Widget(createWidget({
+            env: 'production', application: ['gfw'], dataset: '123', userId: USERS.USER.id
+        })).save();
+        const widgetThree = await new Widget(createWidget({
+            env: 'production', application: ['gfw'], dataset: '123', userId: USERS.USER.id, protected: true
+        })).save();
+        const fakeWidgetFromAdmin = await new Widget(createWidget({
+            env: 'staging', application: ['rw'], dataset: '123', userId: USERS.ADMIN.id
+        })).save();
+        const fakeWidgetFromManager = await new Widget(createWidget({
+            env: 'production', application: ['gfw'], dataset: '123', userId: USERS.MANAGER.id
+        })).save();
+
+
+        const deleteResponse = await requester
+            .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
+            .set('Authorization', `Bearer abcd`)
+            .send();
+
+        deleteResponse.status.should.equal(200);
+        deleteResponse.body.deletedWidgets.should.have.property('data').with.lengthOf(2);
+        deleteResponse.body.protectedWidgets.should.have.property('data').with.lengthOf(1);
+
+        const deletedWidgets = deleteResponse.body.deletedWidgets.data;
+        let widgetIds = deletedWidgets.map(widget => widget.id);
+        widgetIds.should.contain(widgetOne._id);
+        widgetIds.should.contain(widgetTwo._id);
+
+        const protectedWidgets = deleteResponse.body.protectedWidgets.data;
+        widgetIds = protectedWidgets.map(widget => widget.id);
+        widgetIds.should.contain(widgetThree._id);
+
+        const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
+        findWidgetByUser.should.be.an('array').with.lengthOf(1);
+        widgetIds = findWidgetByUser.map(widget => widget._id);
+        widgetIds.should.contain(widgetThree._id);
+
+        const findAllWidgets = await Widget.find({}).exec();
+        findAllWidgets.should.be.an('array').with.lengthOf(3);
+
+        widgetIds = findAllWidgets.map(widget => widget._id);
+        widgetIds.should.contain(fakeWidgetFromAdmin._id);
+        widgetIds.should.contain(fakeWidgetFromManager._id);
+        widgetIds.should.contain(widgetThree._id);
     });
 
     afterEach(async () => {

@@ -284,8 +284,10 @@ class WidgetService {
         logger.debug(`[WidgetService]: Delete widgets for user with id:  ${userId}`);
 
         const userWidgets = await WidgetService.getAll({ userId, env: 'all' });
+        const protectedWidgets = { docs: userWidgets.docs.filter(widget => widget.protected) };
+
         if (userWidgets.docs) {
-            await Promise.all(userWidgets.docs.map(async (widget) => {
+            userWidgets.docs = await Promise.all(userWidgets.docs.filter(widget => !widget.protected).map(async (widget) => {
                 const currentWidgetId = widget._id;
                 const currentWidgetDatasetId = widget.dataset;
                 logger.info(`[DBACCESS-DELETE]: widget.id: ${currentWidgetId}`);
@@ -301,9 +303,13 @@ class WidgetService {
                 } catch (err) {
                     logger.error('Error removing metadata of the widget', err);
                 }
+                return widget;
             }));
         }
-        return userWidgets;
+        return {
+            deletedWidgets: userWidgets,
+            protectedWidgets: protectedWidgets.docs.length > 0 ? protectedWidgets : null
+        };
     }
 
     static async deleteMetadata(datasetId, widgetId) {
