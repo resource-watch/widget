@@ -283,32 +283,16 @@ class WidgetService {
     static async deleteByUserId(userId) {
         logger.debug(`[WidgetService]: Delete widgets for user with id:  ${userId}`);
 
-        const userWidgets = await WidgetService.getAll({ userId, env: 'all' });
-        const protectedWidgets = { docs: userWidgets.docs.filter(widget => widget.protected) };
+        const filteredQuery = WidgetService.getFilteredQuery({ userId, env: 'all' });
 
-        if (userWidgets.docs) {
-            userWidgets.docs = await Promise.all(userWidgets.docs.filter(widget => !widget.protected).map(async (widget) => {
-                const currentWidgetId = widget._id;
-                const currentWidgetDatasetId = widget.dataset;
-                logger.info(`[DBACCESS-DELETE]: widget.id: ${currentWidgetId}`);
-                await widget.remove();
-                logger.debug('[WidgetService]: Deleting in graph');
-                try {
-                    await GraphService.deleteWidget(currentWidgetId);
-                } catch (err) {
-                    logger.error('Error removing widget of the graph', err);
-                }
-                try {
-                    await WidgetService.deleteMetadata(currentWidgetDatasetId, currentWidgetId);
-                } catch (err) {
-                    logger.error('Error removing metadata of the widget', err);
-                }
-                return widget;
-            }));
-        }
+        const unprotectedWidgets = await Widget.find({ ...filteredQuery, protected: false }).exec();
+        const protectedWidgets = await Widget.find({ ...filteredQuery, protected: true }).exec();
+
+        await Promise.all(unprotectedWidgets.map(WidgetService.delete));
+
         return {
-            deletedWidgets: userWidgets,
-            protectedWidgets: protectedWidgets.docs.length > 0 ? protectedWidgets : null
+            deletedWidgets: unprotectedWidgets,
+            protectedWidgets
         };
     }
 
