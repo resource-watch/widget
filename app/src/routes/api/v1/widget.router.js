@@ -181,11 +181,11 @@ class WidgetRouter {
         try {
             const widgets = await WidgetService.deleteByUserId(userIdToDelete);
             ctx.body = {
-                deletedWidgets: WidgetSerializer.serialize(widgets.deletedWidgets)
+                deletedWidgets: WidgetSerializer.serialize(widgets.deletedWidgets).data
             };
 
             if (widgets.protectedWidgets) {
-                ctx.body.protectedWidgets = WidgetSerializer.serialize(widgets.protectedWidgets);
+                ctx.body.protectedWidgets = WidgetSerializer.serialize(widgets.protectedWidgets).data;
             }
         } catch (err) {
             logger.error(`Error deleting widgets from user ${userIdToDelete}`, err);
