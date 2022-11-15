@@ -2,7 +2,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { USERS: { MICROSERVICE } } = require('./utils/test.constants');
+const { USERS: { MICROSERVICE }, USERS } = require('./utils/test.constants');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 const { createRequest } = require('./utils/test-server');
 const {
@@ -59,6 +59,50 @@ describe('Delete all widgets by dataset endpoint', () => {
         ];
         expectedWidgets.map(wid => createMockDeleteMetadata(datasetID, wid._id.toString()));
         await createWidgetInDB({ datasetID: getUUID(), userId: MICROSERVICE.id });
+
+        const response = await widget
+            .delete(`/${datasetID}/widget`)
+            .set('Authorization', `Bearer abcd`)
+            .query();
+
+        response.status.should.equal(200);
+        response.body.should.have.property('data').and.instanceOf(Object);
+        const { data } = response.body;
+
+        const testWidget = (createdWidget, key) => {
+            data[key].id.should.equal(createdWidget._id.toString());
+            data[key].type.should.equal('widget');
+            data[key].should.have.property('attributes').and.instanceOf(Object);
+
+            const expectedWidget = {
+                ...createdWidget._doc,
+                createdAt: createdWidget.createdAt.toISOString(),
+                updatedAt: createdWidget.updatedAt.toISOString(),
+            };
+            // remove fields which are not present to user from response body;
+            delete expectedWidget._id;
+            delete expectedWidget.__v;
+
+            data[key].attributes.should.deep.equal(expectedWidget);
+        };
+
+        expectedWidgets.map(testWidget);
+
+        const widgets = await Widget.find({});
+        widgets.should.be.lengthOf(1);
+    });
+
+    it('Deleting all widgets by dataset with protected widgets should delete all the widgets', async () => {
+        mockGetUserFromToken(MICROSERVICE);
+        const datasetID = getUUID();
+        createMockDataset(datasetID);
+        const expectedWidgets = [
+            await createWidgetInDB({ dataset: datasetID, userId: USERS.USER.id }),
+            await createWidgetInDB({ dataset: datasetID, userId: USERS.USER.id }),
+            await createWidgetInDB({ dataset: datasetID, userId: USERS.USER.id, protected: true })
+        ];
+        expectedWidgets.map(widget => createMockDeleteMetadata(datasetID, widget._id.toString()));
+        await createWidgetInDB({ datasetID: getUUID(), userId: USERS.USER.id });
 
         const response = await widget
             .delete(`/${datasetID}/widget`)
