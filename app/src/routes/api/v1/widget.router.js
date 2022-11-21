@@ -11,6 +11,7 @@ const WidgetProtected = require('errors/widgetProtected.error');
 const WidgetModel = require('models/widget.model');
 const { USER_ROLES } = require('app.constants');
 const GetCollectionInvalidRequest = require('errors/getCollectionInvalidRequest.error');
+const UserService = require('../../../services/user.service');
 
 const router = new Router();
 
@@ -176,6 +177,12 @@ class WidgetRouter {
 
     static async deleteByUserId(ctx) {
         const userIdToDelete = ctx.params.userId;
+
+        try {
+            await UserService.getUserById(userIdToDelete);
+        } catch (error) {
+            ctx.throw(404, `User ${userIdToDelete} does not exist`);
+        }
 
         logger.info(`[WidgetRouter] Deleting all widget for user with id: ${userIdToDelete}`);
         try {
