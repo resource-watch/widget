@@ -349,7 +349,7 @@ class WidgetRouter {
 }
 
 const validationMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Validating the widget`);
+    logger.debug(`[WidgetRouter] Validating the widget`);
     if (ctx.request.body.widget) {
         ctx.request.body = Object.assign(ctx.request.body, ctx.request.body.widget);
         delete ctx.request.body.widget;
@@ -388,7 +388,7 @@ const validationMiddleware = async (ctx, next) => {
 };
 
 const findByIdValidationMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Validating find by id`);
+    logger.debug(`[WidgetRouter] Validating find by id`);
     try {
         await WidgetValidator.validateFindById(ctx);
     } catch (err) {
@@ -404,7 +404,7 @@ const findByIdValidationMiddleware = async (ctx, next) => {
 };
 
 const datasetValidationMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Validating dataset presence`);
+    logger.debug(`[WidgetRouter] Validating dataset presence`);
     //
     try {
         ctx.state.dataset = await DatasetService.checkDataset(ctx);
@@ -415,7 +415,7 @@ const datasetValidationMiddleware = async (ctx, next) => {
 };
 
 const getDatasetForWidgetMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Get dataset for the widget`);
+    logger.debug(`[WidgetRouter] Get dataset for the widget`);
 
     if (ctx.request.body.dataset) {
         await next();
@@ -445,7 +445,7 @@ const isMicroserviceMiddleware = async (ctx, next) => {
 };
 
 const authorizationMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Checking authorization`);
+    logger.debug(`[WidgetRouter] Checking authorization`);
     // Get user from query (delete) or body (post-patch)
     const newWidgetCreation = ctx.request.path.includes('widget') && ctx.request.method === 'POST' && !(ctx.request.path.includes('find-by-ids'));
     const newWidgetUpdate = ctx.request.path.includes('widget') && ctx.request.method === 'PATCH';
@@ -500,7 +500,7 @@ const isMicroservice = async (ctx, next) => {
 };
 
 const isAuthenticatedMiddleware = async (ctx, next) => {
-    logger.info(`Verifying if user is authenticated`);
+    logger.debug(`Verifying if user is authenticated`);
 
     const user = WidgetRouter.getUser(ctx);
 
@@ -512,7 +512,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 };
 
 const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
-    logger.info(`[WidgetRouter] Checking authorization`);
+    logger.debug(`[WidgetRouter] Checking authorization`);
     const user = WidgetRouter.getUser(ctx);
     const userFromParam = ctx.params.userId;
 
