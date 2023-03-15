@@ -285,7 +285,7 @@ class WidgetService {
 
         const filteredQuery = WidgetService.getFilteredQuery({ userId, env: 'all' });
 
-        const unprotectedWidgets = await Widget.find({ ...filteredQuery, protected: false }).exec();
+        const unprotectedWidgets = await Widget.find({ ...filteredQuery, protected: { $ne: true } }).exec();
         const protectedWidgets = await Widget.find({ ...filteredQuery, protected: true }).exec();
 
         await Promise.all(unprotectedWidgets.map(WidgetService.delete));
