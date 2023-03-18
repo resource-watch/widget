@@ -6,6 +6,7 @@ const {
     ensureCorrectError, createWidget, mockGetUserFromToken
 } = require('./utils/helpers');
 const { USERS } = require('./utils/test.constants');
+const { createMockDeleteMetadata } = require('./utils/mock');
 
 chai.should();
 
@@ -56,6 +57,8 @@ describe('Delete all widgets for a user', () => {
         const fakeWidgetFromManager = await new Widget(createWidget({
             env: 'production', application: ['gfw'], dataset: '123', userId: USERS.MANAGER.id
         })).save();
+        createMockDeleteMetadata('123', widgetOne._id);
+        createMockDeleteMetadata('123', widgetTwo._id);
 
         nock(process.env.GATEWAY_URL)
             .get(`/auth/user/${USERS.USER.id}`)
@@ -100,6 +103,8 @@ describe('Delete all widgets for a user', () => {
         const fakeWidgetFromManager = await new Widget(createWidget({
             env: 'production', application: ['gfw'], dataset: '123', userId: USERS.MANAGER.id
         })).save();
+        createMockDeleteMetadata('123', widgetOne._id);
+        createMockDeleteMetadata('123', widgetTwo._id);
 
         nock(process.env.GATEWAY_URL)
             .get(`/auth/user/${USERS.USER.id}`)
@@ -168,6 +173,8 @@ describe('Delete all widgets for a user', () => {
         const fakeWidgetFromManager = await new Widget(createWidget({
             env: 'production', application: ['gfw'], dataset: '123', userId: USERS.MANAGER.id
         })).save();
+        createMockDeleteMetadata('123', widgetOne._id);
+        createMockDeleteMetadata('123', widgetTwo._id);
 
         nock(process.env.GATEWAY_URL)
             .get(`/auth/user/${USERS.USER.id}`)
@@ -217,14 +224,14 @@ describe('Delete all widgets for a user', () => {
         response.body.deletedWidgets.should.be.an('array').with.lengthOf(0);
     });
 
-    it('Deleting widgets while some of them are protected should only delete unprotected ones', async () => {
+    it('Deleting widgets by user id while some of them are protected should only delete unprotected ones', async () => {
         mockGetUserFromToken(USERS.USER);
 
         await Promise.all([...Array(100)].map(async () => {
-            await new Widget(createWidget({
+            const widgetOne = await new Widget(createWidget({
                 env: 'staging', application: ['rw'], dataset: '123', userId: USERS.USER.id
             })).save();
-            await new Widget(createWidget({
+            const widgetTwo = await new Widget(createWidget({
                 env: 'production', application: ['gfw'], dataset: '123', userId: USERS.USER.id
             })).save();
             await new Widget(createWidget({
@@ -236,6 +243,10 @@ describe('Delete all widgets for a user', () => {
             await new Widget(createWidget({
                 env: 'production', application: ['gfw'], dataset: '123', userId: USERS.MANAGER.id
             })).save();
+
+
+            createMockDeleteMetadata('123', widgetOne._id);
+            createMockDeleteMetadata('123', widgetTwo._id);
         }));
 
         nock(process.env.GATEWAY_URL)

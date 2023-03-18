@@ -4,21 +4,16 @@ const chai = require('chai');
 const Widget = require('models/widget.model');
 const { USERS } = require('./utils/test.constants');
 
-const { createRequest, getTestServer } = require('./utils/test-server');
+const { getTestServer } = require('./utils/test-server');
 
 const {
-    createWidgetInDB, getUUID, createAuthCases, createWidget, mockGetUserFromToken
+    createWidgetInDB, getUUID, createWidget, mockGetUserFromToken, ensureCorrectError
 } = require('./utils/helpers');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 
 chai.should();
 
-const prefix = '/api/v1/widget/';
-
-let widget;
 let requester;
-
-const authCases = createAuthCases('123', 'delete');
 
 nock.disableNetConnect();
 nock.enableNetConnect(process.env.HOST_IP);
@@ -32,14 +27,20 @@ describe('Delete widgets endpoint', () => {
 
         nock.cleanAll();
 
-        widget = await createRequest(prefix, 'delete');
-        authCases.setRequester(widget);
         requester = await getTestServer();
 
         await Widget.deleteMany({}).exec();
     });
 
-    it('Deleting widget without being authenticated should fall with HTTP 401', authCases.isLoggedUserRequired());
+    it('Deleting widget without being authenticated should fall with HTTP 401', async () => {
+        const widgetOne = await new Widget(createWidget()).save();
+
+        const response = await requester
+            .delete(`/api/v1/widget/${widgetOne.id}`)
+            .send();
+
+        ensureCorrectError(response.body, 'Unauthorized');
+    });
 
     it('Deleting widget with being authenticated as USER should fall with HTTP 403', async () => {
         mockGetUserFromToken(USERS.USER);
@@ -106,7 +107,16 @@ describe('Delete widgets endpoint', () => {
 
     it('Deleting widget with being authenticated as ADMIN but with wrong app should fall', async () => {
         const createdWidget = await createWidgetInDB({ userId: USERS.WRONG_ADMIN.id });
-        authCases.isRightAppRequired(createdWidget._id);
+
+        mockGetUserFromToken(USERS.WRONG_ADMIN);
+
+        const response = await requester
+            .delete(`/api/v1/widget/${createdWidget.id}`)
+            .set('Authorization', `Bearer abcd`)
+            .send();
+
+        response.status.should.equal(403);
+        ensureCorrectError(response.body, 'Forbidden');
     });
 
     it('Deleting widget should delete widget and return deleted widget (happy case)', async () => {
@@ -118,8 +128,8 @@ describe('Delete widgets endpoint', () => {
 
         createMockDeleteMetadata(datasetID, createdWidget._id);
 
-        const response = await widget
-            .delete(createdWidget._id)
+        const response = await requester
+            .delete(`/api/v1/widget/${createdWidget.id}`)
             .set('Authorization', `Bearer abcd`)
             .query({ dataset: datasetID });
 

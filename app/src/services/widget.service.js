@@ -140,7 +140,6 @@ class WidgetService {
     static async clone(id, widget, userId) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.debug(`[WidgetService]: New user id: ${userId}`);
-        logger.info(`[DBACCESS-FIND]: widget.id: ${id}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
             slug: id
         }).exec();
@@ -207,9 +206,7 @@ class WidgetService {
 
     static async get(id, dataset, includes = [], user = null) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
-        logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
-        logger.info(`[DBACCESS-FIND]: Widget: ${widget}`);
         if (widget) {
             if (dataset && dataset !== widget.dataset) {
                 throw new WidgetNotFound(`Widget not found with the id ${id} for the dataset ${dataset}`);
@@ -228,7 +225,6 @@ class WidgetService {
 
     static async delete(id, dataset) {
         logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
-        logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widget = await Widget.findById(id).exec();
         if (!widget) {
             logger.error(`[WidgetService]: Widget not found with the id ${id}`);
@@ -244,7 +240,7 @@ class WidgetService {
         } catch (err) {
             logger.error('Error removing dataset of the graph', err);
         }
-        logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
+        logger.debug(`[DBACCESS-DELETE]: ID: ${id}`);
         try {
             await WidgetService.deleteMetadata(dataset || widget.dataset, widget._id);
         } catch (err) {
@@ -256,7 +252,6 @@ class WidgetService {
 
     static async deleteByDataset(id) {
         logger.debug(`[WidgetService]: Deleting widgets of dataset with id: ${id}`);
-        logger.info(`[DBACCESS-FIND]: ID: ${id}`);
         const widgets = await Widget.find({
             dataset: id
         }).exec();
@@ -268,7 +263,7 @@ class WidgetService {
             } catch (err) {
                 logger.error('Error removing dataset of the graph', err);
             }
-            logger.info(`[DBACCESS-DELETE]: ID: ${id}`);
+            logger.debug(`[DBACCESS-DELETE]: ID: ${id}`);
             await widget.remove();
             try {
                 await WidgetService.deleteMetadata(id, widget._id);
@@ -288,7 +283,7 @@ class WidgetService {
         const unprotectedWidgets = await Widget.find({ ...filteredQuery, protected: { $ne: true } }).exec();
         const protectedWidgets = await Widget.find({ ...filteredQuery, protected: true }).exec();
 
-        await Promise.all(unprotectedWidgets.map(WidgetService.delete));
+        await Promise.all(unprotectedWidgets.map(widget => WidgetService.delete(widget.id)));
 
         return {
             deletedWidgets: unprotectedWidgets,
@@ -305,7 +300,6 @@ class WidgetService {
     }
 
     static async getAll(query = {}, dataset = null, user) {
-        logger.info(`[DBACCESS-FIND]: all widgets`);
         const sort = query.sort || '';
         const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
         logger.debug(`pageNumber param: ${page}`);
@@ -328,7 +322,6 @@ class WidgetService {
             sort: filteredSort
         };
         logger.debug(`[WidgetService] Query options: ${JSON.stringify(options)}`);
-        logger.info(`[DBACCESS-FIND]: widget`);
         let pages = await Widget.paginate(filteredQuery, options);
         pages = { ...pages };
         if (includes.length > 0) {
