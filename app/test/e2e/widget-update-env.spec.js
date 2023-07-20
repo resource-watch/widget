@@ -17,7 +17,7 @@ const {
     ensureCorrectError,
     createWidgetInDB,
     getUUID,
-    mockGetUserFromToken
+    mockValidateRequestWithApiKeyAndUserToken, mockValidateRequestWithApiKey
 } = require('./utils/helpers');
 const { createMockDataset, createMockDatasetNotFound } = require('./utils/mock');
 
@@ -36,8 +36,6 @@ describe('Update env of widget by dataset endpoint', () => {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
 
-        nock.cleanAll();
-
         widget = await createRequest(prefix, 'patch');
         authCases.setRequester(widget);
 
@@ -45,60 +43,66 @@ describe('Update env of widget by dataset endpoint', () => {
     });
 
     it('Updating env of widget by dataset which doesn\'t exist should return not found', async () => {
+        mockValidateRequestWithApiKey({});
         createMockDatasetNotFound('123');
         const response = await widget
-            .patch('/123/production');
+            .patch('/123/production')
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(404);
         ensureCorrectError(response.body, 'Dataset not found');
     });
 
     it('Updating env of widget by dataset without being authenticated should fall with HTTP 403', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
         createMockDataset(datasetID);
-        const response = await widget.patch(`/${datasetID}/production`);
+        const response = await widget.patch(`/${datasetID}/production`)
+            .set('x-api-key', 'api-key-test');
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
     it('Updating env of widget by dataset with being authenticated as USER should fall with HTTP 403', async () => {
-        mockGetUserFromToken(USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const response = await widget
             .patch(`/${datasetID}/production`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
     it('Updating env of widget by dataset with being authenticated as ADMIN should fall with HTTP 403', async () => {
-        mockGetUserFromToken(ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const response = await widget
             .patch(`/${datasetID}/production`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
-
     it('Updating env of widget by dataset with being authenticated as MANAGER should fall with HTTP 403', async () => {
-        mockGetUserFromToken(MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: MANAGER });
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const response = await widget
             .patch(`/${datasetID}/production`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     });
 
     it('Updating env of widget by dataset should update all relative widgets to provided dataset', async () => {
-        mockGetUserFromToken(MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: MICROSERVICE });
         const datasetID = getUUID();
         createMockDataset(datasetID);
 
@@ -109,6 +113,7 @@ describe('Update env of widget by dataset endpoint', () => {
         const response = await widget
             .patch(`/${datasetID}/preproduction`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
         response.status.should.equal(200);
 
@@ -117,7 +122,6 @@ describe('Update env of widget by dataset endpoint', () => {
         expect(widgetsWithEnvPreproduction).to.be.lengthOf(2);
         expect(widgetsWithEnvProduction).to.be.lengthOf(1);
     });
-
 
     afterEach(async () => {
         await Widget.deleteMany({}).exec();

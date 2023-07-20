@@ -1,7 +1,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { createWidget } = require('./utils/helpers');
+const { createWidget, mockValidateRequestWithApiKey } = require('./utils/helpers');
 
 const { getTestServer } = require('./utils/test-server');
 
@@ -25,8 +25,10 @@ describe('Find widgets by Ids', () => {
     });
 
     it('Find widgets without ids in body returns a 400 error', async () => {
+        mockValidateRequestWithApiKey({});
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(400);
@@ -35,8 +37,10 @@ describe('Find widgets by Ids', () => {
     });
 
     it('Find widgets with empty id list returns an empty list (empty db)', async () => {
+        mockValidateRequestWithApiKey({});
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 ids: []
             });
@@ -46,8 +50,10 @@ describe('Find widgets by Ids', () => {
     });
 
     it('Find widgets with id list containing widget that does not exist returns an empty list (empty db)', async () => {
+        mockValidateRequestWithApiKey({});
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 ids: ['abcd']
             });
@@ -57,11 +63,13 @@ describe('Find widgets by Ids', () => {
     });
 
     it('Find widgets with id list containing a widget that exists returns only the listed widget', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetOne = await new Widget(createWidget()).save();
         await new Widget(createWidget()).save();
 
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 ids: [widgetOne.dataset]
             });
@@ -80,11 +88,13 @@ describe('Find widgets by Ids', () => {
     });
 
     it('Find widgets with id list on the body containing widgets that exist returns the listed widgets', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetOne = await new Widget(createWidget()).save();
         const widgetTwo = await new Widget(createWidget()).save();
 
         const response = await requester
             .post(`/api/v1/widget/find-by-ids`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 ids: [widgetOne.dataset, widgetTwo.dataset]
             });
@@ -111,11 +121,13 @@ describe('Find widgets by Ids', () => {
     });
 
     it('Find widgets with id list on query param and the body containing widgets that exist returns the listed widgets from the body list, ignores query param', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetOne = await new Widget(createWidget()).save();
         const widgetTwo = await new Widget(createWidget()).save();
 
         const response = await requester
             .post(`/api/v1/widget/find-by-ids?ids=${widgetTwo.dataset}`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 ids: [widgetOne.dataset]
             });
@@ -135,11 +147,13 @@ describe('Find widgets by Ids', () => {
 
     describe('Environment', () => {
         it('Get widgets with no env filter should return all passed widgets', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget()).save();
             const widgetTwo = await new Widget(createWidget({ env: 'custom' })).save();
 
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
+                .set('x-api-key', 'api-key-test')
                 .send({
                     ids: [widgetOne.dataset, widgetTwo.dataset],
                 });
@@ -165,10 +179,12 @@ describe('Find widgets by Ids', () => {
         });
 
         it('Get widgets with custom env should return empty response', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget()).save();
 
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
+                .set('x-api-key', 'api-key-test')
                 .send({
                     ids: [widgetOne.dataset],
                     env: 'custom'
@@ -179,11 +195,13 @@ describe('Find widgets by Ids', () => {
         });
 
         it('Get widgets with custom env and created custom widget - should return one widget', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             await new Widget(createWidget()).save();
 
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
+                .set('x-api-key', 'api-key-test')
                 .send({
                     ids: [widgetOne.dataset],
                     env: 'custom'
@@ -194,11 +212,13 @@ describe('Find widgets by Ids', () => {
         });
 
         it('Get widgets with custom env and mismatch widget id - should return empty', async () => {
+            mockValidateRequestWithApiKey({});
             await new Widget(createWidget({ env: 'custom' })).save();
             const widgetTwo = await new Widget(createWidget()).save();
 
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
+                .set('x-api-key', 'api-key-test')
                 .send({
                     ids: [widgetTwo.dataset],
                     env: 'custom'
@@ -209,12 +229,14 @@ describe('Find widgets by Ids', () => {
         });
 
         it('Get widgets with custom and production env', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const widgetTwo = await new Widget(createWidget()).save();
             const widgetThree = await new Widget(createWidget()).save();
 
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
+                .set('x-api-key', 'api-key-test')
                 .send({
                     ids: [widgetOne.dataset, widgetTwo.dataset, widgetThree.dataset],
                     env: ['custom', 'production'].join(',')
@@ -225,12 +247,14 @@ describe('Find widgets by Ids', () => {
         });
 
         it('Get widgets with env as array should fail', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const widgetTwo = await new Widget(createWidget()).save();
             const widgetThree = await new Widget(createWidget()).save();
 
             const response = await requester
                 .post(`/api/v1/widget/find-by-ids`)
+                .set('x-api-key', 'api-key-test')
                 .send({
                     ids: [widgetOne.dataset, widgetTwo.dataset, widgetThree.dataset],
                     env: ['custom', 'production']

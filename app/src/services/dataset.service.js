@@ -2,8 +2,7 @@ const logger = require('logger');
 const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const JSONAPIDeserializer = require('jsonapi-serializer').Deserializer;
 
-
-const deserializer = obj => new Promise((resolve, reject) => {
+const deserializer = (obj) => new Promise((resolve, reject) => {
     new JSONAPIDeserializer({
         keyForAttribute: 'camelCase'
     }).deserialize(obj, (err, data) => {
@@ -14,7 +13,6 @@ const deserializer = obj => new Promise((resolve, reject) => {
         resolve(data);
     });
 });
-
 
 class DatasetService {
 
@@ -27,7 +25,10 @@ class DatasetService {
                 const dataset = await RWAPIMicroservice.requestToMicroservice({
                     uri: `/v1/dataset/${datasetId}`,
                     method: 'GET',
-                    json: true
+                    json: true,
+                    headers: {
+                        'x-api-key': ctx.request.headers['x-api-key'],
+                    }
                 });
                 return await deserializer(dataset);
             } catch (err) {
@@ -42,12 +43,15 @@ class DatasetService {
         }
     }
 
-    static async getDataset(datasetId) {
+    static async getDataset(datasetId, apiKey) {
         try {
             const dataset = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/v1/dataset/${datasetId}`,
                 method: 'GET',
-                json: true
+                json: true,
+                headers: {
+                    'x-api-key': apiKey,
+                }
             });
             return await deserializer(dataset);
         } catch (err) {
@@ -57,6 +61,5 @@ class DatasetService {
     }
 
 }
-
 
 module.exports = DatasetService;

@@ -1,5 +1,7 @@
 const nock = require('nock');
 const Widget = require('models/widget.model');
+const config = require('config');
+const { mockValidateRequest, mockCloudWatchLogRequest } = require('rw-api-microservice-node/dist/test-mocks');
 const { WIDGET_CONFIG, USERS } = require('./test.constants');
 
 const getUUID = () => Math.random().toString(36).substring(7);
@@ -9,41 +11,108 @@ const ensureCorrectError = (body, errMessage) => {
     body.errors[0].should.have.property('detail').and.equal(errMessage);
 };
 
-const mockGetUserFromToken = (userProfile) => {
-    nock(process.env.GATEWAY_URL, { reqheaders: { authorization: 'Bearer abcd' } })
-        .get('/auth/user/me')
-        .reply(200, userProfile);
+const APPLICATION = {
+    data: {
+        type: 'applications',
+        id: '649c4b204967792f3a4e52c9',
+        attributes: {
+            name: 'grouchy-armpit',
+            organization: null,
+            user: null,
+            apiKeyValue: 'a1a9e4c3-bdff-4b6b-b5ff-7a60a0454e13',
+            createdAt: '2023-06-28T15:00:48.149Z',
+            updatedAt: '2023-06-28T15:00:48.149Z'
+        }
+    }
 };
+
+const mockValidateRequestWithApiKey = ({
+    apiKey = 'api-key-test',
+    application = APPLICATION
+}) => {
+    mockValidateRequest({
+        gatewayUrl: process.env.GATEWAY_URL,
+        microserviceToken: process.env.MICROSERVICE_TOKEN,
+        application,
+        apiKey
+    });
+    mockCloudWatchLogRequest({
+        application,
+        awsRegion: process.env.AWS_REGION,
+        logGroupName: process.env.CLOUDWATCH_LOG_GROUP_NAME,
+        logStreamName: config.get('service.name')
+    });
+};
+
+const mockValidateRequestWithApiKeyAndUserToken = ({
+    apiKey = 'api-key-test',
+    token = 'abcd',
+    application = APPLICATION,
+    user = USERS.USER
+}) => {
+    mockValidateRequest({
+        gatewayUrl: process.env.GATEWAY_URL,
+        microserviceToken: process.env.MICROSERVICE_TOKEN,
+        user,
+        application,
+        token,
+        apiKey
+    });
+    mockCloudWatchLogRequest({
+        user,
+        application,
+        awsRegion: process.env.AWS_REGION,
+        logGroupName: process.env.CLOUDWATCH_LOG_GROUP_NAME,
+        logStreamName: config.get('service.name')
+    });
+};
+
+// const mockGetUserFromToken = (userProfile) => {
+//     nock(process.env.GATEWAY_URL, { reqheaders: { authorization: 'Bearer abcd' } })
+//         .get('/auth/user/me')
+//         .reply(200, userProfile);
+// };
 
 const createAuthCases = (url, initMethod, providedRequester) => {
     let requester = providedRequester;
     const { USER, ADMIN, WRONG_ADMIN } = USERS;
 
-    const setRequester = (req) => { requester = req; };
+    const setRequester = (req) => {
+        requester = req;
+    };
 
     const isUserForbidden = (to = url, method = initMethod) => async () => {
-        mockGetUserFromToken(USER);
-        const response = await requester[method](to).send();
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
+        const response = await requester[method](to)
+            .set('x-api-key', 'api-key-test')
+            .send();
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Forbidden');
     };
 
     const isAdminForbidden = (to = url, method = initMethod) => async () => {
-        mockGetUserFromToken(ADMIN);
-        const response = await requester[method](to).send();
+        mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
+        const response = await requester[method](to)
+            .set('x-api-key', 'api-key-test')
+            .send();
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Not authorized');
     };
 
     const isRightAppRequired = (to = url, method = initMethod) => async () => {
-        mockGetUserFromToken(WRONG_ADMIN);
-        const response = await requester[method](to).send();
+        mockValidateRequestWithApiKeyAndUserToken({ user: WRONG_ADMIN });
+        const response = await requester[method](to)
+            .set('x-api-key', 'api-key-test')
+            .send();
         response.status.should.equal(403);
         ensureCorrectError(response.body, 'Forbidden');
     };
 
     const isLoggedUserRequired = (to = url, method = initMethod) => async () => {
-        const response = await requester[method](to).send();
+        mockValidateRequestWithApiKey({});
+        const response = await requester[method](to)
+            .set('x-api-key', 'api-key-test')
+            .send();
         response.status.should.equal(401);
         ensureCorrectError(response.body, 'Unauthorized');
     };
@@ -84,7 +153,7 @@ const createWidgetMetadata = (datasetID, widgetID) => ({
     },
 });
 
-const createVocabulary = widgetID => ({
+const createVocabulary = (widgetID) => ({
     _id: getUUID(),
     type: 'vocabulary',
     attributes: {
@@ -143,7 +212,6 @@ const ensureCorrectWidget = (actualWidgetModel, expectedWidget) => {
     delete widget.attributes;
     delete widget.type;
 
-
     let actualWidget = actualWidgetModel;
     if (actualWidgetModel.toObject) {
         actualWidget = actualWidgetModel.toObject();
@@ -169,7 +237,7 @@ const createWidgetInDB = async (widgetData) => {
 };
 
 const mockDataset = (id, responseData = {}, twice = false) => {
-    const data = Object.assign({}, {
+    const data = {
         id,
         type: 'dataset',
         attributes: {
@@ -209,8 +277,9 @@ const mockDataset = (id, responseData = {}, twice = false) => {
             dataLastUpdated: null,
             widgetRelevantProps: [],
             layerRelevantProps: []
-        }
-    }, responseData);
+        },
+        ...responseData
+    };
 
     const scope = nock(`${process.env.GATEWAY_URL}/v1`).get(`/dataset/${id}`);
     if (twice) scope.twice();
@@ -220,13 +289,19 @@ const mockDataset = (id, responseData = {}, twice = false) => {
 };
 
 const mockWebshot = (success = true, responseData = {}) => {
-    const data = Object.assign({}, { widgetThumbnail: 'http://thumbnail-url.com/file.png' }, responseData);
-    nock(process.env.GATEWAY_URL)
-        .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+    const data = { widgetThumbnail: 'http://thumbnail-url.com/file.png', ...responseData };
+    nock(process.env.GATEWAY_URL, {
+        reqheaders: {
+            'x-api-key': 'api-key-test',
+        }
+    })
+        .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
         .reply(success ? 200 : 500, { data });
 };
 
 module.exports = {
+    mockValidateRequestWithApiKeyAndUserToken,
+    mockValidateRequestWithApiKey,
     createWidget,
     getUUID,
     ensureCorrectWidget,
@@ -238,5 +313,4 @@ module.exports = {
     createVocabulary,
     mockDataset,
     mockWebshot,
-    mockGetUserFromToken
 };

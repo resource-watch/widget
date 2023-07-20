@@ -6,7 +6,8 @@ const Widget = require('models/widget.model');
 const { USERS: { USER, MANAGER, ADMIN } } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
 const {
-    createWidget, ensureCorrectWidget, getUUID, mockGetUserFromToken, createVocabulary, createWidgetMetadata
+    createWidget, ensureCorrectWidget, getUUID, createVocabulary, createWidgetMetadata,
+    mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken
 } = require('./utils/helpers');
 const {
     createMockUser, createMockUserRole, createMockVocabulary, createMockGetMetadata
@@ -29,15 +30,17 @@ describe('Get widgets tests', () => {
         requester = await getTestServer();
     });
 
-
     beforeEach(async () => {
         await Widget.deleteMany({}).exec();
     });
 
     describe('Test pagination links', () => {
         it('Get widgets without referer header should be successful and use the request host', async () => {
+            mockValidateRequestWithApiKey({});
+
             const response = await requester
-                .get(`/api/v1/widget`);
+                .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -50,9 +53,11 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets with referer header should be successful and use that header on the links on the response', async () => {
+            mockValidateRequestWithApiKey({});
             const response = await requester
                 .get(`/api/v1/widget`)
-                .set('referer', `https://potato.com/get-me-all-the-data`);
+                .set('referer', `https://potato.com/get-me-all-the-data`)
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -65,9 +70,11 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets with x-rw-domain header should be successful and use that header on the links on the response', async () => {
+            mockValidateRequestWithApiKey({});
             const response = await requester
                 .get(`/api/v1/widget`)
-                .set('x-rw-domain', `potato.com`);
+                .set('x-rw-domain', `potato.com`)
+                .set('x-api-key', 'api-key-test');
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array');
@@ -80,9 +87,11 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets with x-rw-domain and referer headers should be successful and use the x-rw-domain header on the links on the response', async () => {
+            mockValidateRequestWithApiKey({});
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('x-rw-domain', `potato.com`)
+                .set('x-api-key', 'api-key-test')
                 .set('referer', `https://tomato.com/get-me-all-the-data`);
 
             response.status.should.equal(200);
@@ -103,12 +112,14 @@ describe('Get widgets tests', () => {
      */
     describe('Includes', () => {
         it('Get widgets including metadata - env filter is ignored for metadata', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const metadata = createWidgetMetadata(widgetOne.dataset, widgetOne._id);
             createMockGetMetadata(metadata, widgetOne.dataset);
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: 'metadata', env: 'custom' });
 
             response.status.should.equal(200);
@@ -126,12 +137,14 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets includes vocabulary', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget()).save();
             const vocabulary = createVocabulary(widgetOne._id);
             createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id);
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: 'vocabulary' });
 
             response.status.should.equal(200);
@@ -149,12 +162,14 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets includes vocabulary from custom env without filterIncludesByEnv should return widget filtered by the custom env including the associated vocabulary not filtered by the custom env', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const vocabulary = createVocabulary(widgetOne._id);
             createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id);
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: 'vocabulary', env: 'custom' });
 
             response.status.should.equal(200);
@@ -172,12 +187,14 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets includes vocabulary from custom env with filterIncludesByEnv should return widget filtered by the custom env including the associated vocabulary filtered by the custom env', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const vocabulary = createVocabulary(widgetOne._id);
             createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id, { env: 'custom' });
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: 'vocabulary', env: 'custom', filterIncludesByEnv: true });
 
             response.status.should.equal(200);
@@ -195,6 +212,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets includes vocabulary and metadata from custom env with filterIncludesByEnv should return widget filtered by the custom env including the associated vocabulary filtered by the custom env, but metadata is not filtered', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const vocabulary = createVocabulary(widgetOne._id);
             createMockVocabulary(vocabulary, widgetOne.dataset, widgetOne._id, { env: 'custom' });
@@ -203,6 +221,7 @@ describe('Get widgets tests', () => {
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: ['metadata', 'vocabulary'].join(','), env: 'custom', filterIncludesByEnv: true });
 
             response.status.should.equal(200);
@@ -220,6 +239,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets includes vocabulary from custom env with filterIncludesByEnv should return widget filtered by the custom env including the associated vocabulary filtered by the custom env (multi-env)', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ env: 'custom' })).save();
             const widgetTwo = await new Widget(createWidget({ env: 'potato' })).save();
             const vocabulary = createVocabulary(widgetOne._id);
@@ -228,6 +248,7 @@ describe('Get widgets tests', () => {
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: 'vocabulary', env: 'custom,potato', filterIncludesByEnv: true });
 
             response.status.should.equal(200);
@@ -244,6 +265,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets includes metadata and vocabulary should return widgets with included data', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget()).save();
 
             const vocabulary = createVocabulary(widgetOne._id);
@@ -253,6 +275,7 @@ describe('Get widgets tests', () => {
 
             const response = await requester
                 .get(`/api/v1/widget`)
+                .set('x-api-key', 'api-key-test')
                 .query({ includes: ['metadata', 'vocabulary'].join(',') });
 
             response.status.should.equal(200);
@@ -265,6 +288,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, anonymous call)', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
             const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -273,6 +297,7 @@ describe('Get widgets tests', () => {
 
             const response = await requester
                 .get(`/api/v1/widget?includes=user`)
+                .set('x-api-key', 'api-key-test')
                 .send();
 
             response.status.should.equal(200);
@@ -306,7 +331,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, USER role)', async () => {
-            mockGetUserFromToken(USER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: USER });
             const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
             const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -318,6 +343,7 @@ describe('Get widgets tests', () => {
                     includes: 'user',
                 })
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .send();
 
             response.status.should.equal(200);
@@ -351,7 +377,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, MANAGER role)', async () => {
-            mockGetUserFromToken(MANAGER);
+            mockValidateRequestWithApiKeyAndUserToken({ user: MANAGER });
             const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
             const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -363,6 +389,7 @@ describe('Get widgets tests', () => {
                     includes: 'user',
                 })
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .send();
 
             response.status.should.equal(200);
@@ -396,7 +423,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email (populated db, ADMIN role)', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             const widgetOne = await new Widget(createWidget({ userId: ADMIN.id })).save();
             const widgetTwo = await new Widget(createWidget({ userId: MANAGER.id })).save();
 
@@ -406,6 +433,7 @@ describe('Get widgets tests', () => {
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query({
                     includes: 'user',
                 })
@@ -442,12 +470,17 @@ describe('Get widgets tests', () => {
         });
 
         it('Get all widgets with includes=user should be successful and return a list of widgets with associated user name and email only for users that exist (populated db)', async () => {
+            mockValidateRequestWithApiKey({});
             const widgetOne = await new Widget(createWidget()).save();
             const widgetTwo = await new Widget(createWidget()).save();
 
             createMockUser([ADMIN]);
 
-            nock(process.env.GATEWAY_URL)
+            nock(process.env.GATEWAY_URL, {
+                reqheaders: {
+                    'x-api-key': 'api-key-test',
+                }
+            })
                 .post('/auth/user/find-by-ids', {
                     ids: [widgetTwo.userId]
                 })
@@ -457,6 +490,7 @@ describe('Get widgets tests', () => {
 
             const response = await requester
                 .get(`/api/v1/widget?includes=user`)
+                .set('x-api-key', 'api-key-test')
                 .send();
 
             response.status.should.equal(200);
@@ -487,7 +521,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get all widgets with includes=user should return a list of widgets and user name, email and role, even if only partial data exists', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             const widgetOne = await new Widget(createWidget()).save();
             const widgetTwo = await new Widget(createWidget()).save();
             const widgetThree = await new Widget(createWidget()).save();
@@ -516,17 +550,19 @@ describe('Get widgets tests', () => {
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query({
                     includes: 'user',
-                }).send();
+                })
+                .send();
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(3);
             response.body.should.have.property('links').and.be.an('object');
 
-            const responseWidgetOne = response.body.data.find(widget => widget.id === widgetOne.id);
-            const responseWidgetTwo = response.body.data.find(widget => widget.id === widgetTwo.id);
-            const responseWidgetThree = response.body.data.find(widget => widget.id === widgetThree.id);
+            const responseWidgetOne = response.body.data.find((widget) => widget.id === widgetOne.id);
+            const responseWidgetTwo = response.body.data.find((widget) => widget.id === widgetTwo.id);
+            const responseWidgetThree = response.body.data.find((widget) => widget.id === widgetThree.id);
 
             responseWidgetOne.attributes.name.should.equal(widgetOne.name);
             responseWidgetOne.attributes.dataset.should.equal(widgetOne.dataset);
@@ -561,13 +597,18 @@ describe('Get widgets tests', () => {
         });
 
         it('Getting widgets with includes user and user role USER should not add the usersRole query param to the pagination links', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             await new Widget(createWidget()).save();
-            nock(process.env.GATEWAY_URL).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
+            nock(process.env.GATEWAY_URL, {
+                reqheaders: {
+                    'x-api-key': 'api-key-test',
+                }
+            }).get('/auth/user/ids/USER').reply(200, { data: [USER.id] });
 
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query({
                     includes: 'user',
                     'user.role': 'USER',
@@ -585,13 +626,14 @@ describe('Get widgets tests', () => {
 
     describe('Environment', () => {
         it('Get widgets without env param should filter by env=production', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             const widgetOne = await new Widget(createWidget()).save();
             await new Widget(createWidget({ env: 'custom' })).save();
 
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query();
 
             response.status.should.equal(200);
@@ -610,7 +652,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets with all env query parameter should return widgets from every env', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             const widgetOne = await new Widget(createWidget()).save();
             const widgetTwo = await new Widget(createWidget({ env: 'custom' })).save();
             const widgetThree = await new Widget(createWidget({ env: 'potato' })).save();
@@ -618,6 +660,7 @@ describe('Get widgets tests', () => {
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query({
                     env: 'all'
                 });
@@ -644,7 +687,7 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets with env query parameter should return the matching widgets (single value env)', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             await new Widget(createWidget()).save();
             await new Widget(createWidget({ env: 'potato' })).save();
             const widgetTwo = await new Widget(createWidget({ env: 'dev' })).save();
@@ -653,13 +696,14 @@ describe('Get widgets tests', () => {
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query({
                     env: 'dev'
                 });
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(1);
-            response.body.data.map(elem => elem.id).sort().should.deep.equal([widgetTwo.id].sort());
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([widgetTwo.id].sort());
             response.body.should.have.property('links').and.be.an('object');
             response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
             response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev&page[number]=1&page[size]=10`);
@@ -669,20 +713,21 @@ describe('Get widgets tests', () => {
         });
 
         it('Get widgets with env query parameter should return the matching widgets (multi-value env)', async () => {
-            mockGetUserFromToken(ADMIN);
+            mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
             const widgetOne = await new Widget(createWidget({ env: 'potato' })).save();
             const widgetTwo = await new Widget(createWidget({ env: 'dev' })).save();
             await new Widget(createWidget({ env: 'custom' })).save();
             const response = await requester
                 .get(`/api/v1/widget`)
                 .set('Authorization', `Bearer abcd`)
+                .set('x-api-key', 'api-key-test')
                 .query({
                     env: ['dev', 'potato'].join(',')
                 });
 
             response.status.should.equal(200);
             response.body.should.have.property('data').and.be.an('array').and.length(2);
-            response.body.data.map(elem => elem.id).sort().should.deep.equal([widgetOne.id, widgetTwo.id].sort());
+            response.body.data.map((elem) => elem.id).sort().should.deep.equal([widgetOne.id, widgetTwo.id].sort());
             response.body.should.have.property('links').and.be.an('object');
             response.body.links.should.have.property('self').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
             response.body.links.should.have.property('prev').and.equal(`http://127.0.0.1:${config.get('service.port')}/v1/widget?env=dev%2Cpotato&page[number]=1&page[size]=10`);
@@ -693,7 +738,11 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets should be successful and return an empty list (empty db)', async () => {
-        const response = await requester.get(`/api/v1/widget`).send();
+        mockValidateRequestWithApiKey({});
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
+            .send();
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(0);
@@ -701,10 +750,14 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets should be successful and return a list of widgets (populated db)', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetOne = await new Widget(createWidget()).save();
         const widgetTwo = await new Widget(createWidget()).save();
 
-        const response = await requester.get(`/api/v1/widget`).send();
+        const response = await requester
+            .get(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
+            .send();
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(2);
@@ -718,7 +771,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as ADMIN with query param user.role = ADMIN should return a filtered list of widgets created by ADMIN (populated db)', async () => {
-        mockGetUserFromToken(ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
         const adminID = getUUID();
 
         const widgetOne = await new Widget(createWidget({ userId: adminID })).save();
@@ -729,6 +782,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 'user.role': 'ADMIN',
             });
@@ -743,7 +797,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as ADMIN with query param user.role = MANAGER should return a filtered list of widgets created by MANAGER (populated db)', async () => {
-        mockGetUserFromToken(ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
         const managerID = getUUID();
         const widgetOne = await new Widget(createWidget({ userId: managerID })).save();
         await new Widget(createWidget(['rw'], USER.id)).save();
@@ -753,6 +807,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 'user.role': 'MANAGER',
             });
@@ -767,7 +822,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as ADMIN with query param user.role = USER should return a filtered list of widgets created by USER (populated db)', async () => {
-        mockGetUserFromToken(ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
         const userID = getUUID();
         const widgetOne = await new Widget(createWidget({ userId: userID })).save();
         await new Widget(createWidget({ userId: MANAGER.id })).save();
@@ -777,6 +832,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 'user.role': 'USER',
             });
@@ -791,7 +847,7 @@ describe('Get widgets tests', () => {
     });
 
     it('Getting all widgets as MANAGER with query param user.role = USER should return an unfiltered list of widgets (populated db)', async () => {
-        mockGetUserFromToken(USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
         const userID = getUUID();
 
         const widgetOne = await new Widget(createWidget({ userId: userID })).save();
@@ -800,6 +856,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 'user.role': 'USER',
             });
@@ -814,10 +871,13 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets should return widgets owned by user', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         await new Widget(createWidget()).save();
 
-        const response = await requester.get(`/api/v1/widget?userId=xxx`);
+        const response = await requester
+            .get(`/api/v1/widget?userId=xxx`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(200);
         response.body.should.have.property('data').and.be.an('array').and.length(1);
@@ -828,7 +888,10 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter without being authenticated should return a 403 error', async () => {
-        const response = await requester.get(`/api/v1/widget?collection=xxx`);
+        mockValidateRequestWithApiKey({});
+        const response = await requester
+            .get(`/api/v1/widget?collection=xxx`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(403);
         response.body.should.have.property('errors').and.be.an('array').and.length(1);
@@ -836,8 +899,12 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as string should return a 400 error', async () => {
-        mockGetUserFromToken(USER);
-        nock(process.env.GATEWAY_URL)
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post('/v1/collection/find-by-ids', {
                 ids: 'xxx',
                 userId: USER.id
@@ -846,7 +913,8 @@ describe('Get widgets tests', () => {
 
         const response = await requester
             .get(`/api/v1/widget?collection=xxx`)
-            .set('Authorization', `Bearer abcd`);
+            .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test');
 
         response.status.should.equal(400);
         response.body.should.have.property('errors').and.be.an('array').and.length(1);
@@ -854,12 +922,16 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as string should return the matching widgets (happy case)', async () => {
-        mockGetUserFromToken(USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
         const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         await new Widget(createWidget()).save();
         const collectionId = mongoose.Types.ObjectId().toString();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post('/v1/collection/find-by-ids', {
                 ids: collectionId,
                 userId: USER.id
@@ -884,6 +956,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 collection: collectionId,
             });
@@ -897,13 +970,17 @@ describe('Get widgets tests', () => {
     });
 
     it('Get all widgets with collection filter as array should return the matching widgets (happy case)', async () => {
-        mockGetUserFromToken(USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
         const widgetOne = await new Widget(createWidget({ userId: 'xxx' })).save();
         const widgetTwo = await new Widget(createWidget()).save();
         const collectionIdOne = mongoose.Types.ObjectId().toString();
         const collectionIdTwo = mongoose.Types.ObjectId().toString();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post('/v1/collection/find-by-ids', {
                 ids: [collectionIdOne, collectionIdTwo],
                 userId: USER.id
@@ -940,6 +1017,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 collection: [collectionIdOne, collectionIdTwo],
             });
@@ -948,19 +1026,23 @@ describe('Get widgets tests', () => {
         response.body.should.have.property('data').and.be.an('array').and.length(2);
         response.body.should.have.property('links').and.be.an('object');
 
-        const responseWidgetNames = response.body.data.map(widget => widget.attributes.name);
+        const responseWidgetNames = response.body.data.map((widget) => widget.attributes.name);
         responseWidgetNames.should.contain(widgetOne.name);
         responseWidgetNames.should.contain(widgetTwo.name);
     });
 
     it('Get all widgets with collection filter and with no widget resources on collections should return an empty list', async () => {
-        mockGetUserFromToken(USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
         const widgetOne = await new Widget(createWidget(undefined, 'xxx')).save();
         const widgetTwo = await new Widget(createWidget()).save();
         const collectionIdOne = mongoose.Types.ObjectId().toString();
         const collectionIdTwo = mongoose.Types.ObjectId().toString();
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .post('/v1/collection/find-by-ids', {
                 ids: [collectionIdOne, collectionIdTwo],
                 userId: USER.id
@@ -997,6 +1079,7 @@ describe('Get widgets tests', () => {
         const response = await requester
             .get(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 collection: [collectionIdOne, collectionIdTwo],
             });

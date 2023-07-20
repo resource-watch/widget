@@ -2,7 +2,11 @@ const nock = require('nock');
 const intersection = require('lodash/intersection');
 const { DEFAULT_DATASET_ATTRIBUTES } = require('./test.constants');
 
-const createMockDataset = datasetID => nock(process.env.GATEWAY_URL)
+const createMockDataset = (datasetID) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .get(`/v1/dataset/${datasetID}`)
     .reply(200, {
         data: {
@@ -12,39 +16,63 @@ const createMockDataset = datasetID => nock(process.env.GATEWAY_URL)
         }
     });
 
-const createMockUserRole = (role, userID) => nock(process.env.GATEWAY_URL)
+const createMockUserRole = (role, userID) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .get(`/auth/user/ids/${role}`)
     .reply(200, { data: [userID] });
 
-const createMockDatasetNotFound = datasetID => nock(process.env.GATEWAY_URL)
+const createMockDatasetNotFound = (datasetID) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .get(`/v1/dataset/${datasetID}`)
     .reply(404, {
         error: 'Dataset not found'
     });
 
-const createMockDeleteMetadata = (datasetID, widgetID) => nock(process.env.GATEWAY_URL)
+const createMockDeleteMetadata = (datasetID, widgetID) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .delete(`/v1/dataset/${datasetID}/widget/${widgetID}/metadata`)
     .reply(200, {
         data: [],
     });
 
-const createMockGetMetadata = (mockMetadata, datasetID) => nock(process.env.GATEWAY_URL)
+const createMockGetMetadata = (mockMetadata, datasetID) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .post(`/v1/dataset/${datasetID}/widget/metadata/find-by-ids`)
     .reply(200, {
         data: mockMetadata,
     });
 
-const createMockVocabulary = (mockVocabulary, datasetID, widgetID, query = {}) => nock(process.env.GATEWAY_URL)
+const createMockVocabulary = (mockVocabulary, datasetID, widgetID, query = {}) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .get(`/v1/dataset/${datasetID}/widget/${widgetID}/vocabulary`)
     .query(query)
     .reply(200, {
         data: mockVocabulary,
     });
 
-const createMockUser = users => nock(process.env.GATEWAY_URL)
+const createMockUser = (users) => nock(process.env.GATEWAY_URL, {
+    reqheaders: {
+        'x-api-key': 'api-key-test',
+    }
+})
     .post(
         `/auth/user/find-by-ids`,
-        body => intersection(body.ids, users.map(e => e.id.toString())).length === body.ids.length
+        (body) => intersection(body.ids, users.map((e) => e.id.toString())).length === body.ids.length
     )
     .query(() => true)
     .reply(200, { data: users });

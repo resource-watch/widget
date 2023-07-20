@@ -12,7 +12,7 @@ const {
     mockDataset,
     mockWebshot,
     widgetConfig,
-    mockGetUserFromToken
+    mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken
 } = require('./utils/helpers');
 
 chai.should();
@@ -35,25 +35,30 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an anonymous user should fail with a 401 error code', async () => {
-        const response = await requester.patch(`/api/v1/widget/${getUUID()}`).send();
+        mockValidateRequestWithApiKey({});
+        const response = await requester
+            .patch(`/api/v1/widget/${getUUID()}`)
+            .set('x-api-key', 'api-key-test')
+            .send();
         response.status.should.equal(401);
         ensureCorrectError(response.body, 'Unauthorized');
     });
 
     it('Update a widget that doesn\'t exist should fail with a 404 error code', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const uuid = getUUID();
         const response = await requester
             .patch(`/api/v1/widget/${uuid}`)
             .set('Authorization', `Bearer abcd`)
-            .send({ });
+            .set('x-api-key', 'api-key-test')
+            .send({});
 
         response.status.should.equal(404);
         ensureCorrectError(response.body, `Widget not found with the id ${uuid}`);
     });
 
     it('Update a widget as an ADMIN should be successful', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget()).save();
 
         mockDataset(widgetOne.dataset, {}, true);
@@ -85,6 +90,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: widgetOne.dataset, widget });
 
         response.status.should.equal(200);
@@ -113,7 +119,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an USER with a matching app should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
         mockDataset(widgetOne.dataset, {}, true);
@@ -145,6 +151,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: widgetOne.dataset, widget });
 
         response.status.should.equal(200);
@@ -171,7 +178,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an MANAGER with a matching app should be successful', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         const widgetOne = await new Widget(createWidget({ userId: USERS.MANAGER.id })).save();
 
         mockDataset(widgetOne.dataset, {}, true);
@@ -203,6 +210,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: widgetOne.dataset, widget });
 
         response.status.should.equal(200);
@@ -229,7 +237,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an MANAGER without a matching userId should fail with HTTP 403', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
         mockDataset(widgetOne.dataset);
@@ -251,6 +259,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: widgetOne.dataset, widget });
 
         response.status.should.equal(403);
@@ -259,7 +268,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Update a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget({ application: ['potato'] })).save();
 
         mockDataset(widgetOne.dataset);
@@ -289,6 +298,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: widgetOne.dataset, widget });
 
         response.status.should.equal(403);
@@ -306,7 +316,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Updating a widget when taking a snapshot fails should still succeed', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget()).save();
 
         mockDataset(widgetOne.dataset, {}, true);
@@ -340,6 +350,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 widget,
             });
@@ -370,7 +381,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Updating a widget with widgetConfig value to a JSON string should fail', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget()).save();
 
         mockDataset(widgetOne.dataset);
@@ -394,6 +405,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 widget,
             });
@@ -403,7 +415,7 @@ describe('Update widgets tests', () => {
     });
 
     it('Updating a widget with an empty value for a string field should be successful', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget({ layerId: 'layer Id' })).save();
 
         mockDataset(widgetOne.dataset, {}, true);
@@ -423,6 +435,7 @@ describe('Update widgets tests', () => {
         const response = await requester
             .patch(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 widget,
             });

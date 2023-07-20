@@ -39,9 +39,9 @@ class WidgetSerializer {
         const result = {};
         if (data) {
             if (data.docs) {
-                result.data = data.docs.map(el => WidgetSerializer.serializeElement(el));
+                result.data = data.docs.map((el) => WidgetSerializer.serializeElement(el));
             } else if (Array.isArray(data)) {
-                result.data = data.map(el => WidgetSerializer.serializeElement(el));
+                result.data = data.map((el) => WidgetSerializer.serializeElement(el));
                 // result.data = WidgetSerializer.serializeElement(data[0]);
             } else {
                 result.data = WidgetSerializer.serializeElement(data);

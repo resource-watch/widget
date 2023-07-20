@@ -1,7 +1,7 @@
 const nock = require('nock');
 const chai = require('chai');
 const Widget = require('models/widget.model');
-const { createWidget } = require('./utils/helpers');
+const { createWidget, mockValidateRequestWithApiKey } = require('./utils/helpers');
 
 const { getTestServer } = require('./utils/test-server');
 
@@ -12,7 +12,6 @@ let requester;
 let widgetOne;
 let widgetTwo;
 let widgetThree;
-
 
 describe('Sort widgets tests', () => {
 
@@ -31,8 +30,10 @@ describe('Sort widgets tests', () => {
     });
 
     it('Sort widgets by non-existent field (implicit order)', async () => {
+        mockValidateRequestWithApiKey({});
         const responseOne = await requester
             .get(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
             .query({ sort: 'potato' });
 
         const widgetsOne = responseOne.body.data;
@@ -41,15 +42,17 @@ describe('Sort widgets tests', () => {
         responseOne.body.should.have.property('data').with.lengthOf(3);
         responseOne.body.should.have.property('links').and.be.an('object');
 
-        const widgetIds = widgetsOne.map(widget => widget.id);
+        const widgetIds = widgetsOne.map((widget) => widget.id);
 
         widgetIds.should.contain(widgetTwo._id);
         widgetIds.should.contain(widgetOne._id);
     });
 
     it('Sort widgets by source (implicit order)', async () => {
+        mockValidateRequestWithApiKey({});
         const responseOne = await requester
             .get(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
             .query({ sort: 'source' });
         const widgetsOne = responseOne.body.data;
 
@@ -57,7 +60,7 @@ describe('Sort widgets tests', () => {
         responseOne.body.should.have.property('data').with.lengthOf(3);
         responseOne.body.should.have.property('links').and.be.an('object');
 
-        const widgetIdsOne = widgetsOne.map(widget => widget.id);
+        const widgetIdsOne = widgetsOne.map((widget) => widget.id);
 
         widgetIdsOne[0].should.equal(widgetOne._id);
         widgetIdsOne[1].should.equal(widgetThree._id);
@@ -65,8 +68,10 @@ describe('Sort widgets tests', () => {
     });
 
     it('Sort widgets by source (explicit asc order)', async () => {
+        mockValidateRequestWithApiKey({});
         const responseOne = await requester
             .get(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
             .query({ sort: '+source' });
 
         const widgetsOne = responseOne.body.data;
@@ -75,7 +80,7 @@ describe('Sort widgets tests', () => {
         responseOne.body.should.have.property('data').with.lengthOf(3);
         responseOne.body.should.have.property('links').and.be.an('object');
 
-        const widgetIdsOne = widgetsOne.map(widget => widget.id);
+        const widgetIdsOne = widgetsOne.map((widget) => widget.id);
 
         widgetIdsOne[0].should.equal(widgetOne._id);
         widgetIdsOne[1].should.equal(widgetThree._id);
@@ -83,8 +88,10 @@ describe('Sort widgets tests', () => {
     });
 
     it('Sort widgets by source (explicit desc order)', async () => {
+        mockValidateRequestWithApiKey({});
         const responseOne = await requester
             .get(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
             .query({ sort: '-source' });
 
         const widgetsOne = responseOne.body.data;
@@ -93,7 +100,7 @@ describe('Sort widgets tests', () => {
         responseOne.body.should.have.property('data').with.lengthOf(3);
         responseOne.body.should.have.property('links').and.be.an('object');
 
-        const widgetIdsOne = widgetsOne.map(widget => widget.id);
+        const widgetIdsOne = widgetsOne.map((widget) => widget.id);
 
         widgetIdsOne[0].should.equal(widgetTwo._id);
         widgetIdsOne[1].should.equal(widgetThree._id);

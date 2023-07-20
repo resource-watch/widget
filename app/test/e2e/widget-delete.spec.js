@@ -7,7 +7,8 @@ const { USERS } = require('./utils/test.constants');
 const { getTestServer } = require('./utils/test-server');
 
 const {
-    createWidgetInDB, getUUID, createWidget, mockGetUserFromToken, ensureCorrectError
+    createWidgetInDB, getUUID, createWidget, ensureCorrectError, mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
 } = require('./utils/helpers');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 
@@ -25,30 +26,31 @@ describe('Delete widgets endpoint', () => {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
 
-        nock.cleanAll();
-
         requester = await getTestServer();
 
         await Widget.deleteMany({}).exec();
     });
 
     it('Deleting widget without being authenticated should fall with HTTP 401', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetOne = await new Widget(createWidget()).save();
 
         const response = await requester
             .delete(`/api/v1/widget/${widgetOne.id}`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         ensureCorrectError(response.body, 'Unauthorized');
     });
 
     it('Deleting widget with being authenticated as USER should fall with HTTP 403', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget()).save();
 
         const response = await requester
             .delete(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(403);
@@ -57,12 +59,13 @@ describe('Delete widgets endpoint', () => {
     });
 
     it('Deleting widget with being authenticated as MANAGER that does not own the widget should fall with HTTP 403', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         const widgetOne = await new Widget(createWidget()).save();
 
         const response = await requester
             .delete(`/api/v1/widget/${widgetOne.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(403);
@@ -71,7 +74,7 @@ describe('Delete widgets endpoint', () => {
     });
 
     it('Deleting widget with being authenticated as MANAGER that does own the widget should succeed', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         const createdWidget = await createWidgetInDB({ userId: USERS.MANAGER.id });
 
         createMockDataset(createdWidget.dataset);
@@ -80,6 +83,7 @@ describe('Delete widgets endpoint', () => {
         const response = await requester
             .delete(`/api/v1/widget/${createdWidget.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(200);
@@ -108,11 +112,12 @@ describe('Delete widgets endpoint', () => {
     it('Deleting widget with being authenticated as ADMIN but with wrong app should fall', async () => {
         const createdWidget = await createWidgetInDB({ userId: USERS.WRONG_ADMIN.id });
 
-        mockGetUserFromToken(USERS.WRONG_ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.WRONG_ADMIN });
 
         const response = await requester
             .delete(`/api/v1/widget/${createdWidget.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(403);
@@ -120,7 +125,7 @@ describe('Delete widgets endpoint', () => {
     });
 
     it('Deleting widget should delete widget and return deleted widget (happy case)', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const datasetID = getUUID();
         createMockDataset(datasetID);
         await createWidgetInDB({ datasetID });
@@ -131,6 +136,7 @@ describe('Delete widgets endpoint', () => {
         const response = await requester
             .delete(`/api/v1/widget/${createdWidget.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({ dataset: datasetID });
 
         response.status.should.equal(200);

@@ -6,7 +6,7 @@ const { USERS: { MICROSERVICE }, USERS } = require('./utils/test.constants');
 const { createMockDataset, createMockDeleteMetadata } = require('./utils/mock');
 const { createRequest } = require('./utils/test-server');
 const {
-    createWidgetInDB, getUUID, createAuthCases, mockGetUserFromToken
+    createWidgetInDB, getUUID, createAuthCases, mockValidateRequestWithApiKeyAndUserToken
 } = require('./utils/helpers');
 
 chai.should();
@@ -25,8 +25,6 @@ describe('Delete all widgets by dataset endpoint', () => {
         if (process.env.NODE_ENV !== 'test') {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
-
-        nock.cleanAll();
 
         widget = await createRequest(prefix, 'delete');
         authCases.setRequester(widget);
@@ -50,19 +48,20 @@ describe('Delete all widgets by dataset endpoint', () => {
     });
 
     it('Deleting all widgets by dataset should delete widgets in specific dataset (happy case)', async () => {
-        mockGetUserFromToken(MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: MICROSERVICE });
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const expectedWidgets = [
             await createWidgetInDB({ dataset: datasetID, userId: MICROSERVICE.id }),
             await createWidgetInDB({ dataset: datasetID, userId: MICROSERVICE.id })
         ];
-        expectedWidgets.map(wid => createMockDeleteMetadata(datasetID, wid._id.toString()));
+        expectedWidgets.map((wid) => createMockDeleteMetadata(datasetID, wid._id.toString()));
         await createWidgetInDB({ datasetID: getUUID(), userId: MICROSERVICE.id });
 
         const response = await widget
             .delete(`/${datasetID}/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query();
 
         response.status.should.equal(200);
@@ -93,7 +92,7 @@ describe('Delete all widgets by dataset endpoint', () => {
     });
 
     it('Deleting all widgets by dataset with protected widgets should delete all the widgets', async () => {
-        mockGetUserFromToken(MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: MICROSERVICE });
         const datasetID = getUUID();
         createMockDataset(datasetID);
         const expectedWidgets = [
@@ -101,12 +100,13 @@ describe('Delete all widgets by dataset endpoint', () => {
             await createWidgetInDB({ dataset: datasetID, userId: USERS.USER.id }),
             await createWidgetInDB({ dataset: datasetID, userId: USERS.USER.id, protected: true })
         ];
-        expectedWidgets.map(widget => createMockDeleteMetadata(datasetID, widget._id.toString()));
+        expectedWidgets.map((widget) => createMockDeleteMetadata(datasetID, widget._id.toString()));
         await createWidgetInDB({ datasetID: getUUID(), userId: USERS.USER.id });
 
         const response = await widget
             .delete(`/${datasetID}/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query();
 
         response.status.should.equal(200);

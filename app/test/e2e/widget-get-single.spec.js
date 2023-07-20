@@ -14,7 +14,7 @@ const {
     createAuthCases,
     ensureCorrectError,
     createVocabulary,
-    mockGetUserFromToken
+    mockValidateRequestWithApiKey, mockValidateRequestWithApiKeyAndUserToken
 } = require('./utils/helpers');
 const { createMockUser, createMockGetMetadata, createMockVocabulary } = require('./utils/mock');
 
@@ -54,8 +54,6 @@ describe('Get widget by id endpoint', () => {
             throw Error(`Running the test suite with NODE_ENV ${process.env.NODE_ENV} may result in permanent data loss. Please use NODE_ENV=test.`);
         }
 
-        nock.cleanAll();
-
         widget = await createRequest(prefix, 'get');
         authCases.setRequester(widget);
 
@@ -63,22 +61,29 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget when widget doesn\'t exist should return not found', async () => {
-        const response = await widget.get('123').send({ dataset: getUUID() });
+        mockValidateRequestWithApiKey({});
+        const response = await widget.get('123')
+            .set('x-api-key', 'api-key-test')
+            .send({ dataset: getUUID() });
         response.status.should.equal(404);
         ensureCorrectError(response.body, 'Widget not found with the id 123');
     });
 
     it('Getting widget should return widget (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
 
         const createdWidget = await createWidgetInDB({ datasetID });
-        const response = await widget.get(createdWidget._id).send({ dataset: datasetID });
+        const response = await widget.get(createdWidget._id)
+            .set('x-api-key', 'api-key-test')
+            .send({ dataset: datasetID });
         response.status.should.equal(200);
 
         ensureCorrectWidget(response, createdWidget);
     });
 
     it('Getting widget with vocabulary should return widget with vocabulary (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ dataset: datasetID });
         const vocabulary = createVocabulary(createdWidget._id);
@@ -87,6 +92,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .query({ includes: ['vocabulary'] })
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: datasetID });
         response.status.should.equal(200);
 
@@ -94,6 +100,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with users should return widget with users (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         createMockUser([USER]);
         const datasetID = getUUID();
 
@@ -101,6 +108,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .query({ includes: 'user' })
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: datasetID });
         response.status.should.equal(200);
 
@@ -113,6 +121,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with includes=metadata should return widget with metadata (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ dataset: datasetID, userId: USER.id });
         const metadata = createWidgetMetadata(datasetID, createdWidget._id);
@@ -121,6 +130,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .query({ includes: 'metadata' })
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: datasetID });
         response.status.should.equal(200);
 
@@ -128,6 +138,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget as an anonymous user with includes=user should return widget with user name and email (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
@@ -135,6 +146,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .query({ includes: 'user' })
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: datasetID });
         response.status.should.equal(200);
 
@@ -142,7 +154,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with USER role and includes=user should return widget with user name and email (happy case)', async () => {
-        mockGetUserFromToken(USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USER });
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
@@ -150,6 +162,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 includes: 'user',
             })
@@ -160,7 +173,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with MANAGER role and includes=user should return widget with user name and email (happy case)', async () => {
-        mockGetUserFromToken(MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: MANAGER });
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
@@ -168,6 +181,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 includes: 'user',
             })
@@ -178,7 +192,7 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with ADMIN role and includes=user should return widget with user name and email (happy case)', async () => {
-        mockGetUserFromToken(ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: ADMIN });
         const datasetID = getUUID();
         const createdWidget = await createWidgetInDB({ datasetID, userId: USER.id });
         createMockUser([USER]);
@@ -186,6 +200,7 @@ describe('Get widget by id endpoint', () => {
         const response = await widget
             .get(createdWidget._id)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .query({
                 includes: 'user',
             })
@@ -196,12 +211,14 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with widgetConfig as array with queryUrl should return widget with changed queryUrl (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
         const testURL = 'http://testt.test.com';
 
         const createdWidget = await createWidgetInDB({ datasetID });
         const response = await widget
             .get(createdWidget._id)
+            .set('x-api-key', 'api-key-test')
             .query({ queryUrl: testURL })
             .send({ dataset: datasetID });
         response.status.should.equal(200);
@@ -222,11 +239,13 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with widgetConfig as array with queryURL with custom params should return widget with queryUQL with custom params (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
 
         const createdWidget = await createWidgetInDB({ datasetID });
         const response = await widget
             .get(createdWidget._id)
+            .set('x-api-key', 'api-key-test')
             .query({ foo: 'bar', bar: 'foo' })
             .send({ dataset: datasetID });
         response.status.should.equal(200);
@@ -247,12 +266,14 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with widgetConfig single object with queryUrl should return widget with changed queryUrl (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
         const testURL = 'http://testt.test.com';
 
         const createdWidget = await createWidgetInDB({ dataset: datasetID, widgetConfig: SINGLE_WIDGET_CONFIG });
         const response = await widget
             .get(createdWidget._id)
+            .set('x-api-key', 'api-key-test')
             .query({ queryUrl: testURL })
             .send({ dataset: datasetID });
         response.status.should.equal(200);
@@ -270,11 +291,13 @@ describe('Get widget by id endpoint', () => {
     });
 
     it('Getting widget with widgetConfig as single object with queryURL with custom params should return widget with queryUQL with custom params (happy case)', async () => {
+        mockValidateRequestWithApiKey({});
         const datasetID = getUUID();
 
         const createdWidget = await createWidgetInDB({ dataset: datasetID, widgetConfig: SINGLE_WIDGET_CONFIG });
         const response = await widget
             .get(createdWidget._id)
+            .set('x-api-key', 'api-key-test')
             .query({ foo: 'bar', bar: 'foo' })
             .send({ dataset: datasetID });
         response.status.should.equal(200);

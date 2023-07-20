@@ -3,7 +3,8 @@ const chai = require('chai');
 const Widget = require('models/widget.model');
 const { getTestServer } = require('./utils/test-server');
 const {
-    ensureCorrectError, createWidget, mockGetUserFromToken
+    ensureCorrectError, createWidget, mockValidateRequestWithApiKeyAndUserToken,
+    mockValidateRequestWithApiKey
 } = require('./utils/helpers');
 const { USERS } = require('./utils/test.constants');
 const { createMockDeleteMetadata } = require('./utils/mock');
@@ -25,18 +26,23 @@ describe('Delete all widgets for a user', () => {
     });
 
     it('Deleting all widgets of an user without being authenticated should return a 401 "Not authorized" error', async () => {
-        const response = await requester.delete(`/api/v1/widget/by-user/${USERS.USER.id}`);
+        mockValidateRequestWithApiKey({});
+        const response = await requester
+            .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
+            .set('x-api-key', 'api-key-test');
+
         response.status.should.equal(401);
         ensureCorrectError(response.body, 'Unauthorized');
     });
 
     it('Deleting all widgets of an user while being authenticated as USER that is not the owner of widgets or admin should return a 403 "Forbidden" error', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         await new Widget(createWidget({ application: ['rw'], dataset: '123', userId: USERS.USER.id })).save();
 
         const response = await requester
             .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(403);
@@ -44,7 +50,7 @@ describe('Delete all widgets for a user', () => {
     });
 
     it('Deleting all widgets of an user while being authenticated as ADMIN should return a 200 and all widgets deleted', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget({
             env: 'staging', application: ['rw'], dataset: '123', userId: USERS.USER.id
         })).save();
@@ -60,7 +66,11 @@ describe('Delete all widgets for a user', () => {
         createMockDeleteMetadata('123', widgetOne._id);
         createMockDeleteMetadata('123', widgetTwo._id);
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -71,12 +81,13 @@ describe('Delete all widgets for a user', () => {
         const response = await requester
             .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
-        response.status.should.equal(200);
-        response.body.deletedWidgets.map(elem => elem.attributes.name).sort().should.eql([widgetOne.name, widgetTwo.name].sort());
-        response.body.deletedWidgets.map(elem => elem.attributes.userId).sort().should.eql([widgetOne.userId, widgetTwo.userId].sort());
-        response.body.deletedWidgets.map(elem => elem.attributes.dataset).sort().should.eql([widgetOne.dataset, widgetTwo.dataset].sort());
 
+        response.status.should.equal(200);
+        response.body.deletedWidgets.map((elem) => elem.attributes.name).sort().should.eql([widgetOne.name, widgetTwo.name].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.userId).sort().should.eql([widgetOne.userId, widgetTwo.userId].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.dataset).sort().should.eql([widgetOne.dataset, widgetTwo.dataset].sort());
 
         const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
         findWidgetByUser.should.be.an('array').with.lengthOf(0);
@@ -84,13 +95,13 @@ describe('Delete all widgets for a user', () => {
         const findAllWidgets = await Widget.find({}).exec();
         findAllWidgets.should.be.an('array').with.lengthOf(2);
 
-        const widgetNames = findAllWidgets.map(widget => widget.name);
+        const widgetNames = findAllWidgets.map((widget) => widget.name);
         widgetNames.should.contain(fakeWidgetFromManager.name);
         widgetNames.should.contain(fakeWidgetFromAdmin.name);
     });
 
     it('Deleting all widgets of an user while being authenticated as microservice should return a 200 and all widgets deleted', async () => {
-        mockGetUserFromToken(USERS.MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MICROSERVICE });
         const widgetOne = await new Widget(createWidget({
             env: 'staging', application: ['rw'], dataset: '123', userId: USERS.USER.id
         })).save();
@@ -106,7 +117,11 @@ describe('Delete all widgets for a user', () => {
         createMockDeleteMetadata('123', widgetOne._id);
         createMockDeleteMetadata('123', widgetTwo._id);
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -117,12 +132,12 @@ describe('Delete all widgets for a user', () => {
         const response = await requester
             .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
         response.status.should.equal(200);
-        response.body.deletedWidgets.map(elem => elem.attributes.name).sort().should.eql([widgetOne.name, widgetTwo.name].sort());
-        response.body.deletedWidgets.map(elem => elem.attributes.userId).sort().should.eql([widgetOne.userId, widgetTwo.userId].sort());
-        response.body.deletedWidgets.map(elem => elem.attributes.dataset).sort().should.eql([widgetOne.dataset, widgetTwo.dataset].sort());
-
+        response.body.deletedWidgets.map((elem) => elem.attributes.name).sort().should.eql([widgetOne.name, widgetTwo.name].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.userId).sort().should.eql([widgetOne.userId, widgetTwo.userId].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.dataset).sort().should.eql([widgetOne.dataset, widgetTwo.dataset].sort());
 
         const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
         findWidgetByUser.should.be.an('array').with.lengthOf(0);
@@ -130,15 +145,19 @@ describe('Delete all widgets for a user', () => {
         const findAllWidgets = await Widget.find({}).exec();
         findAllWidgets.should.be.an('array').with.lengthOf(2);
 
-        const widgetNames = findAllWidgets.map(widget => widget.name);
+        const widgetNames = findAllWidgets.map((widget) => widget.name);
         widgetNames.should.contain(fakeWidgetFromManager.name);
         widgetNames.should.contain(fakeWidgetFromAdmin.name);
     });
 
     it('Deleting a widget owned by a user that does not exist as a MICROSERVICE should return a 404', async () => {
-        mockGetUserFromToken(USERS.MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MICROSERVICE });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/potato`)
             .reply(403, {
                 errors: [
@@ -152,6 +171,7 @@ describe('Delete all widgets for a user', () => {
         const deleteResponse = await requester
             .delete(`/api/v1/widget/by-user/potato`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         deleteResponse.status.should.equal(404);
@@ -160,7 +180,7 @@ describe('Delete all widgets for a user', () => {
     });
 
     it('Deleting all widgets of an user while being authenticated as that same user should return a 200 and all widgets deleted', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget({
             env: 'staging', application: ['rw'], dataset: '123', userId: USERS.USER.id
         })).save();
@@ -176,7 +196,11 @@ describe('Delete all widgets for a user', () => {
         createMockDeleteMetadata('123', widgetOne._id);
         createMockDeleteMetadata('123', widgetTwo._id);
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -187,11 +211,12 @@ describe('Delete all widgets for a user', () => {
         const response = await requester
             .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
         response.status.should.equal(200);
-        response.body.deletedWidgets.map(elem => elem.attributes.name).sort().should.eql([widgetOne.name, widgetTwo.name].sort());
-        response.body.deletedWidgets.map(elem => elem.attributes.userId).sort().should.eql([widgetOne.userId, widgetTwo.userId].sort());
-        response.body.deletedWidgets.map(elem => elem.attributes.dataset).sort().should.eql([widgetOne.dataset, widgetTwo.dataset].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.name).sort().should.eql([widgetOne.name, widgetTwo.name].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.userId).sort().should.eql([widgetOne.userId, widgetTwo.userId].sort());
+        response.body.deletedWidgets.map((elem) => elem.attributes.dataset).sort().should.eql([widgetOne.dataset, widgetTwo.dataset].sort());
 
         const findWidgetByUser = await Widget.find({ userId: { $eq: USERS.USER.id } }).exec();
         findWidgetByUser.should.be.an('array').with.lengthOf(0);
@@ -199,15 +224,19 @@ describe('Delete all widgets for a user', () => {
         const findAllWidgets = await Widget.find({}).exec();
         findAllWidgets.should.be.an('array').with.lengthOf(2);
 
-        const widgetNames = findAllWidgets.map(widget => widget.name);
+        const widgetNames = findAllWidgets.map((widget) => widget.name);
         widgetNames.should.contain(fakeWidgetFromManager.name);
         widgetNames.should.contain(fakeWidgetFromAdmin.name);
     });
 
     it('Deleting all widgets of an user while being authenticated as USER should return a 200 and all widgets deleted - no widgets in the db', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -218,6 +247,7 @@ describe('Delete all widgets for a user', () => {
         const response = await requester
             .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
             .set('Authorization', 'Bearer abcd')
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(200);
@@ -225,7 +255,7 @@ describe('Delete all widgets for a user', () => {
     });
 
     it('Deleting widgets by user id while some of them are protected should only delete unprotected ones', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         await Promise.all([...Array(100)].map(async () => {
             const widgetOne = await new Widget(createWidget({
@@ -244,12 +274,15 @@ describe('Delete all widgets for a user', () => {
                 env: 'production', application: ['gfw'], dataset: '123', userId: USERS.MANAGER.id
             })).save();
 
-
             createMockDeleteMetadata('123', widgetOne._id);
             createMockDeleteMetadata('123', widgetTwo._id);
         }));
 
-        nock(process.env.GATEWAY_URL)
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
             .get(`/auth/user/${USERS.USER.id}`)
             .reply(200, {
                 data: {
@@ -260,6 +293,7 @@ describe('Delete all widgets for a user', () => {
         const deleteResponse = await requester
             .delete(`/api/v1/widget/by-user/${USERS.USER.id}`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         deleteResponse.status.should.equal(200);

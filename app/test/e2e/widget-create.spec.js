@@ -9,7 +9,7 @@ const {
     mockDataset,
     mockWebshot,
     ensureCorrectError,
-    mockGetUserFromToken
+    mockValidateRequestWithApiKeyAndUserToken, mockValidateRequestWithApiKey
 } = require('./utils/helpers');
 
 chai.should();
@@ -31,6 +31,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an anonymous user should fail with a 401 error code', async () => {
+        mockValidateRequestWithApiKey({});
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -48,6 +49,7 @@ describe('Create widgets tests', () => {
         };
         const response = await requester
             .post(`/api/v1/widget`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(401);
@@ -55,7 +57,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an ADMIN should be successful', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -76,6 +78,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
@@ -91,7 +94,6 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.widgetConfig.should.deep.equal(widget.widgetConfig);
         new Date(createdWidget.attributes.updatedAt).should.equalDate(new Date());
 
-
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
 
         databaseWidget.name.should.equal(widget.name);
@@ -103,7 +105,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an ADMIN should be successful - minimum required fields', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -115,6 +117,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
@@ -126,7 +129,6 @@ describe('Create widgets tests', () => {
         createdWidget.attributes.dataset.should.equal(dataset.id);
         new Date(createdWidget.attributes.updatedAt).should.equalDate(new Date());
 
-
         const databaseWidget = await Widget.findById(createdWidget.id).exec();
 
         databaseWidget.name.should.equal(widget.name);
@@ -134,7 +136,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER with a matching app should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -155,6 +157,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
@@ -181,7 +184,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER with a matching app should be successful (minimum required fields)', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -193,6 +196,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
@@ -211,7 +215,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79', { application: ['potato'] });
 
         const widget = {
@@ -230,6 +234,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(403);
@@ -238,7 +243,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget when taking a snapshot fails should return 200 OK with the created widget data', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -259,6 +264,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(200);
@@ -285,7 +291,7 @@ describe('Create widgets tests', () => {
     });
 
     it('Create a widget with widgetConfig set to a JSON string should fail', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const dataset = mockDataset('39f5dc1f-5e45-41d8-bcd5-96941c8a7e79');
 
         const widget = {
@@ -305,6 +311,7 @@ describe('Create widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({ dataset: dataset.id, widget });
 
         response.status.should.equal(400);

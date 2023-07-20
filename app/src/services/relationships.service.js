@@ -2,7 +2,7 @@ const logger = require('logger');
 const { RWAPIMicroservice } = require('rw-api-microservice-node');
 const GetCollectionInvalidRequest = require('errors/getCollectionInvalidRequest.error');
 
-const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
+const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
     return a;
 }, []).join('&');
@@ -42,7 +42,7 @@ class RelationshipsService {
         return userObject;
     }
 
-    static async getRelationships(widgets, includes, user, query = {}) {
+    static async getRelationships(widgets, includes, user, apiKey, query = {}) {
         logger.info(`Getting relationships of widgets: ${widgets}`);
         for (let i = 0; i < widgets.length; i++) {
             try {
@@ -54,7 +54,10 @@ class RelationshipsService {
                     const vocabularies = await RWAPIMicroservice.requestToMicroservice({
                         uri: `/v1/dataset/${widgets[i].dataset}/widget/${widgets[i]._id}/vocabulary${uriQuery}`,
                         method: 'GET',
-                        json: true
+                        json: true,
+                        headers: {
+                            'x-api-key': apiKey,
+                        }
                     });
                     widgets[i].vocabulary = vocabularies.data;
                 }
@@ -66,14 +69,17 @@ class RelationshipsService {
                         body: {
                             ids: [widgets[i].userId]
                         },
-                        version: false
+                        version: false,
+                        headers: {
+                            'x-api-key': apiKey,
+                        }
                     });
 
                     if (!userData.data[0]) {
                         logger.warn(`Tried to use find-by-ids to load info for user with id ${widgets[i].userId} but the following was returned: ${JSON.stringify(userData)}`);
                     } else {
                         widgets[i].user = RelationshipsService.formatWidgetOwner(userData.data[0], user);
-                        logger.info('Widgets including user data', widgets.map(el => el.toObject()));
+                        logger.info('Widgets including user data', widgets.map((el) => el.toObject()));
                     }
                 }
                 if (includes.indexOf('metadata') > -1) {
@@ -82,13 +88,16 @@ class RelationshipsService {
                     };
 
                     if (query.env) {
-                        body.env = query.env.split(',').map(elem => elem.trim());
+                        body.env = query.env.split(',').map((elem) => elem.trim());
                     }
                     const metadata = await RWAPIMicroservice.requestToMicroservice({
                         uri: `/v1/dataset/${widgets[i].dataset}/widget/metadata/find-by-ids`,
                         method: 'POST',
                         json: true,
                         body,
+                        headers: {
+                            'x-api-key': apiKey,
+                        }
                     });
                     widgets[i].metadata = metadata.data;
                 }
@@ -99,7 +108,7 @@ class RelationshipsService {
         return widgets;
     }
 
-    static async getCollections(ids, userId) {
+    static async getCollections(ids, userId, apiKey) {
         logger.debug(`[RelationshipsService] getCollections for ids ${ids} and userID ${userId}.`);
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
@@ -109,35 +118,41 @@ class RelationshipsService {
                 body: {
                     ids,
                     userId
+                },
+                headers: {
+                    'x-api-key': apiKey,
                 }
             });
             logger.debug(`[RelationshipsService] Result of getCollections: `, result);
             const collectionsWithWidgetResources = result.data
-                .map(col => col.attributes.resources.filter(res => res.type === 'widget'));
+                .map((col) => col.attributes.resources.filter((res) => res.type === 'widget'));
 
             if (collectionsWithWidgetResources.length === 0) {
                 return [];
             }
 
             return collectionsWithWidgetResources
-                .reduce((pre, cur) => pre.concat(cur)).map(el => el.id);
+                .reduce((pre, cur) => pre.concat(cur)).map((el) => el.id);
         } catch (e) {
             throw new GetCollectionInvalidRequest(e.message, e.statusCode || 500);
         }
     }
 
-    static async getUsersWithRole(role) {
+    static async getUsersWithRole(role, apiKey) {
         const body = await RWAPIMicroservice.requestToMicroservice({
             uri: `/auth/user/ids/${role}`,
             method: 'GET',
             json: true,
-            version: false
+            version: false,
+            headers: {
+                'x-api-key': apiKey,
+            }
         });
         logger.debug('User ids', body.data);
         return body.data;
     }
 
-    static async getFavorites(app, userId) {
+    static async getFavorites(app, userId, apiKey) {
         try {
             const result = await RWAPIMicroservice.requestToMicroservice({
                 uri: `/v1/favourite/find-by-user`,
@@ -146,23 +161,29 @@ class RelationshipsService {
                 body: {
                     app,
                     userId
+                },
+                headers: {
+                    'x-api-key': apiKey,
                 }
             });
             logger.debug(result);
-            return result.data.filter(fav => fav.attributes.resourceType === 'widget').map(el => el.attributes.resourceId);
+            return result.data.filter((fav) => fav.attributes.resourceType === 'widget').map((el) => el.attributes.resourceId);
         } catch (e) {
             throw new Error(e);
         }
     }
 
-    static async getUsersInfoByIds(ids) {
+    static async getUsersInfoByIds(ids, apiKey) {
         logger.debug('Fetching all users\' information');
         const body = await RWAPIMicroservice.requestToMicroservice({
             uri: `/auth/user/find-by-ids`,
             method: 'POST',
             json: true,
             version: false,
-            body: { ids }
+            body: { ids },
+            headers: {
+                'x-api-key': apiKey,
+            }
         });
 
         return body.data;

@@ -15,7 +15,7 @@ const UserService = require('../../../services/user.service');
 
 const router = new Router();
 
-const serializeObjToQuery = obj => Object.keys(obj).reduce((a, k) => {
+const serializeObjToQuery = (obj) => Object.keys(obj).reduce((a, k) => {
     a.push(`${k}=${encodeURIComponent(obj[k])}`);
     return a;
 }, []).join('&');
@@ -43,8 +43,8 @@ class WidgetRouter {
         const { dataset } = ctx.params;
         const user = query.loggedUser && query.loggedUser !== 'null' ? JSON.parse(query.loggedUser) : null;
         logger.info(`[WidgetRouter] Getting widget with id: ${id}`);
-        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
-        const widget = await WidgetService.get(id, dataset, includes, user);
+        const includes = query.includes ? query.includes.split(',').map((elem) => elem.trim()) : [];
+        const widget = await WidgetService.get(id, dataset, ctx.request.headers['x-api-key'], includes, user);
         const queryParams = Object.keys(query);
         if (queryParams.indexOf('loggedUser') !== -1) {
             queryParams.splice(queryParams.indexOf('loggedUser'), 1);
@@ -115,7 +115,7 @@ class WidgetRouter {
         logger.info(`[WidgetRouter] Creating widget with name: ${ctx.request.body.name}`);
         const { dataset } = ctx.params;
         const user = WidgetRouter.getUser(ctx);
-        const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user.id);
+        const widget = await WidgetService.create(ctx.request.body, dataset, ctx.state.dataset, user.id, ctx.request.headers['x-api-key']);
         ctx.set('uncache', ['widget', `${ctx.state.dataset.id}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
         ctx.body = WidgetSerializer.serialize(widget);
     }
@@ -131,7 +131,7 @@ class WidgetRouter {
         } else {
             clonedWidgetUserId = user.id;
         }
-        const widget = await WidgetService.clone(id, ctx.request.body, clonedWidgetUserId);
+        const widget = await WidgetService.clone(id, ctx.request.body, clonedWidgetUserId, ctx.request.headers['x-api-key']);
         ctx.body = WidgetSerializer.serialize(widget);
     }
 
@@ -140,9 +140,9 @@ class WidgetRouter {
         logger.info(`[WidgetRouter] Deleting widget with id: ${id}`);
         try {
             let { dataset } = ctx.params;
-            const widget = await WidgetService.delete(id, dataset);
+            const widget = await WidgetService.delete(id, dataset, ctx.request.headers['x-api-key']);
             if (!ctx.state.dataset) {
-                dataset = await DatasetService.getDataset(widget.dataset);
+                dataset = await DatasetService.getDataset(widget.dataset, ctx.request.headers['x-api-key']);
                 ctx.state.dataset = dataset;
             }
             ctx.body = WidgetSerializer.serialize(widget);
@@ -163,7 +163,7 @@ class WidgetRouter {
     static async deleteByDataset(ctx) {
         const id = ctx.params.dataset;
         logger.info(`[WidgetRouter] Deleting widgets of dataset with id: ${id}`);
-        const widgets = await WidgetService.deleteByDataset(id);
+        const widgets = await WidgetService.deleteByDataset(id, ctx.request.headers['x-api-key']);
         ctx.body = WidgetSerializer.serialize(widgets);
         const uncache = ['widget', `${ctx.params.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`];
         if (widgets) {
@@ -179,14 +179,14 @@ class WidgetRouter {
         const userIdToDelete = ctx.params.userId;
 
         try {
-            await UserService.getUserById(userIdToDelete);
+            await UserService.getUserById(userIdToDelete, ctx.request.headers['x-api-key']);
         } catch (error) {
             ctx.throw(404, `User ${userIdToDelete} does not exist`);
         }
 
         logger.info(`[WidgetRouter] Deleting all widget for user with id: ${userIdToDelete}`);
         try {
-            const widgets = await WidgetService.deleteByUserId(userIdToDelete);
+            const widgets = await WidgetService.deleteByUserId(userIdToDelete, ctx.request.headers['x-api-key']);
             ctx.body = {
                 deletedWidgets: WidgetSerializer.serialize(widgets.deletedWidgets).data
             };
@@ -220,8 +220,8 @@ class WidgetRouter {
 
             // Fetch info to sort again
             const ids = await WidgetService.getAllWidgetsUserIds();
-            const users = await RelationshipsService.getUsersInfoByIds(ids);
-            await Promise.all(users.map(u => WidgetModel.updateMany(
+            const users = await RelationshipsService.getUsersInfoByIds(ids, ctx.request.headers['x-api-key']);
+            await Promise.all(users.map((u) => WidgetModel.updateMany(
                 { userId: u._id },
                 {
                     userRole: u.role ? u.role.toLowerCase() : '',
@@ -238,14 +238,14 @@ class WidgetRouter {
         //     ctx.throw(400, 'Invalid page size');
         // }
 
-        if (Object.keys(query).find(el => el.indexOf('collection') >= 0)) {
+        if (Object.keys(query).find((el) => el.indexOf('collection') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Collection filter not authorized');
                 return;
             }
             logger.debug('Obtaining collections', userId);
             try {
-                query.ids = await RelationshipsService.getCollections(query.collection, userId);
+                query.ids = await RelationshipsService.getCollections(query.collection, userId, ctx.request.headers['x-api-key']);
             } catch (e) {
                 if (e instanceof GetCollectionInvalidRequest) {
                     ctx.throw(e.statusCode, `Error loading associated collection: ${e.message}`);
@@ -258,22 +258,22 @@ class WidgetRouter {
             query.ids = query.ids.length > 0 ? query.ids.join(',') : '';
             logger.debug('Ids from collections', query.ids);
         }
-        if (Object.keys(query).find(el => el.indexOf('user.role') >= 0) && isAdmin) {
+        if (Object.keys(query).find((el) => el.indexOf('user.role') >= 0) && isAdmin) {
             logger.debug('Obtaining users with role');
-            query.usersRole = await RelationshipsService.getUsersWithRole(query['user.role']);
+            query.usersRole = await RelationshipsService.getUsersWithRole(query['user.role'], ctx.request.headers['x-api-key']);
             logger.debug('Ids from users with role', query.usersRole);
         }
-        if (Object.keys(query).find(el => el.indexOf('favourite') >= 0)) {
+        if (Object.keys(query).find((el) => el.indexOf('favourite') >= 0)) {
             if (!userId) {
                 ctx.throw(403, 'Fav filter not authorized');
                 return;
             }
             const app = query.app || query.application || 'rw';
-            query.ids = await RelationshipsService.getFavorites(app, userId);
+            query.ids = await RelationshipsService.getFavorites(app, userId, ctx.request.headers['x-api-key']);
             query.ids = query.ids.length > 0 ? query.ids.join(',') : '';
             logger.debug('Ids from collections', query.ids);
         }
-        const widgets = await WidgetService.getAll(query, dataset, user);
+        const widgets = await WidgetService.getAll(user, ctx.request.headers['x-api-key'], query, dataset);
         const clonedQuery = { ...query };
         delete clonedQuery['page[size]'];
         delete clonedQuery['page[number]'];
@@ -286,7 +286,7 @@ class WidgetRouter {
         logger.debug(`[WidgetRouter] widgets: ${JSON.stringify(widgets)}`);
         ctx.body = WidgetSerializer.serialize(widgets, link);
 
-        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map((elem) => elem.trim()) : [];
         const cache = ['widget'];
         if (ctx.params.dataset) {
             cache.push(`${ctx.params.dataset}-widget-all`);
@@ -305,7 +305,7 @@ class WidgetRouter {
     static async update(ctx) {
         const id = ctx.params.widget;
         logger.info(`[WidgetRouter] Updating widget with id: ${id}`);
-        const widget = await WidgetService.update(id, ctx.request.body);
+        const widget = await WidgetService.update(id, ctx.request.body, ctx.request.headers['x-api-key']);
         ctx.body = WidgetSerializer.serialize(widget);
         ctx.set('uncache', ['widget', id, widget.slug, `${widget.dataset}-widget`, `${ctx.state.dataset.slug}-widget`, `${ctx.state.dataset.id}-widget-all`]);
     }
@@ -323,10 +323,10 @@ class WidgetRouter {
             env: body.env
         };
         if (typeof resource.ids === 'string') {
-            resource.ids = resource.ids.split(',').map(elem => elem.trim());
+            resource.ids = resource.ids.split(',').map((elem) => elem.trim());
         }
         if (typeof resource.env === 'string') {
-            resource.env = resource.env.split(',').map(elem => elem.trim());
+            resource.env = resource.env.split(',').map((elem) => elem.trim());
         }
         const result = await WidgetService.getByDataset(resource);
         ctx.body = WidgetSerializer.serialize(result);
@@ -383,7 +383,6 @@ const validationMiddleware = async (ctx, next) => {
         throw err;
     }
 
-
     await next();
 };
 
@@ -398,7 +397,6 @@ const findByIdValidationMiddleware = async (ctx, next) => {
         }
         throw err;
     }
-
 
     await next();
 };
@@ -424,7 +422,7 @@ const getDatasetForWidgetMiddleware = async (ctx, next) => {
 
     const widgetId = ctx.params.widget;
     try {
-        const widget = await WidgetService.get(widgetId, null);
+        const widget = await WidgetService.get(widgetId, null, ctx.request.headers['x-api-key']);
         if (widget && widget.dataset) {
             ctx.request.body.dataset = widget.dataset;
         }
@@ -465,7 +463,7 @@ const authorizationMiddleware = async (ctx, next) => {
             return;
         }
         if (newWidgetUpdate || newWidgetClone) {
-            const permission = await WidgetService.hasPermission(ctx.params.widget, user);
+            const permission = await WidgetService.hasPermission(ctx.params.widget, user, ctx.request.headers['x-api-key']);
             if (!permission) {
                 ctx.throw(403, 'Forbidden');
                 return;
@@ -474,14 +472,14 @@ const authorizationMiddleware = async (ctx, next) => {
     }
     const application = ctx.request.query.application ? ctx.request.query.application : ctx.request.body.application;
     if (application) {
-        const appPermission = application.find(app => user.extraUserData.apps.find(userApp => userApp === app));
+        const appPermission = application.find((app) => user.extraUserData.apps.find((userApp) => userApp === app));
         if (!appPermission) {
             ctx.throw(403, 'Forbidden'); // if manager or admin but no application -> out
             return;
         }
     }
     if ((user.role === 'MANAGER' || user.role === 'ADMIN') && !newWidgetCreation) {
-        const permission = await WidgetService.hasPermission(ctx.params.widget, user);
+        const permission = await WidgetService.hasPermission(ctx.params.widget, user, ctx.request.headers['x-api-key']);
         if (!permission) {
             ctx.throw(403, 'Forbidden');
             return;
@@ -528,7 +526,6 @@ const deleteResourceAuthorizationMiddleware = async (ctx, next) => {
 
     ctx.throw(403, 'Forbidden');
 };
-
 
 // Declaring the routes
 // Index

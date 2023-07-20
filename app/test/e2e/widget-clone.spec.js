@@ -4,7 +4,10 @@ const Widget = require('models/widget.model');
 const { USERS } = require('./utils/test.constants');
 
 const { getTestServer } = require('./utils/test-server');
-const { getUUID, createWidget, mockGetUserFromToken } = require('./utils/helpers');
+const {
+    getUUID, createWidget, mockValidateRequestWithApiKey,
+    mockValidateRequestWithApiKeyAndUserToken
+} = require('./utils/helpers');
 
 chai.should();
 
@@ -26,23 +29,26 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an anonymous user should fail with a 401 error code', async () => {
+        mockValidateRequestWithApiKey({});
         const widgetId = getUUID();
 
         const response = await requester
             .post(`/api/v1/widget/${widgetId}/clone`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(401);
     });
 
     it('Clone a widget that does not exist should fail with a 404 error code', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
 
         const widgetId = getUUID();
 
         const response = await requester
             .post(`/api/v1/widget/${widgetId}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(404);
@@ -51,13 +57,14 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER that does not own the widget should fail with a 403 code', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const widgetOne = await new Widget(createWidget()).save();
 
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send();
 
         response.status.should.equal(403);
@@ -66,12 +73,13 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER that does owns the widget but doesn\'t have the same applications should fail with a 403 code', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget({ userId: '123456789', application: ['potato'] })).save();
 
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(403);
@@ -80,11 +88,15 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER that owns the widget should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -94,6 +106,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(200);
@@ -114,11 +127,15 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an MANAGER should be successful', async () => {
-        mockGetUserFromToken(USERS.MANAGER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MANAGER });
         const widgetOne = await new Widget(createWidget({ userId: '123456789' })).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -128,6 +145,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(200);
@@ -148,11 +166,15 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an ADMIN should be successful', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -162,6 +184,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(200);
@@ -182,11 +205,15 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an ADMIN with a custom user id should be successful and retain the ADMIN\'s userId', async () => {
-        mockGetUserFromToken(USERS.ADMIN);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.ADMIN });
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -196,6 +223,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`, { userId: '1322548' })
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(200);
@@ -217,11 +245,15 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as the \'microservice\' user with a custom userId should be successful and retain the custom userId', async () => {
-        mockGetUserFromToken(USERS.MICROSERVICE);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.MICROSERVICE });
         const widgetOne = await new Widget(createWidget()).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -231,6 +263,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 userId: '1322548',
             });
@@ -254,11 +287,15 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER with a matching app should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -268,6 +305,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(200);
@@ -296,7 +334,7 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an USER without a matching app should fail with HTTP 403', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
         const widgetWithFakeApp = createWidget({ userId: USERS.USER.id });
         widgetWithFakeApp.application = ['potato'];
         const widgetOne = await new Widget(widgetWithFakeApp).save();
@@ -304,6 +342,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({});
 
         response.status.should.equal(403);
@@ -312,12 +351,16 @@ describe('Clone widgets tests', () => {
     });
 
     it('Clone a widget as an ADMIN overwriting data should be successful', async () => {
-        mockGetUserFromToken(USERS.USER);
+        mockValidateRequestWithApiKeyAndUserToken({ user: USERS.USER });
 
         const widgetOne = await new Widget(createWidget({ userId: USERS.USER.id })).save();
 
-        nock(process.env.GATEWAY_URL)
-            .post(uri => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
+        nock(process.env.GATEWAY_URL, {
+            reqheaders: {
+                'x-api-key': 'api-key-test',
+            }
+        })
+            .post((uri) => uri.match(/\/v1\/webshot\/widget\/(\w|-)*\/thumbnail/))
             .twice()
             .reply(
                 200,
@@ -327,6 +370,7 @@ describe('Clone widgets tests', () => {
         const response = await requester
             .post(`/api/v1/widget/${widgetOne.id}/clone`)
             .set('Authorization', `Bearer abcd`)
+            .set('x-api-key', 'api-key-test')
             .send({
                 name: 'new name',
                 description: 'new description'

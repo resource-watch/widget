@@ -33,13 +33,16 @@ class WidgetService {
         return null;
     }
 
-    static async update(id, widget) {
+    static async update(id, widget, apiKey) {
         logger.debug(`[WidgetService]: Updating widget with id:  ${id}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
             slug: id
         }).exec();
         logger.debug('Obtaining dataset');
-        await DatasetService.checkDataset({ params: { dataset: currentWidget.dataset } });
+        await DatasetService.checkDataset({
+            params: { dataset: currentWidget.dataset },
+            request: { headers: { 'x-api-key': apiKey } }
+        });
 
         logger.debug(`[WidgetService]: Widget:  ${currentWidget}`);
         if (!currentWidget) {
@@ -90,12 +93,12 @@ class WidgetService {
         const newWidget = await currentWidget.save();
         logger.debug(`[WidgetService]: Widget:  ${newWidget}`);
 
-        WidgetService.generateThumbnail(newWidget.id);
+        WidgetService.generateThumbnail(newWidget.id, apiKey);
 
         return newWidget;
     }
 
-    static async create(widget, datasetId, dataset, userId) {
+    static async create(widget, datasetId, dataset, userId, apiKey) {
         logger.debug(`[WidgetService]: Creating widget with name: ${widget.name}`);
         const tempSlug = await WidgetService.getSlug(widget.name);
 
@@ -132,12 +135,12 @@ class WidgetService {
             throw new Error(err);
         }
 
-        WidgetService.generateThumbnail(newWidget.id);
+        WidgetService.generateThumbnail(newWidget.id, apiKey);
 
         return newWidget;
     }
 
-    static async clone(id, widget, userId) {
+    static async clone(id, widget, userId, apiKey) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         logger.debug(`[WidgetService]: New user id: ${userId}`);
         const currentWidget = await Widget.findById(id).exec() || await Widget.findOne({
@@ -168,18 +171,18 @@ class WidgetService {
         newWidget.template = currentWidget.template;
         newWidget.layerId = currentWidget.layerId;
 
-        const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, userId);
+        const createdWidget = await WidgetService.create(newWidget, currentWidget.dataset, null, userId, apiKey);
 
-        WidgetService.generateThumbnail(createdWidget.id);
+        WidgetService.generateThumbnail(createdWidget.id, apiKey);
 
         return createdWidget;
     }
 
-    static async generateThumbnail(id) {
+    static async generateThumbnail(id, apiKey) {
         logger.debug('[WidgetService]: Creating thumbnail');
         let thumbURL = '';
         try {
-            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(id);
+            const widgetThumbnail = await ScreenshotService.takeWidgetScreenshot(id, apiKey);
             thumbURL = widgetThumbnail.data.widgetThumbnail;
         } catch (err) {
             logger.error(`Error generating widget thumbnail: ${err.message}`);
@@ -194,7 +197,6 @@ class WidgetService {
         }
     }
 
-
     static async updateEnvironment(dataset, env) {
         logger.debug('Updating widgets with dataset', dataset);
         const widgets = await Widget.find({
@@ -204,7 +206,7 @@ class WidgetService {
         return widgets;
     }
 
-    static async get(id, dataset, includes = [], user = null) {
+    static async get(id, dataset, apiKey, includes = [], user = null) {
         logger.debug(`[WidgetService]: Getting widget with id: ${id}`);
         const widget = await Widget.findById(id).exec();
         if (widget) {
@@ -213,7 +215,7 @@ class WidgetService {
             } else {
                 if (includes && includes.length > 0) {
                     logger.debug('Finding relationships');
-                    const widgets = await RelationshipsService.getRelationships([widget], includes, user);
+                    const widgets = await RelationshipsService.getRelationships([widget], includes, user, apiKey);
                     return widgets[0];
                 }
                 return widget;
@@ -223,7 +225,7 @@ class WidgetService {
         }
     }
 
-    static async delete(id, dataset) {
+    static async delete(id, dataset, apiKey) {
         logger.debug(`[WidgetService]: Deleting widget with id: ${id}`);
         const widget = await Widget.findById(id).exec();
         if (!widget) {
@@ -242,7 +244,7 @@ class WidgetService {
         }
         logger.debug(`[DBACCESS-DELETE]: ID: ${id}`);
         try {
-            await WidgetService.deleteMetadata(dataset || widget.dataset, widget._id);
+            await WidgetService.deleteMetadata(dataset || widget.dataset, widget._id, apiKey);
         } catch (err) {
             logger.error('Error removing metadata of the widget', err);
         }
@@ -250,7 +252,7 @@ class WidgetService {
         return widget;
     }
 
-    static async deleteByDataset(id) {
+    static async deleteByDataset(id, apiKey) {
         logger.debug(`[WidgetService]: Deleting widgets of dataset with id: ${id}`);
         const widgets = await Widget.find({
             dataset: id
@@ -266,7 +268,7 @@ class WidgetService {
             logger.debug(`[DBACCESS-DELETE]: ID: ${id}`);
             await widget.remove();
             try {
-                await WidgetService.deleteMetadata(id, widget._id);
+                await WidgetService.deleteMetadata(id, widget._id, apiKey);
             } catch (err) {
                 logger.error('Error removing metadata of the widget', err);
             }
@@ -275,7 +277,7 @@ class WidgetService {
         return widgets;
     }
 
-    static async deleteByUserId(userId) {
+    static async deleteByUserId(userId, apiKey) {
         logger.debug(`[WidgetService]: Delete widgets for user with id:  ${userId}`);
 
         const filteredQuery = WidgetService.getFilteredQuery({ userId, env: 'all' });
@@ -283,7 +285,7 @@ class WidgetService {
         const unprotectedWidgets = await Widget.find({ ...filteredQuery, protected: { $ne: true } }).exec();
         const protectedWidgets = await Widget.find({ ...filteredQuery, protected: true }).exec();
 
-        await Promise.all(unprotectedWidgets.map(widget => WidgetService.delete(widget.id)));
+        await Promise.all(unprotectedWidgets.map((widget) => WidgetService.delete(widget.id, null, apiKey)));
 
         return {
             deletedWidgets: unprotectedWidgets,
@@ -291,22 +293,25 @@ class WidgetService {
         };
     }
 
-    static async deleteMetadata(datasetId, widgetId) {
+    static async deleteMetadata(datasetId, widgetId, apiKey) {
         logger.debug('Removing metadata of the widget');
         await RWAPIMicroservice.requestToMicroservice({
             uri: `/v1/dataset/${datasetId}/widget/${widgetId}/metadata`,
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'x-api-key': apiKey,
+            }
         });
     }
 
-    static async getAll(query = {}, dataset = null, user) {
+    static async getAll(user, apiKey, query = {}, dataset = null) {
         const sort = query.sort || '';
         const page = query['page[number]'] ? parseInt(query['page[number]'], 10) : 1;
         logger.debug(`pageNumber param: ${page}`);
         const limit = query['page[size]'] ? parseInt(query['page[size]'], 10) : 10;
         logger.debug(`pageSize param: ${limit}`);
-        const ids = query.ids ? query.ids.split(',').map(el => el.trim()) : [];
-        const includes = query.includes ? query.includes.split(',').map(elem => elem.trim()) : [];
+        const ids = query.ids ? query.ids.split(',').map((el) => el.trim()) : [];
+        const includes = query.includes ? query.includes.split(',').map((elem) => elem.trim()) : [];
         logger.debug(`ids param: ${ids}`);
         if (dataset) {
             query.dataset = dataset;
@@ -326,7 +331,7 @@ class WidgetService {
         pages = { ...pages };
         if (includes.length > 0) {
             logger.debug('Finding relationships');
-            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, user, query);
+            pages.docs = await RelationshipsService.getRelationships(pages.docs, includes, user, apiKey, query);
         }
         return pages;
     }
@@ -363,29 +368,30 @@ class WidgetService {
                     case 'Array':
                         if (query[param].indexOf('@') >= 0) {
                             query[param] = {
-                                $all: query[param].split('@').map(elem => elem.trim())
+                                $all: query[param].split('@').map((elem) => elem.trim())
                             };
                         } else {
                             query[param] = {
-                                $in: query[param].split(',').map(elem => elem.trim())
+                                $in: query[param].split(',').map((elem) => elem.trim())
                             };
                         }
                         break;
                     case 'Object':
+                        // eslint-disable-next-line no-self-assign
                         query[param] = query[param];
                         break;
                     case 'Date':
+                        // eslint-disable-next-line no-self-assign
                         query[param] = query[param];
                         break;
                     default:
+                        // eslint-disable-next-line no-self-assign
                         query[param] = query[param];
 
                 }
             } else if (param === 'usersRole') {
                 logger.debug('Params users roles');
-                query.userId = Object.assign({}, query.userId || {}, {
-                    $in: query[param]
-                });
+                query.userId = { ...query.userId || {}, $in: query[param] };
                 delete query.usersRole;
             } else if (param === 'env') {
                 if (query[param] === 'all') {
@@ -409,7 +415,7 @@ class WidgetService {
     static async getAllWidgetsUserIds() {
         logger.debug(`[WidgetService]: Getting the user ids of all widgets`);
         const widgets = await Widget.find({}, 'userId').lean();
-        const userIds = widgets.map(w => w.userId);
+        const userIds = widgets.map((w) => w.userId);
         return userIds.filter((item, idx) => userIds.indexOf(item) === idx && item !== 'legacy');
     }
 
@@ -435,17 +441,16 @@ class WidgetService {
         return filteredSort;
     }
 
-
     static async getByDataset(resource) {
         logger.debug(`[WidgetService] Getting widgets for datasets with ids ${resource.ids}`);
         if (resource.app) {
             if (resource.app.indexOf('@') >= 0) {
                 resource.app = {
-                    $all: resource.app.split('@').map(elem => elem.trim())
+                    $all: resource.app.split('@').map((elem) => elem.trim())
                 };
             } else {
                 resource.app = {
-                    $in: resource.app.split(',').map(elem => elem.trim())
+                    $in: resource.app.split(',').map((elem) => elem.trim())
                 };
             }
         }
@@ -467,10 +472,10 @@ class WidgetService {
         return Widget.find(query).exec();
     }
 
-    static async hasPermission(id, user) {
+    static async hasPermission(id, user, apiKey) {
         let permission = true;
-        const widget = await WidgetService.get(id, null, []);
-        const appPermission = widget.application.find(widgetApp => user.extraUserData.apps.find(app => app === widgetApp));
+        const widget = await WidgetService.get(id, null, apiKey, []);
+        const appPermission = widget.application.find((widgetApp) => user.extraUserData.apps.find((app) => app === widgetApp));
         if (!appPermission) {
             permission = false;
         }
