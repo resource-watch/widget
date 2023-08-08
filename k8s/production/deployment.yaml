@@ -88,7 +88,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: REQUIRE_API_KEY
-                  name: authorization
+                  name: mssecrets
           image: gfwdockerhub/widget
           imagePullPolicy: Always
           livenessProbe:
